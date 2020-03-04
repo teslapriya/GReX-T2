@@ -11,13 +11,13 @@ def parse_candsfile(candsfile, selectcols=['itime', 'idm', 'ibox']):
 
     tab = ascii.read(candsfile, names=['snr', 'if', 'itime', 'mjds', 'ibox', 'idm', 'dm', 'ibeam'])
     data = np.lib.recfunctions.structured_to_unstructured(tab[selectcols].as_array())  # ok for single dtype (int)
-    snrs = data['snr']
+    snrs = tab['snr']
     # how to use ibeam?
 
     return data, snrs
 
 
-def cluster_data(data, min_cluster_size, min_samples):
+def cluster_data(data, min_cluster_size=3, min_samples=5):
     """ Take data from parse_candsfile and identify clusters via hamming metric.
     """
 
