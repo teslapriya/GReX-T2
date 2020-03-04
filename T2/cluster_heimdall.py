@@ -17,11 +17,13 @@ def parse_candsfile(candsfile, selectcols=['itime', 'idm', 'ibox']):
     return data, snrs
 
 
-def cluster_data(data, min_cluster_size=3, min_samples=5):
+def cluster_data(data, min_cluster_size=3, min_samples=5, metric='hamming', returnclusterer=False):
     """ Take data from parse_candsfile and identify clusters via hamming metric.
     """
 
-    clusterer = hdbscan.HDBSCAN(metric='hamming', min_cluster_size=min_cluster_size, min_samples=min_samples, cluster_selection_method='eom', allow_single_cluster=True).fit(data) 
+    clusterer = hdbscan.HDBSCAN(metric=metric, min_cluster_size=min_cluster_size,
+                                min_samples=min_samples, cluster_selection_method='eom',
+                                allow_single_cluster=True).fit(data) 
 
     nclustered = np.max(clusterer.labels_ + 1) 
     nunclustered = len(np.where(clusterer.labels_ == -1)[0]) 
@@ -29,7 +31,10 @@ def cluster_data(data, min_cluster_size=3, min_samples=5):
     print('All labels: {0}'.format(np.unique(clusterer.labels_)))
     data_labeled = np.hstack((data, clusterer.labels_[:,None])) 
 
-    return data_labeled
+    if returnclusterer:
+        return clusterer
+    else:
+        return data_labeled
 
 
 def get_peak(data_labeled, snrs):
