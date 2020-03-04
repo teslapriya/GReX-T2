@@ -11,20 +11,21 @@ def datasnrs():
     return data, snrs
 
 
-def test_parse():
+def test_parse(datasnrs):
     data, snrs = datasnrs
     assert len(data)
     assert len(data) == len(snrs)
 
 
-def test_cluster1():
+def test_cluster1(datasnrs):
     data, snrs = datasnrs
     datal = cluster_heimdall.cluster_data(data)
 
-    assert len(np.unique(datal[:,0])[0]) == 1  # find one cluster
+    assert len(datal) == len(data)
+    assert len(datal[0]) == 4
 
 
-def test_peak():
+def test_peak(datasnrs):
     data, snrs = datasnrs
     datal = cluster_heimdall.cluster_data(data)
 
