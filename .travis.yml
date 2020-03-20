@@ -9,7 +9,6 @@ branches:
   only:
     - master
     - development
-    - cjl/dev
 
 branches:
   only:
