@@ -1,7 +1,10 @@
 from astropy.io import ascii
 import numpy as np
 import hdbscan
-
+import dsautils.dsa_syslog as dsl
+logger = dsl.DsaSyslogger()
+logger.subsystem('software')
+logger.app('T2')
 
 def parse_candsfile(candsfile, selectcols=['itime', 'idm', 'ibox']):
     """ Takes standard MBHeimdall output and returns classifier inputs and snr tables.
@@ -14,6 +17,7 @@ def parse_candsfile(candsfile, selectcols=['itime', 'idm', 'ibox']):
     snrs = tab['snr']
     # how to use ibeam?
 
+    logger.info("Parsed candsfile")
     return data, snrs
 
 
@@ -27,8 +31,8 @@ def cluster_data(data, min_cluster_size=3, min_samples=5, metric='hamming', retu
 
     nclustered = np.max(clusterer.labels_ + 1) 
     nunclustered = len(np.where(clusterer.labels_ == -1)[0]) 
-    print('Found {0} clustered and {1} unclustered rows'.format(nclustered, nunclustered))
-    print('All labels: {0}'.format(np.unique(clusterer.labels_)))
+    logger.info('Found {0} clustered and {1} unclustered rows'.format(nclustered, nunclustered))
+    logger.info('All labels: {0}'.format(np.unique(clusterer.labels_)))
     data_labeled = np.hstack((data, clusterer.labels_[:,None])) 
 
     if returnclusterer:
