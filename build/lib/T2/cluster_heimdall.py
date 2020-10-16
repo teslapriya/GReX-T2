@@ -75,7 +75,7 @@ def dump_cluster_results(tab, clsnr, outputfile, output_cols=['mjds', 'snr', 'ib
         json.dump(output_dict, f, ensure_ascii=False, indent=4) 
     
 
-def plot_clustered(clusterer, clsnr, snrs, data, tab, cols, plot_dir="./"):
+def plot_cluster(clusterer, clsnr, snrs, data, tab, cols, plot_dir="./"):
     """
     Plot cluster probabilities in color and greyness. 
 
@@ -121,9 +121,6 @@ def plot_clustered(clusterer, clsnr, snrs, data, tab, cols, plot_dir="./"):
                 fig.clf()
                 plt.close('all') 
 
-
-def plot_giants():
-    pass 
 
 def parse_socket():
     pass 
