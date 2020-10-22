@@ -1,9 +1,0 @@
-README.md
-setup.py
-T2/__init__.py
-T2/cluster_heimdall.py
-dsa110_T2.egg-info/PKG-INFO
-dsa110_T2.egg-info/SOURCES.txt
-dsa110_T2.egg-info/dependency_links.txt
-dsa110_T2.egg-info/not-zip-safe
-dsa110_T2.egg-info/top_level.txt
