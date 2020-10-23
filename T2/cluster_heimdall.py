@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# dsahead python 3.7
 from astropy.io import ascii
 import numpy as np
 import hdbscan
@@ -324,7 +327,7 @@ def parse_socket(host, port, selectcols=['itime', 'idm', 'ibox', 'ibeam']):
     host, port: same with heimdall -coincidencer host:port 
     selectcol: list of str.  Select columns for clustering. 
     """
-    s = socket.socket() 
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
     s.bind((host,port))    # assigns the socket with an address
     s.listen(5)             # accept no. of incoming connections
 
@@ -334,16 +337,27 @@ def parse_socket(host, port, selectcols=['itime', 'idm', 'ibox', 'ibeam']):
         
         # read in heimdall socket output  
         ascii_letter = clientsocket.recv(1)           # recieves an alphabet whose ASCII value is the size of the message 
-        size = ord(ascii_letter.decode('utf-8'))      # ord() returns the ASCII value of a character
-        candsfile = clientsocket.recv(size)           # recieving the actual msg
-        candsfile = candsfile.decode('utf-8')               # decode the bytes msg 
-
-        clientsocket.close()   
         
-        # do we want both heimdall.cand and giants.out?  From two sockets?  
-        tab = ascii.read(candsfile, names=['snr', 'if', 'itime', 'mjds', 'ibox', 'idm', 'dm', 'ibeam'])
-        data = np.lib.recfunctions.structured_to_unstructured(tab[selectcols].as_array())  # ok for single dtype (int)
-        snrs = tab['snr'] 
-        
-        return tab, data, snrs
+        if len(ascii_letter) > 0:
+            size = ord(ascii_letter.decode('utf-8'))      # ord() returns the ASCII value of a character
+            #candsfile = clientsocket.recv(size)           # recieving the actual msg        
+            candsfile = clientsocket.recv(int(1e10))  # how to make sure size is big enough?
+            
+            candsfile = candsfile.decode('utf-8')               # decode the bytes msg 
+            print(candsfile)
+            
+            clientsocket.close()   
+            
+            # do we want both heimdall.cand and giants.out?  From two sockets?  
+            # reading in one gulp at a time. 
+            # will modify to continue reading in.  
+            print("reading candsfile...")
+            tab = ascii.read(candsfile, names=['snr', 'if', 'itime', 'mjds', 'ibox', 'idm', 'dm', 'ibeam'], guess=False, fast_reader=False, delimiter="\t")
+            data = np.lib.recfunctions.structured_to_unstructured(tab[selectcols].as_array())  # ok for single dtype (int)
+            snrs = tab['snr'] 
+            
+            print("table has", len(tab), "rows")
+            
+            
+            return tab, data, snrs
                 
