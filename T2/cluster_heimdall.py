@@ -40,11 +40,13 @@ def cluster_data(data, min_cluster_size=3, min_samples=5, metric='hamming', retu
     print('Found {0} clustered and {1} unclustered rows'.format(nclustered, nunclustered))
     print('All labels: {0}'.format(np.unique(clusterer.labels_)))
     data_labeled = np.hstack((data, clusterer.labels_[:,None])) 
+    
+    return clusterer, data_labeled
 
-    if returnclusterer:
-        return clusterer
-    else:
-        return data_labeled
+    #if returnclusterer:
+    #    return clusterer
+    #else:
+    #    return data_labeled
 
 
 def get_peak(data_labeled, snrs):
