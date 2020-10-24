@@ -23,6 +23,8 @@ def parse_candsfile(candsfile, selectcols=['itime', 'idm', 'ibox', 'ibeam']):
     data = np.lib.recfunctions.structured_to_unstructured(tab[selectcols].as_array())  # ok for single dtype (int)
     snrs = tab['snr']
     # how to use ibeam?
+    
+    print("table has", len(tab), "rows")
 
     return tab, data, snrs
 
@@ -290,10 +292,10 @@ def plot_beam_time(tab, plot_dir="./"):
     ax.cla()
     colormap = ax.scatter(tab['mjds'], tab['ibeam'], s=(tab['snr'] / tab['snr'].min())*5, c=tab['ibox'], marker='o', alpha=0.5)   
     fig.colorbar(colormap, ax=ax, use_gridspec=True,label='$\\rm Boxcar width\;(index)$')
-    ax.set_xlabel('$\\rm Beam Number$', size=12)
-    ax.set_ylabel('$\\rm Time (s) $', size=12)
+    ax.set_xlabel('$\\rm mjd (s)$', size=12)
+    ax.set_ylabel('$\\rm beam number$', size=12)
     ax.set_title("giants snr for each beam")
-    fig.savefig(plot_dir+"gitnat_beam_time.pdf") 
+    fig.savefig(plot_dir+"giants_beam_time.pdf") 
 
 
 
@@ -317,7 +319,7 @@ def plot_giants(tab, plot_dir="./"):
     cbar_ax = divider.append_axes("right", size="5%", pad=0.1)
     plot_dm_snr(ax2[1], cbar_ax, tab) 
     fig2.savefig(plot_dir+'giants_dm_time_snr.pdf') 
-    fig2.clf()
+    #fig2.clf()
     plt.close('all') 
     
  
@@ -332,10 +334,13 @@ def parse_socket(host, port, selectcols=['itime', 'idm', 'ibox', 'ibeam']):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
     s.bind((host,port))    # assigns the socket with an address
     s.listen(5)             # accept no. of incoming connections
-
+    
+    gulp_i = 0 # track heimdall gulp number 
     while True:
         clientsocket, address = s.accept() # stores the socket details in 2 variables
         print(f"Connection from {address} has been established")
+        gulp_i += 1 
+        print("gulp ", gulp_i)
         
         # read in heimdall socket output  
         ascii_letter = clientsocket.recv(1)           # recieves an alphabet whose ASCII value is the size of the message 
@@ -343,10 +348,10 @@ def parse_socket(host, port, selectcols=['itime', 'idm', 'ibox', 'ibeam']):
         if len(ascii_letter) > 0:
             size = ord(ascii_letter.decode('utf-8'))      # ord() returns the ASCII value of a character
             #candsfile = clientsocket.recv(size)           # recieving the actual msg        
-            candsfile = clientsocket.recv(int(1e10))  # how to make sure size is big enough?
+            candsfile = clientsocket.recv(int(1e10))  # python 3 requires argument here. how to make sure the size is big enough? 
             
             candsfile = candsfile.decode('utf-8')               # decode the bytes msg 
-            print(candsfile)
+            #print(candsfile)
             
             clientsocket.close()   
             
@@ -362,4 +367,57 @@ def parse_socket(host, port, selectcols=['itime', 'idm', 'ibox', 'ibeam']):
             
             
             return tab, data, snrs
+        
+        else: 
+            print ("this gulp has no heimdall giants output.")
+
+
+
+def parse_socket_and_cluster_and_plot(host="127.0.0.1", port=12345, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outputfile="T2_output_socket_", plot=False, plot_dir="socket_"):
+    """ 
+    continuously read in socket, cluster, dump results to outputfile and save plots.
+    """
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
+    s.bind((host,port))    # assigns the socket with an address
+    s.listen(5)             # accept no. of incoming connections
+    
+    gulp_i = 0 # track heimdall gulp number 
+    
+    while True:
+        clientsocket, address = s.accept() # stores the socket details in 2 variables
+        print(f"Connection from {address} has been established")
+        gulp_i += 1 
+        print("gulp ", gulp_i)
+        
+        # read in heimdall socket output  
+        candsfile = clientsocket.recv(int(1e11))  # python 3 requires argument here. how to make sure the size is big enough?         
+        
+        if len(candsfile) == 0:
+            print ("this gulp has no heimdall giants output.")
+        
+        else: 
+            candsfile = candsfile.decode('utf-8')               # decode the bytes msg 
+            #print(candsfile)            
+            clientsocket.close()   
+           
+            print("reading candsfile...")
+            tab = ascii.read(candsfile, names=['snr', 'if', 'itime', 'mjds', 'ibox', 'idm', 'dm', 'ibeam'], guess=False, fast_reader=False, delimiter="\t")
+            data = np.lib.recfunctions.structured_to_unstructured(tab[selectcols].as_array())  # ok for single dtype (int)
+            snrs = tab['snr'] 
+            
+            print("table has", len(tab), "rows")
+            
+            # T2 cluster 
+            clusterer, data_labeled = cluster_data(data, min_cluster_size=10, min_samples=10, metric='euclidean', allow_single_cluster=True)
+            clsnr = get_peak(data_labeled, snrs) 
+    
+            # send T2 cluster results to outputfile
+            dump_cluster_results(tab, clsnr, outputfile+str(gulp_i)+".txt", output_cols=['mjds', 'snr', 'ibox', 'dm'])
+            
+            if plot: 
+                plot_giants(tab, plot_dir=plot_dir+str(gulp_i)+"_") # plot giants      
+                plot_clustered(clusterer, clsnr, snrs, data, tab, cols=['itime', 'idm', 'ibox'], plot_dir=plot_dir+str(gulp_i)+"_") # plot cluster results  
+            
+                
+
                 
