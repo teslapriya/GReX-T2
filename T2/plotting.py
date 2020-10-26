@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt 
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import seaborn as sns
+import dsautils.dsa_syslog as dsl
 logger = dsl.DsaSyslogger()
 logger.subsystem('software')
 logger.app('T2')

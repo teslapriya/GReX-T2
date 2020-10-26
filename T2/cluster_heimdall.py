@@ -16,7 +16,7 @@ def parse_candsfile(candsfile, selectcols=['itime', 'idm', 'ibox', 'ibeam']):
     selectcols will take a subset of the standard MBHeimdall output
     (Can add cleaning here, eventually)
     """
-    #tab = pd.read_csv(candsfile, names=['snr', 'if', 'itime', 'mjds', 'ibox', 'idm', 'dm', 'ibeam'], delim_whitespace=True) 
+
     tab = ascii.read(candsfile, names=['snr', 'if', 'itime', 'mjds', 'ibox', 'idm', 'dm', 'ibeam'], guess=True, fast_reader=False)
     tab['ibeam'] = tab['ibeam'].astype(int)
     data = np.lib.recfunctions.structured_to_unstructured(tab[selectcols].as_array())  # ok for single dtype (int)

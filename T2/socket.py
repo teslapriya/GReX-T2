@@ -2,6 +2,7 @@ import numpy as np
 import socket 
 from T2 import cluster_heimdall, plotting
 
+import dsautils.dsa_syslog as dsl
 logger = dsl.DsaSyslogger()
 logger.subsystem('software')
 logger.app('T2')
