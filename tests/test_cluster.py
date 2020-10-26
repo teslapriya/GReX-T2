@@ -7,18 +7,18 @@ _install_dir = os.path.abspath(os.path.dirname(__file__))
 @pytest.fixture(scope="module")
 def datasnrs():
     candsfile = os.path.join(_install_dir, 'data/giants.cand')
-    data, snrs = cluster_heimdall.parse_candsfile(candsfile, selectcols=['itime', 'idm', 'ibox'])
-    return data, snrs
+    tab, data, snrs = cluster_heimdall.parse_candsfile(candsfile, selectcols=['itime', 'idm', 'ibox'])
+    return tab, data, snrs
 
 
 def test_parse(datasnrs):
-    data, snrs = datasnrs
+    tab, data, snrs = datasnrs
     assert len(data)
     assert len(data) == len(snrs)
 
 
 def test_cluster1(datasnrs):
-    data, snrs = datasnrs
+    tab, data, snrs = datasnrs
     datal = cluster_heimdall.cluster_data(data)
 
     assert len(datal) == len(data)
@@ -26,7 +26,7 @@ def test_cluster1(datasnrs):
 
 
 def test_peak(datasnrs):
-    data, snrs = datasnrs
+    tab, data, snrs = datasnrs
     datal = cluster_heimdall.cluster_data(data)
 
     clsnr = cluster_heimdall.get_peak(datal, snrs)
