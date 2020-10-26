@@ -34,7 +34,7 @@ def parse_candsfile(candsfile, selectcols=['itime', 'idm', 'ibox', 'ibeam']):
     return tab, data, snrs
 
 
-def cluster_data(data, min_cluster_size=3, min_samples=5, metric='hamming', returnclusterer=False, allow_single_cluster=True):
+def cluster_data(data, min_cluster_size=3, min_samples=5, metric='hamming', return_clusterer=False, allow_single_cluster=True):
     """ Take data from parse_candsfile and identify clusters via hamming metric.
     """
 
@@ -48,12 +48,10 @@ def cluster_data(data, min_cluster_size=3, min_samples=5, metric='hamming', retu
     logger.info('All labels: {0}'.format(np.unique(clusterer.labels_)))
     data_labeled = np.hstack((data, clusterer.labels_[:,None])) 
     
-    return clusterer, data_labeled
-
-    #if returnclusterer:
-    #    return clusterer
-    #else:
-    #    return data_labeled
+    if return_clusterer:
+        return clusterer, data_labeled
+    else:
+        return data_labeled
 
 
 def get_peak(data_labeled, snrs):
@@ -414,7 +412,7 @@ def parse_socket_and_cluster_and_plot(host="127.0.0.1", port=12345, selectcols=[
             print("table has", len(tab), "rows")
             
             # T2 cluster 
-            clusterer, data_labeled = cluster_data(data, min_cluster_size=10, min_samples=10, metric='euclidean', allow_single_cluster=True)
+            clusterer, data_labeled = cluster_data(data, min_cluster_size=10, min_samples=10, metric='euclidean', allow_single_cluster=True, return_clusterer=True)
             clsnr = get_peak(data_labeled, snrs) 
     
             # send T2 cluster results to outputfile

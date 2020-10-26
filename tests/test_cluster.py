@@ -19,7 +19,7 @@ def test_parse(datasnrs):
 
 def test_cluster1(datasnrs):
     tab, data, snrs = datasnrs
-    datal = cluster_heimdall.cluster_data(data)
+    datal = cluster_heimdall.cluster_data(data, return_clusterer=False)
 
     assert len(datal) == len(data)
     assert len(datal[0]) == 4
@@ -27,7 +27,7 @@ def test_cluster1(datasnrs):
 
 def test_peak(datasnrs):
     tab, data, snrs = datasnrs
-    datal = cluster_heimdall.cluster_data(data)
+    datal = cluster_heimdall.cluster_data(data, return_clusterer=False)
 
     clsnr = cluster_heimdall.get_peak(datal, snrs)
     assert len(clsnr) == 1
