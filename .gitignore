@@ -1,5 +1,11 @@
+<<<<<<< HEAD
 dist
 build
 __pycache__
 */__pycache__
 RELEASE-VERSION
+=======
+RELEASE-VERSION
+build
+dist
+>>>>>>> ffd57b8e587c3688a44fefcd8bb12a52a4a966b0
