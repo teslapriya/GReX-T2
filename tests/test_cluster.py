@@ -1,6 +1,6 @@
 import pytest
 import os.path
-from T2 import cluster_heimdall
+from T2 import cluster_heimdall, plotting
 
 _install_dir = os.path.abspath(os.path.dirname(__file__))
 
@@ -34,7 +34,7 @@ def test_peak(datasnrs):
 
     i, snr = clsnr[0]
 
-    assert i == 1376
+    assert i == 1380
     assert snr == 117.613
 
 
@@ -46,3 +46,8 @@ def test_json(datasnrs):
     cluster_heimdall.dump_cluster_results(tab, clsnr, 'test.json')
 
     assert os.path.exists('test.json')
+
+
+def test_plot_dmhist(datasnrs):
+    tab, data, snrs = datasnrs
+    plotting.plot_dm_hist(tab)

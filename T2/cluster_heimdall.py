@@ -23,7 +23,7 @@ def parse_candsfile(candsfile, selectcols=['itime', 'idm', 'ibox', 'ibeam']):
     snrs = tab['snr']
     # how to use ibeam?
     
-    print("table has", len(tab), "rows")
+    logger.info(f"Table has {len(tab)} rows")
 
     logger.info("Parsed candsfile")
     return tab, data, snrs
@@ -73,12 +73,12 @@ def dump_cluster_results(tab, clsnr, outputfile, output_cols=['mjds', 'snr', 'ib
     imaxsnr_arr = [clsnr[i][0] for i in range(len(clsnr))] 
     output_dict = {} 
     for i in imaxsnr_arr:
-        output_dict[tab['if'][i]] = {} 
+        output_dict[str(tab['if'][i])] = {} 
         for col in output_cols:
             if type(tab[col][i]) == np.int64:
-                output_dict[tab['if'][i]][col] = int(tab[col][i]) 
+                output_dict[str(tab['if'][i])][col] = int(tab[col][i]) 
             else: 
-                output_dict[tab['if'][i]][col] = tab[col][i] 
+                output_dict[str(tab['if'][i])][col] = tab[col][i] 
 
     with open(outputfile, 'w') as f: #encoding='utf-8'
         json.dump(output_dict, f, ensure_ascii=False, indent=4) 

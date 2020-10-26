@@ -154,7 +154,7 @@ def plot_dm_snr(ax, ax_cbar,tab,tsamp=1048e-6):
     ax.xaxis.set_minor_locator(plt.NullLocator())
 
     if tab['snr'].max() > max_snr:
-        print("\n    WARNING: The SNR of a candidate is higher than the maximum SNRs plotted!\n")
+        logger.warning("The SNR of a candidate is higher than the maximum SNRs plotted!")
         
     colormap = ax.scatter(tab['snr'], tab['dm'], s=tab['ibox'], c=tab['ibox'], cmap='viridis', \
                    vmin=0., vmax=12, marker='o', picker=2, alpha=0.5)
