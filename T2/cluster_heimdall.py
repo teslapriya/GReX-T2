@@ -22,7 +22,7 @@ def parse_candsfile(candsfile, selectcols=['itime', 'idm', 'ibox', 'ibeam']):
     (Can add cleaning here, eventually)
     """
     #tab = pd.read_csv(candsfile, names=['snr', 'if', 'itime', 'mjds', 'ibox', 'idm', 'dm', 'ibeam'], delim_whitespace=True) 
-    tab = ascii.read(candsfile, names=['snr', 'if', 'itime', 'mjds', 'ibox', 'idm', 'dm', 'ibeam'], guess=False, fast_reader=False, delimiter="\s")
+    tab = ascii.read(candsfile, names=['snr', 'if', 'itime', 'mjds', 'ibox', 'idm', 'dm', 'ibeam'], guess=True, fast_reader=False, delimiter="\s")
     tab['ibeam'] = tab['ibeam'].astype(int)
     data = np.lib.recfunctions.structured_to_unstructured(tab[selectcols].as_array())  # ok for single dtype (int)
     snrs = tab['snr']
@@ -353,7 +353,7 @@ def parse_socket(host, port, selectcols=['itime', 'idm', 'ibox', 'ibeam']):
         if len(ascii_letter) > 0:
             size = ord(ascii_letter.decode('utf-8'))      # ord() returns the ASCII value of a character
             #candsfile = clientsocket.recv(size)           # recieving the actual msg        
-            candsfile = clientsocket.recv(int(1e10))  # python 3 requires argument here. how to make sure the size is big enough? 
+            candsfile = clientsocket.recv(10000000)  # python 3 requires argument here. how to make sure the size is big enough? 
             
             candsfile = candsfile.decode('utf-8')               # decode the bytes msg 
             #print(candsfile)
@@ -364,7 +364,7 @@ def parse_socket(host, port, selectcols=['itime', 'idm', 'ibox', 'ibeam']):
             # reading in one gulp at a time. 
             # will modify to continue reading in.  
             print("reading candsfile...")
-            tab = ascii.read(candsfile, names=['snr', 'if', 'itime', 'mjds', 'ibox', 'idm', 'dm', 'ibeam'], guess=False, fast_reader=False, delimiter="\t")
+            tab = ascii.read(candsfile, names=['snr', 'if', 'itime', 'mjds', 'ibox', 'idm', 'dm', 'ibeam'], guess=True, fast_reader=False)
             data = np.lib.recfunctions.structured_to_unstructured(tab[selectcols].as_array())  # ok for single dtype (int)
             snrs = tab['snr'] 
             
@@ -395,18 +395,19 @@ def parse_socket_and_cluster_and_plot(host="127.0.0.1", port=12345, selectcols=[
         print("gulp ", gulp_i)
         
         # read in heimdall socket output  
-        candsfile = clientsocket.recv(int(1e11))  # python 3 requires argument here. how to make sure the size is big enough?         
+        candsfile = clientsocket.recv(100000000)  # python 3 requires argument here. how to make sure the size is big enough?         
         
         if len(candsfile) == 0:
             print ("this gulp has no heimdall giants output.")
         
         else: 
             candsfile = candsfile.decode('utf-8')               # decode the bytes msg 
-            #print(candsfile)            
             clientsocket.close()   
            
             print("reading candsfile...")
-            tab = ascii.read(candsfile, names=['snr', 'if', 'itime', 'mjds', 'ibox', 'idm', 'dm', 'ibeam'], guess=False, fast_reader=False, delimiter="\t")
+            print(candsfile.split('\n'))
+
+            tab = ascii.read(candsfile, names=['snr', 'if', 'itime', 'mjds', 'ibox', 'idm', 'dm', 'ibeam'], guess=True, fast_reader=False)
             data = np.lib.recfunctions.structured_to_unstructured(tab[selectcols].as_array())  # ok for single dtype (int)
             snrs = tab['snr'] 
             
