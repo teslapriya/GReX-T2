@@ -69,15 +69,16 @@ def dump_cluster_results(tab, clsnr, outputfile, output_cols=['mjds', 'snr', 'ib
     Takes tab from parse_candsfile and clsnr from get_peak, 
     output columns output_cols into a jason file outputfile. 
     """
+
     imaxsnr_arr = [clsnr[i][0] for i in range(len(clsnr))] 
     output_dict = {} 
     for i in imaxsnr_arr:
-        output_dict[tab['mjds'][i]] = {} 
+        output_dict[tab['if'][i]] = {} 
         for col in output_cols:
             if type(tab[col][i]) == np.int64:
-                output_dict[tab['mjds'][i]][col] = int(tab[col][i]) 
+                output_dict[tab['if'][i]][col] = int(tab[col][i]) 
             else: 
-                output_dict[tab['mjds'][i]][col] = tab[col][i] 
+                output_dict[tab['if'][i]][col] = tab[col][i] 
 
     with open(outputfile, 'w') as f: #encoding='utf-8'
         json.dump(output_dict, f, ensure_ascii=False, indent=4) 

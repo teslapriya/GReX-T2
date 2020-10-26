@@ -36,3 +36,13 @@ def test_peak(datasnrs):
 
     assert i == 1376
     assert snr == 117.613
+
+
+def test_json(datasnrs):
+    tab, data, snrs = datasnrs
+    datal = cluster_heimdall.cluster_data(data, return_clusterer=False)
+
+    clsnr = cluster_heimdall.get_peak(datal, snrs)
+    dump_cluster_results(tab, clsnr, 'test.json')
+
+    assert os.path.exists('test.json')
