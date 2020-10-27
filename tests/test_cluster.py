@@ -7,7 +7,7 @@ _install_dir = os.path.abspath(os.path.dirname(__file__))
 @pytest.fixture(scope="module")
 def datasnrs():
     candsfile = os.path.join(_install_dir, 'data/giants.cand')
-    tab, data, snrs = cluster_heimdall.parse_candsfile(candsfile, selectcols=['itime', 'idm', 'ibox'])
+    tab, data, snrs = cluster_heimdall.parse_candsfile(candsfile)
     return tab, data, snrs
 
 
@@ -22,7 +22,7 @@ def test_cluster1(datasnrs):
     datal = cluster_heimdall.cluster_data(data, return_clusterer=False)
 
     assert len(datal) == len(data)
-    assert len(datal[0]) == 4
+    assert len(datal[0]) == 7
 
 
 def test_peak(datasnrs):
@@ -32,10 +32,12 @@ def test_peak(datasnrs):
     clsnr = cluster_heimdall.get_peak(datal, snrs)
     assert len(clsnr) == 1
 
-    i, snr = clsnr[0]
+    i, snr, cb, cc = clsnr[0]
 
     assert i == 1380
     assert snr == 117.613
+    # assert cb ==
+    # assert cc ==
 
 
 def test_json(datasnrs):
@@ -51,3 +53,13 @@ def test_json(datasnrs):
 def test_plot_dmhist(datasnrs):
     tab, data, snrs = datasnrs
     plotting.plot_dm_hist(tab)
+
+
+def test_plot_bt(datasnrs):
+    tab, data, snrs = datasnrs
+    plotting.plot_beam_time(tab)
+
+
+def test_giantst(datasnrs):
+    tab, data, snrs = datasnrs
+    plotting.plot_giants(tab)
