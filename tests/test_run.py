@@ -18,7 +18,7 @@ def test_T2():
     plot_dir : default is "./".
     """
 
-    outputfile="T2_output.txt"
+    outputfile = os.path.join(_install_dir, 'data/T2_output.txt')
     candsfile = os.path.join(_install_dir, 'data/giants_1.cand')
 
     # read in giants 

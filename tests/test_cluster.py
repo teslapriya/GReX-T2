@@ -41,13 +41,14 @@ def test_peak(datasnrs):
 
 
 def test_json(datasnrs):
+    outfile = os.path.join(_install_dir, 'test.json')
     tab, data, snrs = datasnrs
     datal = cluster_heimdall.cluster_data(data, return_clusterer=False)
 
     clsnr = cluster_heimdall.get_peak(datal, snrs)
-    cluster_heimdall.dump_cluster_results(tab, clsnr, 'test.json')
+    cluster_heimdall.dump_cluster_results(tab, clsnr, outfile)
 
-    assert os.path.exists('test.json')
+    assert os.path.exists(outfile)
 
 
 def test_plot_dmhist(datasnrs):
