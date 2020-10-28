@@ -17,7 +17,8 @@ def parse_candsfile(candsfile, selectcols=['itime', 'idm', 'ibox', 'ibeam']):
     (Can add cleaning here, eventually)
     """
 
-    tab = ascii.read(candsfile, names=['snr', 'if', 'itime', 'mjds', 'ibox', 'idm', 'dm', 'ibeam'], guess=True, fast_reader=False)
+    print(candsfile)
+    tab = ascii.read(candsfile, names=['snr', 'if', 'itime', 'mjds', 'ibox', 'idm', 'dm', 'ibeam'], guess=True, fast_reader=False, delimiter='\s')
     tab['ibeam'] = tab['ibeam'].astype(int)
     data = np.lib.recfunctions.structured_to_unstructured(tab[selectcols].as_array())  # ok for single dtype (int)
     snrs = tab['snr']
@@ -71,13 +72,14 @@ def get_peak(datal, snrs):
     """
 
     clsnr = []
-    cl = datal[:, 4]   # hack. should really use table.
-    cnt_beam = datal[:, 5]
-    cnt_cl = datal[:, 6]
+    cl = datal[:, 4].astype(int)   # hack. should really use table.
+    cnt_beam = datal[:, 5].astype(int)
+    cnt_cl = datal[:, 6].astype(int)
     for i in np.unique(cl):
         clusterinds = np.where(i == cl)[0]
         maxsnr = snrs[clusterinds].max()
         imaxsnr = np.where(snrs == maxsnr)[0][0]
+        print(imaxsnr, maxsnr, cnt_beam[i], cnt_cl[i])
         clsnr.append((imaxsnr, maxsnr, cnt_beam[i], cnt_cl[i]))
 
     return clsnr

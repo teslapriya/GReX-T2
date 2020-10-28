@@ -53,7 +53,7 @@ def test_T2(mode, outputfile="T2_output.txt", candsfile="giants.cand.", host="12
     print("========= begin one T2 test: ", mode, "mode ==============")
     # read in giants 
     if mode == "file":
-        tab, data, snrs = T2.cluster_heimdall.parse_candsfile(candsfile, selectcols=['itime', 'dm', 'ibox'])
+        tab, data, snrs = T2.cluster_heimdall.parse_candsfile(candsfile, selectcols=['itime', 'dm', 'ibox', 'ibeam'])
     elif mode == "socket":
         # a better place for socket trails: test_socket.py 
         tab, data, snrs = T2.cluster_heimdall.parse_socket("127.0.0.1", 12345) # use the same host, port with heimdall -coincidencer HOST:PORT 
@@ -61,15 +61,15 @@ def test_T2(mode, outputfile="T2_output.txt", candsfile="giants.cand.", host="12
         print("mode is either file or socket.") 
    
     # T2 cluster 
-    clusterer, data_labeled = T2.cluster_heimdall.cluster_data(data, min_cluster_size=10, min_samples=10, metric='euclidean', allow_single_cluster=True)
+    clusterer, data_labeled = T2.cluster_heimdall.cluster_data(data, min_cluster_size=10, min_samples=10, metric='euclidean', allow_single_cluster=True, return_clusterer=True)
     clsnr = T2.cluster_heimdall.get_peak(data_labeled, snrs) 
     
     # send T2 cluster results to outputfile
     T2.cluster_heimdall.dump_cluster_results(tab, clsnr, outputfile, output_cols=['mjds', 'snr', 'ibox', 'dm'])
     
     if plot: 
-        T2.cluster_heimdall.plot_giants(tab, plot_dir=plot_dir) # plot giants      
-        T2.cluster_heimdall.plot_clustered(clusterer, clsnr, snrs, data, tab, cols=['itime', 'idm', 'ibox'], plot_dir=plot_dir) # plot cluster results  
+        T2.plotting.plot_giants(tab, plot_dir=plot_dir) # plot giants      
+        T2.plotting.plot_clustered(clusterer, clsnr, snrs, data, tab, cols=['itime', 'idm', 'ibox'], plot_dir=plot_dir) # plot cluster results  
     
     print("one T2 test completed (", mode, "mode).\n")
 
@@ -95,13 +95,13 @@ if __name__ == '__main__':
     '''
     
     # test 1: file 
-    test_T2("file", outputfile="T2_output_file.txt", candsfile="giants_1.cand", plot=True, plot_dir="file_")
+    test_T2("file", outputfile="T2_output_file.txt", candsfile="tests/data/giants_1.cand", plot=True, plot_dir="file_")
     
     # test 2: socket, one gulp only 
     #test_T2("socket", outputfile="T2_output_socket.txt", host="127.0.0.1", port=12345, plot=True, plot_dir="socket_")
     
     # test 3: socket, continuously 
-    T2.cluster_heimdall.parse_socket_and_cluster_and_plot(host="127.0.0.1", port=12345, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outputfile="T2_output_socket", plot=True, plot_dir="socket_")
+    T2.socket.parse_socket_and_cluster_and_plot(host="127.0.0.1", port=12345, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outputfile="T2_output_socket", plot=True, plot_dir="socket_")
     
     '''
     # read in and plot giants
