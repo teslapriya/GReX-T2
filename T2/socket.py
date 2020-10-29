@@ -57,7 +57,12 @@ def parse_socket_and_cluster_and_plot(host="127.0.0.1", port=12345, selectcols=[
     gulp_i = 0 # track heimdall gulp number 
     
     while True:
-        clientsocket, address = s.accept() # stores the socket details in 2 variables
+        try:
+            clientsocket, address = s.accept() # stores the socket details in 2 variables
+        except KeyboardInterrupt:
+            logger.info("Escaping socket connection")
+            break
+
         logger.info(f"Connection from {address} has been established")
         gulp_i += 1 
         logger.info(f"gulp {gulp_i}")
@@ -78,7 +83,8 @@ def parse_socket_and_cluster_and_plot(host="127.0.0.1", port=12345, selectcols=[
             # T2 cluster 
             clusterer, data_labeled = cluster_heimdall.cluster_data(data, min_cluster_size=10, min_samples=10, metric='euclidean', allow_single_cluster=True, return_clusterer=True)
             clsnr = cluster_heimdall.get_peak(data_labeled, snrs) 
-    
+            clsnr = cluster_heimdall.filter_clustered(clsnr)
+
             # send T2 cluster results to outputfile
             cluster_heimdall.dump_cluster_results(tab, clsnr, outputfile+str(gulp_i)+".txt", output_cols=['mjds', 'snr', 'ibox', 'dm'])
             

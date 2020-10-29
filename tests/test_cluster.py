@@ -36,12 +36,23 @@ def test_peak(datasnrs):
 
     assert i == 1380
     assert snr == 117.613
+    # TODO
     # assert cb ==
     # assert cc ==
 
 
+def test_filter(datasnrs):
+    tab, data, snrs = datasnrs
+    datal = cluster_heimdall.cluster_data(data, return_clusterer=False)
+
+    clsnr = cluster_heimdall.get_peak(datal, snrs)
+    assert len(clsnr) == 1
+    clsnr = cluster_heimdall.filter_clustered(clsnr, min_snr=1000)
+    assert len(clsnr) == 0
+
+
 def test_json(datasnrs):
-    outfile = os.path.join(_install_dir, 'test.json')
+    outfile = os.path.join(_install_dir, 'trigger.json')
     tab, data, snrs = datasnrs
     datal = cluster_heimdall.cluster_data(data, return_clusterer=False)
 
@@ -58,9 +69,9 @@ def test_plot_dmhist(datasnrs):
 
 def test_plot_bt(datasnrs):
     tab, data, snrs = datasnrs
-    plotting.plot_beam_time(tab)
+    plotting.plot_beam_time(tab, plot_dir=_install_dir)
 
 
 def test_giantst(datasnrs):
     tab, data, snrs = datasnrs
-    plotting.plot_giants(tab)
+    plotting.plot_giants(tab, plot_dir=_install_dir)

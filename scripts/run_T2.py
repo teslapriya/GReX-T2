@@ -37,5 +37,5 @@ def main(argv):
     print('Save plots at "', plotdir) 
 
 if __name__ == '__main__':
-    T2.socket.parse_socket_and_cluster_and_plot(host="127.0.0.1", port=12345, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outputfile="T2_output_socket", plot=True, plot_dir="socket_")
+    T2.socket.parse_socket_and_cluster_and_plot(host="127.0.0.1", port=12345, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outputfile="T2_output_socket", plot=False, plot_dir="socket_")
 

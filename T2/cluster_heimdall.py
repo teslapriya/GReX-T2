@@ -4,7 +4,8 @@
 from astropy.io import ascii
 import numpy as np
 import hdbscan
-import json 
+import json
+import os.path
 import dsautils.dsa_syslog as dsl
 logger = dsl.DsaSyslogger()
 logger.subsystem('software')
@@ -17,16 +18,23 @@ def parse_candsfile(candsfile, selectcols=['itime', 'idm', 'ibox', 'ibeam']):
     (Can add cleaning here, eventually)
     """
 
-    print(candsfile)
-    tab = ascii.read(candsfile, names=['snr', 'if', 'itime', 'mjds', 'ibox', 'idm', 'dm', 'ibeam'], guess=True, fast_reader=False, delimiter='\s')
+    logger.info("Parsing candsfile")
+
+    if os.path.exists(candsfile):
+        logger.info(f'Candsfile {candsfile} is path, so opening it')
+        candsfile = open(candsfile, 'r').read()
+        
+    ncands0 = len(candsfile.split('\n'))
+    candsfile = '\n'.join([line for line in candsfile.split('\n') if line.count(' ') == 7])
+    ncands = len(candsfile.split('\n'))
+    logger.info(f'Received {ncands0} candidates, removed {ncands0-ncands} lines.')
+
+    tab = ascii.read(candsfile, names=['snr', 'if', 'itime', 'mjds', 'ibox', 'idm', 'dm', 'ibeam'], guess=True, fast_reader=False)
     tab['ibeam'] = tab['ibeam'].astype(int)
     data = np.lib.recfunctions.structured_to_unstructured(tab[selectcols].as_array())  # ok for single dtype (int)
     snrs = tab['snr']
     # how to use ibeam?
     
-    logger.info(f"Table has {len(tab)} rows")
-
-    logger.info("Parsed candsfile")
     return tab, data, snrs
 
 
@@ -85,11 +93,33 @@ def get_peak(datal, snrs):
     return clsnr
 
 
-def filter_giants(clsnr):
+def filter_clustered(clsnr, min_snr=None, min_cntb=None, max_cntb=None, min_cntc=None,
+                     max_cntc=None):
     """ Function to select a subset of clustered output.
+    Can set minimum SNR, min/max number of beams in cluster, min/max total count in cluster.
     """
 
-    pass
+    clsnr_out = []
+    for (imaxsnr, snr, cntb, cntc) in clsnr:
+        if min_snr is not None:
+            if snr < min_snr:
+                continue
+        if min_cntb is not None:
+            if cntb < min_cntb:
+                continue
+        if max_cntb is not None:
+            if cntb > max_cntb:
+                continue
+        if min_cntc is not None:
+            if cntc < min_cntc:
+                continue
+        if max_cntc is not None:
+            if cntc > max_cntc:
+                continue
+
+        clsnr_out.append((imaxsnr, snr, cntb, cntc))
+
+    return clsnr_out
 
 
 def dump_cluster_results(tab, clsnr, outputfile, output_cols=['mjds', 'snr', 'ibox', 'dm', 'ibeam']):
@@ -98,15 +128,15 @@ def dump_cluster_results(tab, clsnr, outputfile, output_cols=['mjds', 'snr', 'ib
     output columns output_cols into a jason file outputfile. 
     """
 
-    imaxsnr_arr = [clsnr[i][0] for i in range(len(clsnr))] 
-    output_dict = {} 
-    for i in imaxsnr_arr:
-        output_dict[str(tab['if'][i])] = {} 
+    output_dict = {}
+    for i, (imaxsnr, maxsnr, cnt_beam, cnt_cl) in enumerate(clsnr):
+        output_dict[str(tab['if'][imaxsnr])] = {}
         for col in output_cols:
-            if type(tab[col][i]) == np.int64:
-                output_dict[str(tab['if'][i])][col] = int(tab[col][i]) 
-            else: 
-                output_dict[str(tab['if'][i])][col] = tab[col][i] 
+            if type(tab[col][imaxsnr]) == np.int64:
+                output_dict[str(tab['if'][imaxsnr])][col] = int(tab[col][imaxsnr])
+            else:
+                output_dict[str(tab['if'][imaxsnr])][col] = tab[col][imaxsnr]
+        # add fields from clsnr?
 
     with open(outputfile, 'w') as f: #encoding='utf-8'
         json.dump(output_dict, f, ensure_ascii=False, indent=4) 
