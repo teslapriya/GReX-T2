@@ -136,7 +136,10 @@ def dump_cluster_results(tab, clsnr, outputfile, output_cols=['mjds', 'snr', 'ib
                 output_dict[str(tab['if'][imaxsnr])][col] = int(tab[col][imaxsnr])
             else:
                 output_dict[str(tab['if'][imaxsnr])][col] = tab[col][imaxsnr]
-        # add fields from clsnr?
+
+        # append fields from clsnr for now
+        output_dict[str(tab['if'][imaxsnr])]['nbeam'] = int(cnt_beam)
+        output_dict[str(tab['if'][imaxsnr])]['ncluster'] = int(cnt_cl)
 
     with open(outputfile, 'w') as f: #encoding='utf-8'
         json.dump(output_dict, f, ensure_ascii=False, indent=4) 

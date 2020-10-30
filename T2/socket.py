@@ -18,13 +18,10 @@ def parse_socket(host, ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outp
     selectcol: list of str.  Select columns for clustering. 
     """
 
-    if isinstance(ports, list):
-        nport = len(ports)
-    elif isinstance(ports, int):
-        nport = 1
+    if isinstance(ports, int):
         ports = [ports]
-    else:
-        logger.warning("ports should be int or list of ints")
+
+    assert isinstance(ports, list)
 
     ss = []
     for port in ports:
@@ -50,26 +47,27 @@ def parse_socket(host, ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outp
         logger.info(f"gulp {gulp_i}")
 
         # read in heimdall socket output  
-        receiving = all([len(cl.recv(1)) for cl in cls])           # recieves an alphabet whose ASCII value is the size of the message 
+        receiving = all([len(cl.recv(1)) for cl in cls])           # could also set header as code for gulp number?
         
         if not receiving:
-            logger.info(f"clients are not gulping gulp {gulp_i}.")
-        else: 
+            logger.info(f"not all clients are gulping gulp {gulp_i}.")
+            print(f"not all clients are gulping gulp {gulp_i}.")
+        else:
+            print(f"receiving from all ports")
             logger.info("Reading candsfile...")
             candsfile = ''
             for cl in cls:
                 candsfile += cl.recv(10000000).decode('utf-8')
-                clientsocket.close()
+                cl.close()
                 candsfile += '\n'
-                # need to add \n?
+                print(candsfile)
 
-            print(candsfile)
-            tab, data, snrs = cluster_heimdall.parse_candsfile(candsfile)
-            logger.info(f"Table has {len(tab)} rows")
             try:
+                tab, data, snrs = cluster_heimdall.parse_candsfile(candsfile)
+                logger.info(f"Table has {len(tab)} rows")
                 cluster_and_plot(tab, data, snrs, gulp_i, selectcols=selectcols, outputfile=outputfile, plot_dir=plot_dir)
             except KeyboardInterrupt:
-                logger.info("Escaping plotting")
+                logger.info("Escaping parsing and plotting")
                 break
 
 
