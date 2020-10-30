@@ -8,41 +8,62 @@ logger.subsystem('software')
 logger.app('T2')
 
 
-def parse_socket(host, port, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outputfile=None, plot_dir=None):
+def parse_socket(host, ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outputfile=None, plot_dir=None):
     """ 
     Takes standard MBHeimdall giants socket output and returns full table, classifier inputs and snr tables.
     selectcols will take a subset of the standard MBHeimdall output for cluster. 
     
-    host, port: same with heimdall -coincidencer host:port 
+    host, ports: same with heimdall -coincidencer host:port
+    ports can be list of integers.
     selectcol: list of str.  Select columns for clustering. 
     """
 
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
-    s.bind((host,port))    # assigns the socket with an address
-    s.listen(5)             # accept no. of incoming connections
-    
+    if isinstance(ports, list):
+        nport = len(ports)
+    elif isinstance(ports, int):
+        nport = 1
+        ports = [ports]
+    else:
+        logger.warning("ports should be int or list of ints")
+
+    ss = []
+    for port in ports:
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
+        s.bind((host, port))    # assigns the socket with an address
+        s.listen(5)             # accept no. of incoming connections
+        ss.append(s)
+
     gulp_i = 0 # track heimdall gulp number 
     
     while True:
-        try:
-            clientsocket, address = s.accept() # stores the socket details in 2 variables
-        except KeyboardInterrupt:
-            logger.info("Escaping socket connection")
-            break
+        cls = []
+        for s in ss:
+            try:
+                clientsocket, address = s.accept() # stores the socket details in 2 variables
+                logger.info(f"Connection from {address} has been established")
+                cls.append(clientsocket)
+            except KeyboardInterrupt:
+                logger.info("Escaping socket connection")
+                break
 
-        logger.info(f"Connection from {address} has been established")
         gulp_i += 1 
         logger.info(f"gulp {gulp_i}")
 
         # read in heimdall socket output  
-        ascii_letter = clientsocket.recv(1)           # recieves an alphabet whose ASCII value is the size of the message 
+        receiving = all([len(cl.recv(1)) for cl in cls])           # recieves an alphabet whose ASCII value is the size of the message 
         
-        if len(ascii_letter) == 0:
-            logger.info("This gulp has no heimdall giants output.")
+        if not receiving:
+            logger.info(f"clients are not gulping gulp {gulp_i}.")
         else: 
             logger.info("Reading candsfile...")
-            candsfile = clientsocket.recv(10000000).decode('utf-8')
-            clientsocket.close()   
+            candsfile = ''
+            for cl in cls:
+                candsfile += cl.recv(10000000).decode('utf-8')
+                clientsocket.close()
+                candsfile += '\n'
+                # need to add \n?
+
+            print(candsfile)
             tab, data, snrs = cluster_heimdall.parse_candsfile(candsfile)
             logger.info(f"Table has {len(tab)} rows")
             try:

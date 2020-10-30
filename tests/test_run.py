@@ -13,7 +13,7 @@ def test_T2():
     mode : String. "file" or "socket". 
     outputfile : default is "T2_output.txt".
     candsfile : default is "giants.cand.".
-    host, port : use the same host, port with heimdall -coincidencer HOST:PORT 
+    host, ports : use the same host, port with heimdall -coincidencer HOST:PORT 
     plot : default is True.
     plot_dir : default is "./".
     """

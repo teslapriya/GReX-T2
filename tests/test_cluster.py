@@ -69,9 +69,9 @@ def test_plot_dmhist(datasnrs):
 
 def test_plot_bt(datasnrs):
     tab, data, snrs = datasnrs
-    plotting.plot_beam_time(tab, plot_dir=_install_dir)
+    plotting.plot_beam_time(tab, plot_dir=_install_dir + 'plot_')
 
 
 def test_giantst(datasnrs):
     tab, data, snrs = datasnrs
-    plotting.plot_giants(tab, plot_dir=_install_dir)
+    plotting.plot_giants(tab, plot_dir=_install_dir + 'plot_')
