@@ -148,7 +148,7 @@ def dump_cluster_results_json(tab, clsnr, outputfile, output_cols=['mjds', 'snr'
 def dump_cluster_results_heimdall(tab, clsnr, outputfile): 
     """   
     Takes tab from parse_candsfile and clsnr from get_peak, 
-    output T2-clustered results with the same columns as heimdall.cand into a file outputfile_heimdall_columns. 
+    output T2-clustered results with the same columns as heimdall.cand into a file outputfile.
     The output is in pandas format with column names in the 1st row.
     """
 
@@ -159,6 +159,6 @@ def dump_cluster_results_heimdall(tab, clsnr, outputfile):
     output['members'] = cnt_cl 
     output['ibeam'] = tab['ibeam'][imaxsnr]
 
-    with open(outputfile_heimdall_columns, 'w') as f: 
+    with open(outputfile, 'w') as f: 
         print(output, file=f)
         

@@ -68,7 +68,7 @@ def test_json(datasnrs):
     datal = cluster_heimdall.cluster_data(data, return_clusterer=False)
 
     clsnr = cluster_heimdall.get_peak(datal, snrs)
-    cluster_heimdall.dump_cluster_results_heimdall(tab, clsnr, outputfile)
+    cluster_heimdall.dump_cluster_results_heimdall(tab, clsnr, outfile)
     assert os.path.exists(outfile)
 
 
