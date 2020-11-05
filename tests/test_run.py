@@ -31,7 +31,7 @@ def test_T2():
     clsnr = T2.cluster_heimdall.get_peak(data_labeled, snrs) 
     
     # send T2 cluster results to outputfile
-    T2.cluster_heimdall.dump_cluster_results(tab, clsnr, outputfile, output_cols=['mjds', 'snr', 'ibox', 'dm'])
+    T2.cluster_heimdall.dump_cluster_results_json(tab, clsnr, outputfile, output_cols=['mjds', 'snr', 'ibox', 'dm'])
     
 #    if plot: 
 #        T2.cluster_heimdall.plot_giants(tab, plot_dir=plot_dir) # plot giants      

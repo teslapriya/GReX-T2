@@ -122,7 +122,7 @@ def filter_clustered(clsnr, min_snr=None, min_cntb=None, max_cntb=None, min_cntc
     return clsnr_out
 
 
-def dump_cluster_results(tab, clsnr, outputfile, output_cols=['mjds', 'snr', 'ibox', 'dm', 'ibeam']):
+def dump_cluster_results_json(tab, clsnr, outputfile, output_cols=['mjds', 'snr', 'ibox', 'dm', 'ibeam']):
     """   
     Takes tab from parse_candsfile and clsnr from get_peak, 
     output columns output_cols into a jason file outputfile. 
@@ -145,3 +145,20 @@ def dump_cluster_results(tab, clsnr, outputfile, output_cols=['mjds', 'snr', 'ib
         json.dump(output_dict, f, ensure_ascii=False, indent=4) 
     
 
+def dump_cluster_results_heimdall(tab, clsnr, outputfile): 
+    """   
+    Takes tab from parse_candsfile and clsnr from get_peak, 
+    output T2-clustered results with the same columns as heimdall.cand into a file outputfile.
+    The output is in pandas format with column names in the 1st row.
+    """
+
+    imaxsnr = [clsnr[i][0] for i in range(len(clsnr))] 
+    cnt_cl =  [clsnr[i][3] for i in range(len(clsnr))] 
+    
+    output = tab['snr','if','itime', 'mjds','ibox','idm', 'dm'][imaxsnr] 
+    output['members'] = cnt_cl 
+    output['ibeam'] = tab['ibeam'][imaxsnr]
+
+    with open(outputfile, 'w') as f: 
+        print(output, file=f)
+        
