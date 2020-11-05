@@ -57,10 +57,14 @@ def parse_socket(host, ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outp
             logger.info("Reading candsfile...")
             candsfile = ''
             for cl in cls:
-                candsfile += cl.recv(10000000).decode('utf-8')
-                cl.close()
-                candsfile += '\n'
-                print(candsfile)
+                ascii_letter = cl.recv(1)           # recieves an alphabet whose ASCII value is the size of the message 
+                if len(ascii_letter) == 0:
+                    logger.info(f"gulp {gulp_i} has no giant.")
+                else: 
+                    candsfile += cl.recv(10000000).decode('utf-8')
+                    cl.close()
+                    candsfile += '\n'
+                    print(candsfile)
 
             try:
                 tab, data, snrs = cluster_heimdall.parse_candsfile(candsfile)
