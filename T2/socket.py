@@ -43,32 +43,42 @@ def parse_socket(host, ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outp
                 logger.info("Escaping socket connection")
                 break
 
-        gulp_i += 1 
-        logger.info(f"gulp {gulp_i}")
-
         # read in heimdall socket output  
-        receiving = all([len(cl.recv(1)) for cl in cls])           # could also set header as code for gulp number?
-        
-        if not receiving:
+        logger.info(f"Reading candsfile from {len(cls)} sockets...")
+        candsfile = ''
+        headers = []
+        for i, cl in enumerate(cls):
+            print(f'Checking gulp {gulp_i} from client {i}')
+            cf = cl.recv(10000000).decode('utf-8')
+            cl.close()
+            print("received cf:")
+            print(cf)
+            headers.append(cf.split('\n')[0])
+            cf = '\n'.join(cf.split('\n')[1:])
+            candsfile += cf
+            candsfile += '\n'
+
+        print(f"headers {headers}")
+        if len(headers) != len(cls):
             logger.info(f"not all clients are gulping gulp {gulp_i}.")
             print(f"not all clients are gulping gulp {gulp_i}.")
         else:
             print(f"receiving from all ports")
-            logger.info("Reading candsfile...")
-            candsfile = ''
-            for cl in cls:
-                candsfile += cl.recv(10000000).decode('utf-8')
-                cl.close()
-                candsfile += '\n'
-                print(candsfile)
 
-            try:
-                tab, data, snrs = cluster_heimdall.parse_candsfile(candsfile)
-                logger.info(f"Table has {len(tab)} rows")
-                cluster_and_plot(tab, data, snrs, gulp_i, selectcols=selectcols, outputfile=outputfile, plot_dir=plot_dir)
-            except KeyboardInterrupt:
-                logger.info("Escaping parsing and plotting")
-                break
+        print("created candsfile:")
+        print(candsfile)
+        if candsfile == '\n':  # skip empty candsfile
+            continue
+
+        try:
+            tab, data, snrs = cluster_heimdall.parse_candsfile(candsfile)
+            logger.info(f"Table has {len(tab)} rows")
+            cluster_and_plot(tab, data, snrs, gulp_i, selectcols=selectcols, outputfile=outputfile, plot_dir=plot_dir)
+        except KeyboardInterrupt:
+            logger.info("Escaping parsing and plotting")
+            break
+
+        gulp_i += 1
 
 
 def cluster_and_plot(tab, data, snrs, gulp_i, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outputfile=None, plot_dir=None):
