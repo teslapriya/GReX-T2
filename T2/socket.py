@@ -93,7 +93,7 @@ def cluster_and_plot(tab, data, snrs, gulp_i, selectcols=['itime', 'idm', 'ibox'
 
     # send T2 cluster results to outputfile
     if outputfile is not None:
-        cluster_heimdall.dump_cluster_results(tab, clsnr, outputfile+str(gulp_i)+".txt", output_cols=['mjds', 'snr', 'ibox', 'dm'])
+        cluster_heimdall.dump_cluster_results_heimdall(tab, clsnr, outputfile+str(gulp_i)+".cand")
             
     if plot_dir is not None: 
          plotting.plot_giants(tab, plot_dir=plot_dir+str(gulp_i)+"_") # plot giants      
