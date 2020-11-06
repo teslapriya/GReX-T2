@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # dsahead python 3.7
 from astropy.io import ascii
+from astropy.io.ascii.core import InconsistentTableError
 import numpy as np
 import hdbscan
 import json
@@ -29,7 +30,13 @@ def parse_candsfile(candsfile, selectcols=['itime', 'idm', 'ibox', 'ibeam']):
     ncands = len(candsfile.split('\n'))
     logger.info(f'Received {ncands0} candidates, removed {ncands0-ncands} lines.')
 
-    tab = ascii.read(candsfile, names=['snr', 'if', 'itime', 'mjds', 'ibox', 'idm', 'dm', 'ibeam'], guess=True, fast_reader=False)
+    try:
+        tab = ascii.read(candsfile, names=['snr', 'if', 'itime', 'mjds', 'ibox', 'idm', 'dm', 'ibeam'], guess=True, fast_reader=False, format='no_header')
+    except InconsistentTableError:
+        print('Inconsistent table. Skipping...')
+        return ([], [], [])
+
+    print(f'max ibeam: {max(tab["ibeam"])}')
     tab['ibeam'] = tab['ibeam'].astype(int)
     data = np.lib.recfunctions.structured_to_unstructured(tab[selectcols].as_array())  # ok for single dtype (int)
     snrs = tab['snr']
@@ -87,7 +94,7 @@ def get_peak(datal, snrs):
         clusterinds = np.where(i == cl)[0]
         maxsnr = snrs[clusterinds].max()
         imaxsnr = np.where(snrs == maxsnr)[0][0]
-        print(imaxsnr, maxsnr, cnt_beam[i], cnt_cl[i])
+        print(f"maxsnr {maxsnr}, cnt_bbeam {cnt_beam[i]}, cnt_cl {cnt_cl[i]}")
         clsnr.append((imaxsnr, maxsnr, cnt_beam[i], cnt_cl[i]))
 
     return clsnr
@@ -159,6 +166,4 @@ def dump_cluster_results_heimdall(tab, clsnr, outputfile):
     output['members'] = cnt_cl 
     output['ibeam'] = tab['ibeam'][imaxsnr]
 
-    with open(outputfile, 'w') as f: 
-        print(output, file=f)
-        
+    output.write(outputfile, format='ascii')
