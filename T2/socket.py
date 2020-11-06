@@ -30,8 +30,6 @@ def parse_socket(host, ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outp
         s.listen(5)             # accept no. of incoming connections
         ss.append(s)
 
-    gulp_i = 0 # track heimdall gulp number 
-    
     while True:
         cls = []
         for s in ss:
@@ -46,26 +44,31 @@ def parse_socket(host, ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outp
         # read in heimdall socket output  
         logger.info(f"Reading candsfile from {len(cls)} sockets...")
         candsfile = ''
-        headers = []
+        gulps = []
         for i, cl in enumerate(cls):
-            print(f'Checking gulp {gulp_i} from client {i}')
             cf = cl.recv(10000000).decode('utf-8')
             cl.close()
             print("received cf:")
             print(cf)
-            headers.append(cf.split('\n')[0])
+            gulps.append(cf.split('\n')[0])
             cf = '\n'.join(cf.split('\n')[1:])
             candsfile += cf
             candsfile += '\n'
 
-        print(f"headers {headers}")
-        if len(headers) != len(cls):
+        print(f'Received gulp_i {gulps}')
+        if len(gulps) != len(cls):
             logger.info(f"not all clients are gulping gulp {gulp_i}.")
-            print(f"not all clients are gulping gulp {gulp_i}.")
+            print(f"not all clients are gulping gulp {gulp_i}. Skipping...")
+            continue
         else:
             print(f"receiving from all ports")
 
-        print("created candsfile:")
+        if len(set(gulps)) > 1:
+            logger.info(f"not all clients received from same gulp: {set(gulps)}")
+            print(f"not all clients received from same gulp: {set(gulps)}. Skipping")
+            continue
+
+        print("Created candsfile from all clients:")
         print(candsfile)
         if candsfile == '\n':  # skip empty candsfile
             continue
@@ -73,12 +76,16 @@ def parse_socket(host, ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outp
         try:
             tab, data, snrs = cluster_heimdall.parse_candsfile(candsfile)
             logger.info(f"Table has {len(tab)} rows")
-            cluster_and_plot(tab, data, snrs, gulp_i, selectcols=selectcols, outputfile=outputfile, plot_dir=plot_dir)
+            if len(tab) == 0 and len(data) == 0 and len(snrs) == 0:
+                continue
+            assert len(set(gulps)) == 1
+            cluster_and_plot(tab, data, snrs, set(gulps).pop(), selectcols=selectcols, outputfile=outputfile, plot_dir=plot_dir)
         except KeyboardInterrupt:
             logger.info("Escaping parsing and plotting")
             break
-
-        gulp_i += 1
+        except OverflowError:
+            logger.warning("overflowing value. Skipping this gulp...")
+            continue
 
 
 def cluster_and_plot(tab, data, snrs, gulp_i, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outputfile=None, plot_dir=None):
