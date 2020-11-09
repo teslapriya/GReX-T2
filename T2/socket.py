@@ -32,28 +32,38 @@ def parse_socket(host, ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outp
 
     while True:
         cls = []
-        for s in ss:
-            try:
+        try:
+            for s in ss:
                 clientsocket, address = s.accept() # stores the socket details in 2 variables
                 logger.info(f"Connection from {address} has been established")
                 cls.append(clientsocket)
-            except KeyboardInterrupt:
-                logger.info("Escaping socket connection")
-                break
+        except KeyboardInterrupt:
+            logger.info("Escaping socket connection")
+            break
 
         # read in heimdall socket output  
         logger.info(f"Reading candsfile from {len(cls)} sockets...")
         candsfile = ''
         gulps = []
         for i, cl in enumerate(cls):
-            cf = cl.recv(10000000).decode('utf-8')
+            #cf = cl.recv(10000000).decode('utf-8')  # not guaranteed to all from a gulp
+            cf = recvall(cl, 100000000).decode('utf-8')
             cl.close()
-            print("received cf:")
-            print(cf)
-            gulps.append(cf.split('\n')[0])
-            cf = '\n'.join(cf.split('\n')[1:])
-            candsfile += cf
-            candsfile += '\n'
+
+            gulp, *lines = cf.split('\n')
+            try:
+                gulp = int(gulp)
+                gulps.append(gulp)
+                print(f"received gulp {gulp} with {len(lines)} lines")
+            except ValueError:
+                print(f'Could not get int from gulp: {gulp}.')
+                continue
+
+            if len(lines) > 1:
+                if len(lines[0]) > 0:
+                    print("first line:")
+                    print('\t', lines[0])
+                    candsfile += '\n'.join(lines)
 
         print(f'Received gulp_i {gulps}')
         if len(gulps) != len(cls):
@@ -69,8 +79,8 @@ def parse_socket(host, ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outp
             continue
 
         print("Created candsfile from all clients:")
-        print(candsfile)
-        if candsfile == '\n':  # skip empty candsfile
+        #print(candsfile)
+        if candsfile == '\n' or candsfile == '':  # skip empty candsfile
             continue
 
         try:
@@ -86,6 +96,23 @@ def parse_socket(host, ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outp
         except OverflowError:
             logger.warning("overflowing value. Skipping this gulp...")
             continue
+
+
+def recvall(sock, n):
+    """
+    helper function to receive all bytes from a socket
+    sock: open socket
+    n: maximum number of bytes to expect. you can make this ginormous!
+    """
+
+    data = bytearray()
+    while len(data) < n:
+        packet = sock.recv(n - len(data))
+        if not packet:
+            return data
+        data.extend(packet)
+
+    return data
 
 
 def cluster_and_plot(tab, data, snrs, gulp_i, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outputfile=None, plot_dir=None):
