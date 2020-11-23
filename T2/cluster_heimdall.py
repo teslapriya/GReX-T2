@@ -137,16 +137,16 @@ def dump_cluster_results_json(tab, clsnr, outputfile, output_cols=['mjds', 'snr'
 
     output_dict = {}
     for i, (imaxsnr, maxsnr, cnt_beam, cnt_cl) in enumerate(clsnr):
-        output_dict[str(tab['if'][imaxsnr])] = {}
+        output_dict[str(tab['itime'][imaxsnr])] = {}
         for col in output_cols:
             if type(tab[col][imaxsnr]) == np.int64:
-                output_dict[str(tab['if'][imaxsnr])][col] = int(tab[col][imaxsnr])
+                output_dict[str(tab['itime'][imaxsnr])][col] = int(tab[col][imaxsnr])
             else:
-                output_dict[str(tab['if'][imaxsnr])][col] = tab[col][imaxsnr]
+                output_dict[str(tab['itime'][imaxsnr])][col] = tab[col][imaxsnr]
 
         # append fields from clsnr for now
-        output_dict[str(tab['if'][imaxsnr])]['nbeam'] = int(cnt_beam)
-        output_dict[str(tab['if'][imaxsnr])]['ncluster'] = int(cnt_cl)
+        output_dict[str(tab['itime'][imaxsnr])]['nbeam'] = int(cnt_beam)
+        output_dict[str(tab['itime'][imaxsnr])]['ncluster'] = int(cnt_cl)
 
     with open(outputfile, 'w') as f: #encoding='utf-8'
         json.dump(output_dict, f, ensure_ascii=False, indent=4) 
