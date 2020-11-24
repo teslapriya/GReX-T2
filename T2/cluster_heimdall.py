@@ -158,24 +158,21 @@ def dump_cluster_results_json(tab, clsnr, outputfile, output_cols=['mjds', 'snr'
     with open(outputfile, 'w') as f: #encoding='utf-8'
         json.dump(output_dict, f, ensure_ascii=False, indent=4) 
 
-    snrmin = 8
-    dmmin = 40
-    boxmax = 16
-    if trigger:
+    if trigger and len(output_dict):
         itimes = list(output_dict.keys())
-        for i, dd in enumerate(output_dict.values()):
-            send = True
-            for kk, vv in dd.items():
-                if kk == 'dm':
-                    if vv < dmmin:
-                        send = False
-                elif kk == 'snr':
-                    if vv < snrmin:
-                        send = False
-                elif kk == 'ibox':
-                    if vv > boxmax:
-                        send = False
-            itime = (int(itimes[i])-477)*16
+#        for i, dd in enumerate(output_dict.values()):
+#            send = True
+#            for kk, vv in dd.items():
+#                if kk == 'dm':
+#                    if vv < dmmin:
+#                        send = False
+#                elif kk == 'snr':
+#                    if vv < snrmin:
+#                        send = False
+#                elif kk == 'ibox':
+#                    if vv > boxmax:
+#                        send = False
+        itime = (int(itimes[0])-477)*16  # just take first
         ds.put_dict('/cmd/corr/0', {'cmd': 'trigger', 'val': f'{itime}'})
 
 

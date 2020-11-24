@@ -124,13 +124,12 @@ def cluster_and_plot(tab, data, snrs, gulp_i, selectcols=['itime', 'idm', 'ibox'
     # cluster
     data_labeled = cluster_heimdall.cluster_data(data, metric='euclidean', allow_single_cluster=True, return_clusterer=False)
     clsnr = cluster_heimdall.get_peak(data_labeled, snrs) 
-    clsnr = cluster_heimdall.filter_clustered(clsnr)
+    clsnr = cluster_heimdall.filter_clustered(clsnr, min_snr=8)
+    print(f'{len(clsnr)} candidates after filtering')
 
     # send T2 cluster results to outputfile
-    if outputfile is not None:
+    if outputfile is not None and len(clsnr):
         cluster_heimdall.dump_cluster_results_heimdall(tab, clsnr, outputfile+str(gulp_i)+".cand")
-
-    if outputfile is not None:
         cluster_heimdall.dump_cluster_results_json(tab, clsnr, outputfile+str(gulp_i)+".json", trigger=trigger)
 
 #    if plot_dir is not None: 
