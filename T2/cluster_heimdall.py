@@ -7,6 +7,8 @@ import numpy as np
 import hdbscan
 import json
 import os.path
+from dsautils import dsa_store
+ds = dsa_store.DsaStore()
 import dsautils.dsa_syslog as dsl
 logger = dsl.DsaSyslogger()
 logger.subsystem('software')
@@ -19,16 +21,14 @@ def parse_candsfile(candsfile, selectcols=['itime', 'idm', 'ibox', 'ibeam']):
     (Can add cleaning here, eventually)
     """
 
-    logger.info("Parsing candsfile")
-
     if os.path.exists(candsfile):
-        logger.info(f'Candsfile {candsfile} is path, so opening it')
+        print(f'Candsfile {candsfile} is path, so opening it')
         candsfile = open(candsfile, 'r').read()
-        
-    ncands0 = len(candsfile.split('\n'))
-    candsfile = '\n'.join([line for line in candsfile.split('\n') if line.count(' ') == 7])
-    ncands = len(candsfile.split('\n'))
-    logger.info(f'Received {ncands0} candidates, removed {ncands0-ncands} lines.')
+    else:
+        ncands = len(candsfile.split('\n'))-1
+        print(f'Received {ncands} candidates')
+#    candsfile = '\n'.join([line for line in candsfile.split('\n') if line.count(' ') == 7])
+#    print(f'Received {ncands0} candidates, removed {ncands0-ncands} lines.')
 
     try:
         tab = ascii.read(candsfile, names=['snr', 'if', 'itime', 'mjds', 'ibox', 'idm', 'dm', 'ibeam'], guess=True, fast_reader=False, format='no_header')
@@ -36,7 +36,6 @@ def parse_candsfile(candsfile, selectcols=['itime', 'idm', 'ibox', 'ibeam']):
         print('Inconsistent table. Skipping...')
         return ([], [], [])
 
-    print(f'max ibeam: {max(tab["ibeam"])}')
     tab['ibeam'] = tab['ibeam'].astype(int)
     data = np.lib.recfunctions.structured_to_unstructured(tab[selectcols].as_array())  # ok for single dtype (int)
     snrs = tab['snr']
@@ -49,18 +48,25 @@ def cluster_data(data, min_cluster_size=3, min_samples=5, metric='hamming', retu
     """ Take data from parse_candsfile and identify clusters via hamming metric.
     """
 
-    clusterer = hdbscan.HDBSCAN(metric=metric, min_cluster_size=min_cluster_size,
-                                min_samples=min_samples, cluster_selection_method='eom',
-                                allow_single_cluster=allow_single_cluster).fit(data) 
+    try:
+        clusterer = hdbscan.HDBSCAN(metric=metric, min_cluster_size=min_cluster_size,
+                                    min_samples=min_samples, cluster_selection_method='eom',
+                                    allow_single_cluster=allow_single_cluster).fit(data) 
 
-    nclustered = np.max(clusterer.labels_ + 1) 
-    nunclustered = len(np.where(clusterer.labels_ == -1)[0]) 
+        nclustered = np.max(clusterer.labels_ + 1) 
+        nunclustered = len(np.where(clusterer.labels_ == -1)[0]) 
+        cl = clusterer.labels_
+    except ValueError:
+        logger.info("Clustering did not run. Each point assigned to unique cluster.")
+        cl = np.arange(len(data))
+        nclustered = 0
+        nunclustered = len(cl)
+
+    print(f'Found {nclustered} clustered and {nunclustered} unclustered rows')
     logger.info('Found {0} clustered and {1} unclustered rows'.format(nclustered, nunclustered))
-    logger.info('All labels: {0}'.format(np.unique(clusterer.labels_)))
 
     # hack assumes fixed columns
     bl = data[:, 3]
-    cl = clusterer.labels_
     cntb, cntc = np.zeros((len(data), 1), dtype=int), np.zeros((len(data), 1), dtype=int)
     ucl = np.unique(cl)
 
@@ -73,7 +79,7 @@ def cluster_data(data, min_cluster_size=3, min_samples=5, metric='hamming', retu
             cntb[wwb] = len(wwb[0]) 
 
     # append useful metastats to original data
-    data_labeled = np.hstack((data, clusterer.labels_[:,None], cntb, cntc)) 
+    data_labeled = np.hstack((data, cl[:,None], cntb, cntc)) 
     
     if return_clusterer:
         return clusterer, data_labeled
@@ -94,8 +100,8 @@ def get_peak(datal, snrs):
         clusterinds = np.where(i == cl)[0]
         maxsnr = snrs[clusterinds].max()
         imaxsnr = np.where(snrs == maxsnr)[0][0]
-        print(f"maxsnr {maxsnr}, cnt_bbeam {cnt_beam[i]}, cnt_cl {cnt_cl[i]}")
-        clsnr.append((imaxsnr, maxsnr, cnt_beam[i], cnt_cl[i]))
+        print(f"\tCluster {imaxsnr}: maxsnr {maxsnr}, cnt_bbeam {cnt_beam[imaxsnr]}, cnt_cl {cnt_cl[imaxsnr]}")
+        clsnr.append((imaxsnr, maxsnr, cnt_beam[imaxsnr], cnt_cl[imaxsnr]))
 
     return clsnr
 
@@ -129,10 +135,11 @@ def filter_clustered(clsnr, min_snr=None, min_cntb=None, max_cntb=None, min_cntc
     return clsnr_out
 
 
-def dump_cluster_results_json(tab, clsnr, outputfile, output_cols=['mjds', 'snr', 'ibox', 'dm', 'ibeam']):
+def dump_cluster_results_json(tab, clsnr, outputfile, output_cols=['mjds', 'snr', 'ibox', 'dm', 'ibeam'], trigger=False):
     """   
     Takes tab from parse_candsfile and clsnr from get_peak, 
     output columns output_cols into a jason file outputfile. 
+    trigger is bool to update DsaStore to trigger data dump.
     """
 
     output_dict = {}
@@ -150,7 +157,27 @@ def dump_cluster_results_json(tab, clsnr, outputfile, output_cols=['mjds', 'snr'
 
     with open(outputfile, 'w') as f: #encoding='utf-8'
         json.dump(output_dict, f, ensure_ascii=False, indent=4) 
-    
+
+    snrmin = 8
+    dmmin = 40
+    boxmax = 16
+    if trigger:
+        itimes = list(output_dict.keys())
+        for i, dd in enumerate(output_dict.values()):
+            send = True
+            for kk, vv in dd.items():
+                if kk == 'dm':
+                    if vv < dmmin:
+                        send = False
+                elif kk == 'snr':
+                    if vv < snrmin:
+                        send = False
+                elif kk == 'ibox':
+                    if vv > boxmax:
+                        send = False
+            itime = (int(itimes[i])-477)*16
+        ds.put_dict('/cmd/corr/0', {'cmd': 'trigger', 'val': f'{itime}'})
+
 
 def dump_cluster_results_heimdall(tab, clsnr, outputfile): 
     """   

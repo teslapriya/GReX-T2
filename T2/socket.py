@@ -8,7 +8,7 @@ logger.subsystem('software')
 logger.app('T2')
 
 
-def parse_socket(host, ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outputfile=None, plot_dir=None):
+def parse_socket(host, ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outputfile=None, plot_dir=None, trigger=False):
     """ 
     Takes standard MBHeimdall giants socket output and returns full table, classifier inputs and snr tables.
     selectcols will take a subset of the standard MBHeimdall output for cluster. 
@@ -54,15 +54,15 @@ def parse_socket(host, ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outp
             try:
                 gulp = int(gulp)
                 gulps.append(gulp)
-                print(f"received gulp {gulp} with {len(lines)} lines")
+#                print(f"received gulp {gulp} with {len(lines)-1} lines")
             except ValueError:
                 print(f'Could not get int from gulp: {gulp}.')
                 continue
 
             if len(lines) > 1:
                 if len(lines[0]) > 0:
-                    print("first line:")
-                    print('\t', lines[0])
+#                    print("first line:")
+#                    print('\t', lines[0])
                     candsfile += '\n'.join(lines)
 
         print(f'Received gulp_i {gulps}')
@@ -71,15 +71,14 @@ def parse_socket(host, ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outp
             print(f"not all clients are gulping gulp {gulp_i}. Skipping...")
             continue
         else:
-            print(f"receiving from all ports")
+            #print(f"receiving from all ports")
+            pass
 
         if len(set(gulps)) > 1:
             logger.info(f"not all clients received from same gulp: {set(gulps)}")
             print(f"not all clients received from same gulp: {set(gulps)}. Skipping")
             continue
 
-        print("Created candsfile from all clients:")
-        #print(candsfile)
         if candsfile == '\n' or candsfile == '':  # skip empty candsfile
             continue
 
@@ -89,7 +88,8 @@ def parse_socket(host, ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outp
             if len(tab) == 0 and len(data) == 0 and len(snrs) == 0:
                 continue
             assert len(set(gulps)) == 1
-            cluster_and_plot(tab, data, snrs, set(gulps).pop(), selectcols=selectcols, outputfile=outputfile, plot_dir=plot_dir)
+            cluster_and_plot(tab, data, snrs, set(gulps).pop(), selectcols=selectcols, outputfile=outputfile, plot_dir=plot_dir,
+                             trigger=trigger)
         except KeyboardInterrupt:
             logger.info("Escaping parsing and plotting")
             break
@@ -115,20 +115,24 @@ def recvall(sock, n):
     return data
 
 
-def cluster_and_plot(tab, data, snrs, gulp_i, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outputfile=None, plot_dir=None):
+def cluster_and_plot(tab, data, snrs, gulp_i, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outputfile=None, plot_dir=None,
+                     trigger=False):
     """ 
     Run clustering and plotting on read data.
     """
 
-    # cluster 
-    clusterer, data_labeled = cluster_heimdall.cluster_data(data, min_cluster_size=10, min_samples=10, metric='euclidean', allow_single_cluster=True, return_clusterer=True)
+    # cluster
+    data_labeled = cluster_heimdall.cluster_data(data, metric='euclidean', allow_single_cluster=True, return_clusterer=False)
     clsnr = cluster_heimdall.get_peak(data_labeled, snrs) 
     clsnr = cluster_heimdall.filter_clustered(clsnr)
 
     # send T2 cluster results to outputfile
     if outputfile is not None:
         cluster_heimdall.dump_cluster_results_heimdall(tab, clsnr, outputfile+str(gulp_i)+".cand")
-            
-    if plot_dir is not None: 
-         plotting.plot_giants(tab, plot_dir=plot_dir+str(gulp_i)+"_") # plot giants      
-         plotting.plot_clustered(clusterer, clsnr, snrs, data, tab, cols=['itime', 'idm', 'ibox'], plot_dir=plot_dir+str(gulp_i)+"_") # plot cluster results  
+
+    if outputfile is not None:
+        cluster_heimdall.dump_cluster_results_json(tab, clsnr, outputfile+str(gulp_i)+".json", trigger=trigger)
+
+#    if plot_dir is not None: 
+#         plotting.plot_giants(tab, plot_dir=plot_dir+str(gulp_i)+"_") # plot giants      
+#         plotting.plot_clustered(clusterer, clsnr, snrs, data, tab, cols=['itime', 'idm', 'ibox'], plot_dir=plot_dir+str(gulp_i)+"_") # plot cluster results  
