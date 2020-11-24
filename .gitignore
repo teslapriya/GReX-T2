@@ -2,3 +2,5 @@ dist
 build
 __pycache__
 */__pycache__
+RELEASE-VERSION
+dsa110_T2.egg-info
