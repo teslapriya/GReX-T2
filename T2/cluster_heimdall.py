@@ -170,7 +170,7 @@ def dump_cluster_results_json(tab, outputfile, output_cols=['mjds', 'snr', 'ibox
                 output_dict[str(row['itime'])][col] = row[col]
 
     with open(outputfile, 'w') as f: #encoding='utf-8'
-        print(f'Writing {len(output_dict)} candidates to json')
+        print(f'Writing {len(output_dict)} candidates to json {outputfile}')
         json.dump(output_dict, f, ensure_ascii=False, indent=4) 
 
     if trigger and len(tab) and (len(tab) < max_ncl):

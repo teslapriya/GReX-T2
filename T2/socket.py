@@ -102,9 +102,9 @@ def cluster_and_plot(tab, gulp_i, selectcols=['itime', 'idm', 'ibox', 'ibeam'], 
 
     # TODO: put these in json config file
     min_dm = 50  # smallest dm in filtering
-    max_ibox = 16  # largest ibox in filtering
-    min_snr = 8  # smallest snr in filtering
-    max_ncl = 10  # largest number of clusters allowed in triggering
+    max_ibox = 8  # largest ibox in filtering
+    min_snr = 10  # smallest snr in filtering
+    max_ncl = 5  # largest number of clusters allowed in triggering
 
     # cluster
     cluster_heimdall.cluster_data(tab, metric='euclidean', allow_single_cluster=True, return_clusterer=False)
@@ -114,7 +114,7 @@ def cluster_and_plot(tab, gulp_i, selectcols=['itime', 'idm', 'ibox', 'ibeam'], 
     # send T2 cluster results to outputfile
     if outputfile is not None and len(tab3):
 #        cluster_heimdall.dump_cluster_results_heimdall(tab, clsnr, outputfile+str(gulp_i)+".cand")
-        cluster_heimdall.dump_cluster_results_json(tab, outputfile+str(gulp_i)+".json", trigger=trigger, max_ncl=max_ncl)
+        cluster_heimdall.dump_cluster_results_json(tab3, outputfile+str(gulp_i)+".json", trigger=trigger, max_ncl=max_ncl)
 
 #    if plot_dir is not None: 
 #         plotting.plot_giants(tab, plot_dir=plot_dir+str(gulp_i)+"_") # plot giants      
