@@ -128,7 +128,7 @@ def filter_clustered(tab, min_snr=None, min_dm=None, max_ibox=None, min_cntb=Non
     Can set minimum SNR, min/max number of beams in cluster, min/max total count in cluster.
     """
 
-#    for (imaxsnr, snr, cntb, cntc) in clsnr:
+ #    for (imaxsnr, snr, cntb, cntc) in clsnr:
     good = [True] * len(tab)
 
     if min_snr is not None:
@@ -153,7 +153,7 @@ def filter_clustered(tab, min_snr=None, min_dm=None, max_ibox=None, min_cntb=Non
     return tab_out
 
 
-def dump_cluster_results_json(tab, clsnr, outputfile, output_cols=['mjds', 'snr', 'ibox', 'dm', 'ibeam'], trigger=False):
+def dump_cluster_results_json(tab, outputfile, output_cols=['mjds', 'snr', 'ibox', 'dm', 'ibeam', 'cntb', 'cntc'], trigger=False, max_cl=10):
     """   
     Takes tab from parse_candsfile and clsnr from get_peak, 
     output columns output_cols into a jason file outputfile. 
@@ -161,48 +161,35 @@ def dump_cluster_results_json(tab, clsnr, outputfile, output_cols=['mjds', 'snr'
     """
 
     output_dict = {}
-    for i, (imaxsnr, maxsnr, cnt_beam, cnt_cl) in enumerate(clsnr):
-        output_dict[str(tab['itime'][imaxsnr])] = {}
+    for i, row in enumerate(tab):
+        output_dict[str(row['itime'])] = {}
         for col in output_cols:
-            if type(tab[col][imaxsnr]) == np.int64:
-                output_dict[str(tab['itime'][imaxsnr])][col] = int(tab[col][imaxsnr])
+            if type(row[col]) == np.int64:
+                output_dict[str(row['itime'])][col] = int(row[col])
             else:
-                output_dict[str(tab['itime'][imaxsnr])][col] = tab[col][imaxsnr]
-
-        # append fields from clsnr for now
-        output_dict[str(tab['itime'][imaxsnr])]['nbeam'] = int(cnt_beam)
-        output_dict[str(tab['itime'][imaxsnr])]['ncluster'] = int(cnt_cl)
+                output_dict[str(row['itime'])][col] = row[col]
 
     with open(outputfile, 'w') as f: #encoding='utf-8'
-        print('Writing candidates to json')
+        print(f'Writing {len(output_dict)} candidates to json')
         json.dump(output_dict, f, ensure_ascii=False, indent=4) 
 
-    if trigger and len(output_dict):
-        print('*Triggering on first candidate*')
+    if trigger and len(tab) and (len(tab) < max_cl):
         itimes = list(output_dict.keys())
-#        for i, dd in enumerate(output_dict.values()):
-#            send = True
-#            for kk, vv in dd.items():
-#                if kk == 'dm':
-#                    if vv < dmmin:
-#                        send = False
-#                elif kk == 'snr':
-#                    if vv < snrmin:
-#                        send = False
-#                elif kk == 'ibox':
-#                    if vv > boxmax:
-#                        send = False
-        itime = (int(itimes[0])-477)*16  # just take first
+        maxsnr = tab['snr'].max()
+        imaxsnr = np.where(tab['snr'] == maxsnr)[0][0]
+        print(f'Triggering on candidate {imaxsnr} with SNR={maxsnr}')
+        itime = (int(itimes[imaxsnr])-477)*16
         ds.put_dict('/cmd/corr/0', {'cmd': 'trigger', 'val': f'{itime}'})
 
 
-def dump_cluster_results_heimdall(tab, clsnr, outputfile): 
+def dump_cluster_results_heimdall(tab, outputfile): 
     """   
     Takes tab from parse_candsfile and clsnr from get_peak, 
     output T2-clustered results with the same columns as heimdall.cand into a file outputfile.
     The output is in pandas format with column names in the 1st row.
     """
 
+    # **TODO: remove clsnr**
     imaxsnr = [clsnr[i][0] for i in range(len(clsnr))] 
     cnt_cl =  [clsnr[i][3] for i in range(len(clsnr))] 
     

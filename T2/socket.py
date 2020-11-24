@@ -83,12 +83,12 @@ def parse_socket(host, ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outp
             continue
 
         try:
-            tab, data, snrs = cluster_heimdall.parse_candsfile(candsfile)
+            tab = cluster_heimdall.parse_candsfile(candsfile)
             logger.info(f"Table has {len(tab)} rows")
-            if len(tab) == 0 and len(data) == 0 and len(snrs) == 0:
+            if len(tab) == 0:
                 continue
             assert len(set(gulps)) == 1
-            cluster_and_plot(tab, data, snrs, set(gulps).pop(), selectcols=selectcols, outputfile=outputfile, plot_dir=plot_dir,
+            cluster_and_plot(tab, set(gulps).pop(), selectcols=selectcols, outputfile=outputfile, plot_dir=plot_dir,
                              trigger=trigger)
         except KeyboardInterrupt:
             logger.info("Escaping parsing and plotting")
@@ -98,21 +98,21 @@ def parse_socket(host, ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outp
             continue
 
 
-def cluster_and_plot(tab, data, snrs, gulp_i, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outputfile=None, plot_dir=None,
+def cluster_and_plot(tab, gulp_i, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outputfile=None, plot_dir=None,
                      trigger=False):
     """ 
     Run clustering and plotting on read data.
     """
 
     # cluster
-    data_labeled = cluster_heimdall.cluster_data(data, metric='euclidean', allow_single_cluster=True, return_clusterer=False)
-    clsnr = cluster_heimdall.get_peak(data_labeled, snrs) 
-    clsnr = cluster_heimdall.filter_clustered(clsnr, min_snr=8)
+    cluster_heimdall.cluster_data(tab, metric='euclidean', allow_single_cluster=True, return_clusterer=False)
+    tab2 = cluster_heimdall.get_peak(tab)
+    tab3 = cluster_heimdall.filter_clustered(tab2, min_snr=8, min_dm=50, max_ibox=16)
 
     # send T2 cluster results to outputfile
-    if outputfile is not None and len(clsnr):
-        cluster_heimdall.dump_cluster_results_heimdall(tab, clsnr, outputfile+str(gulp_i)+".cand")
-        cluster_heimdall.dump_cluster_results_json(tab, clsnr, outputfile+str(gulp_i)+".json", trigger=trigger)
+    if outputfile is not None and len(tab3):
+#        cluster_heimdall.dump_cluster_results_heimdall(tab, clsnr, outputfile+str(gulp_i)+".cand")
+        cluster_heimdall.dump_cluster_results_json(tab, outputfile+str(gulp_i)+".json", trigger=trigger)
 
 #    if plot_dir is not None: 
 #         plotting.plot_giants(tab, plot_dir=plot_dir+str(gulp_i)+"_") # plot giants      
