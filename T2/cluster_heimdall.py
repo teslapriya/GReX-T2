@@ -132,6 +132,7 @@ def filter_clustered(clsnr, min_snr=None, min_cntb=None, max_cntb=None, min_cntc
 
         clsnr_out.append((imaxsnr, snr, cntb, cntc))
 
+    print(f'Filtering from {len(clsnr)} to {len(clsnr_out)} candidates.')
     return clsnr_out
 
 
@@ -156,9 +157,11 @@ def dump_cluster_results_json(tab, clsnr, outputfile, output_cols=['mjds', 'snr'
         output_dict[str(tab['itime'][imaxsnr])]['ncluster'] = int(cnt_cl)
 
     with open(outputfile, 'w') as f: #encoding='utf-8'
+        print('Writing candidates to json')
         json.dump(output_dict, f, ensure_ascii=False, indent=4) 
 
     if trigger and len(output_dict):
+        print('*Triggering on first candidate*')
         itimes = list(output_dict.keys())
 #        for i, dd in enumerate(output_dict.values()):
 #            send = True

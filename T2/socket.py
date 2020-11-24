@@ -98,6 +98,27 @@ def parse_socket(host, ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outp
             continue
 
 
+def cluster_and_plot(tab, data, snrs, gulp_i, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outputfile=None, plot_dir=None,
+                     trigger=False):
+    """ 
+    Run clustering and plotting on read data.
+    """
+
+    # cluster
+    data_labeled = cluster_heimdall.cluster_data(data, metric='euclidean', allow_single_cluster=True, return_clusterer=False)
+    clsnr = cluster_heimdall.get_peak(data_labeled, snrs) 
+    clsnr = cluster_heimdall.filter_clustered(clsnr, min_snr=8)
+
+    # send T2 cluster results to outputfile
+    if outputfile is not None and len(clsnr):
+        cluster_heimdall.dump_cluster_results_heimdall(tab, clsnr, outputfile+str(gulp_i)+".cand")
+        cluster_heimdall.dump_cluster_results_json(tab, clsnr, outputfile+str(gulp_i)+".json", trigger=trigger)
+
+#    if plot_dir is not None: 
+#         plotting.plot_giants(tab, plot_dir=plot_dir+str(gulp_i)+"_") # plot giants      
+#         plotting.plot_clustered(clusterer, clsnr, snrs, data, tab, cols=['itime', 'idm', 'ibox'], plot_dir=plot_dir+str(gulp_i)+"_") # plot cluster results  
+
+
 def recvall(sock, n):
     """
     helper function to receive all bytes from a socket
@@ -113,25 +134,3 @@ def recvall(sock, n):
         data.extend(packet)
 
     return data
-
-
-def cluster_and_plot(tab, data, snrs, gulp_i, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outputfile=None, plot_dir=None,
-                     trigger=False):
-    """ 
-    Run clustering and plotting on read data.
-    """
-
-    # cluster
-    data_labeled = cluster_heimdall.cluster_data(data, metric='euclidean', allow_single_cluster=True, return_clusterer=False)
-    clsnr = cluster_heimdall.get_peak(data_labeled, snrs) 
-    clsnr = cluster_heimdall.filter_clustered(clsnr, min_snr=8)
-    print(f'{len(clsnr)} candidates after filtering')
-
-    # send T2 cluster results to outputfile
-    if outputfile is not None and len(clsnr):
-        cluster_heimdall.dump_cluster_results_heimdall(tab, clsnr, outputfile+str(gulp_i)+".cand")
-        cluster_heimdall.dump_cluster_results_json(tab, clsnr, outputfile+str(gulp_i)+".json", trigger=trigger)
-
-#    if plot_dir is not None: 
-#         plotting.plot_giants(tab, plot_dir=plot_dir+str(gulp_i)+"_") # plot giants      
-#         plotting.plot_clustered(clusterer, clsnr, snrs, data, tab, cols=['itime', 'idm', 'ibox'], plot_dir=plot_dir+str(gulp_i)+"_") # plot cluster results  
