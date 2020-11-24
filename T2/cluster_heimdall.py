@@ -153,7 +153,7 @@ def filter_clustered(tab, min_snr=None, min_dm=None, max_ibox=None, min_cntb=Non
     return tab_out
 
 
-def dump_cluster_results_json(tab, outputfile, output_cols=['mjds', 'snr', 'ibox', 'dm', 'ibeam', 'cntb', 'cntc'], trigger=False, max_cl=10):
+def dump_cluster_results_json(tab, outputfile, output_cols=['mjds', 'snr', 'ibox', 'dm', 'ibeam', 'cntb', 'cntc'], trigger=False, max_ncl=10):
     """   
     Takes tab from parse_candsfile and clsnr from get_peak, 
     output columns output_cols into a jason file outputfile. 
@@ -173,14 +173,15 @@ def dump_cluster_results_json(tab, outputfile, output_cols=['mjds', 'snr', 'ibox
         print(f'Writing {len(output_dict)} candidates to json')
         json.dump(output_dict, f, ensure_ascii=False, indent=4) 
 
-    if trigger and len(tab) and (len(tab) < max_cl):
+    if trigger and len(tab) and (len(tab) < max_ncl):
         itimes = list(output_dict.keys())
         maxsnr = tab['snr'].max()
         imaxsnr = np.where(tab['snr'] == maxsnr)[0][0]
         print(f'Triggering on candidate {imaxsnr} with SNR={maxsnr}')
         itime = (int(itimes[imaxsnr])-477)*16
         ds.put_dict('/cmd/corr/0', {'cmd': 'trigger', 'val': f'{itime}'})
-
+    elif len(tab) >= max_ncl:
+        print(f'Not triggering on block with {len(tab)} > {max_ncl} candidates')
 
 def dump_cluster_results_heimdall(tab, outputfile): 
     """   
