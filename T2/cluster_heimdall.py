@@ -190,11 +190,8 @@ def dump_cluster_results_heimdall(tab, outputfile):
     """
 
     # **TODO: remove clsnr**
-    imaxsnr = [clsnr[i][0] for i in range(len(clsnr))] 
-    cnt_cl =  [clsnr[i][3] for i in range(len(clsnr))] 
-    
-    output = tab['snr','if','itime', 'mjds','ibox','idm', 'dm'][imaxsnr] 
-    output['members'] = cnt_cl 
-    output['ibeam'] = tab['ibeam'][imaxsnr]
+    output = tab['snr', 'if', 'itime', 'mjds', 'ibox', 'idm', 'dm']
+    output['members'] = tab['cntc']
+    output['ibeam'] = tab['ibeam']
 
     output.write(outputfile, format='ascii')

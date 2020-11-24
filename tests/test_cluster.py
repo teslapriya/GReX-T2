@@ -62,12 +62,12 @@ def test_json(tab):
 
 
 def test_plot_dmhist(tab):
-    plotting.plot_dm_hist(tab)
+    plotting.plot_dm_hist(tab, plot_dir=os.path.join(_install_dir, 'plot_'))
 
 
 def test_plot_bt(tab):
-    plotting.plot_beam_time(tab, plot_dir=_install_dir + 'plot_')
+    plotting.plot_beam_time(tab, plot_dir=os.path.join(_install_dir, 'plot_'))
 
 
 def test_giantst(tab):
-    plotting.plot_giants(tab, plot_dir=_install_dir + 'plot_')
+    plotting.plot_giants(tab, plot_dir=os.path.join(_install_dir, 'plot_'))
