@@ -75,7 +75,7 @@ def cluster_data(tab, selectcols=['itime', 'idm', 'ibox', 'ibeam'], min_cluster_
         ww = np.where(i == cl)
         cntc[ww] = len(ww[0]) 
         ubl = np.unique(bl[ww])
-        cntb[ww] = len(wwb[0]) 
+        cntb[ww] = len(ubl) 
 
     # append useful metastats to original data
 #    data_labeled = np.hstack((data, cl[:,None], cntb, cntc))
