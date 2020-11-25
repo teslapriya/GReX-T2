@@ -46,7 +46,6 @@ def parse_socket(host, ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outp
         candsfile = ''
         gulps = []
         for i, cl in enumerate(cls):
-            #cf = cl.recv(10000000).decode('utf-8')  # not guaranteed to all from a gulp
             cf = recvall(cl, 100000000).decode('utf-8')
             cl.close()
 
@@ -61,8 +60,6 @@ def parse_socket(host, ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outp
 
             if len(lines) > 1:
                 if len(lines[0]) > 0:
-#                    print("first line:")
-#                    print('\t', lines[0])
                     candsfile += '\n'.join(lines)
 
         print(f'Received gulp_i {gulps}')
@@ -76,19 +73,18 @@ def parse_socket(host, ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outp
 
         if len(set(gulps)) > 1:
             logger.info(f"not all clients received from same gulp: {set(gulps)}")
-            print(f"not all clients received from same gulp: {set(gulps)}. Skipping")
+            print(f"not all clients received from same gulp: {set(gulps)}.")
             continue
 
         if candsfile == '\n' or candsfile == '':  # skip empty candsfile
             continue
 
         try:
-            tab, data, snrs = cluster_heimdall.parse_candsfile(candsfile)
+            tab = cluster_heimdall.parse_candsfile(candsfile)
             logger.info(f"Table has {len(tab)} rows")
-            if len(tab) == 0 and len(data) == 0 and len(snrs) == 0:
+            if len(tab) == 0:
                 continue
-            assert len(set(gulps)) == 1
-            cluster_and_plot(tab, data, snrs, set(gulps).pop(), selectcols=selectcols, outputfile=outputfile, plot_dir=plot_dir,
+            cluster_and_plot(tab, set(gulps).pop(), selectcols=selectcols, outputfile=outputfile, plot_dir=plot_dir,
                              trigger=trigger)
         except KeyboardInterrupt:
             logger.info("Escaping parsing and plotting")
@@ -98,21 +94,27 @@ def parse_socket(host, ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outp
             continue
 
 
-def cluster_and_plot(tab, data, snrs, gulp_i, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outputfile=None, plot_dir=None,
+def cluster_and_plot(tab, gulp_i, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outputfile=None, plot_dir=None,
                      trigger=False):
     """ 
     Run clustering and plotting on read data.
     """
 
+    # TODO: put these in json config file
+    min_dm = 50  # smallest dm in filtering
+    max_ibox = 8  # largest ibox in filtering
+    min_snr = 10  # smallest snr in filtering
+    max_ncl = 5  # largest number of clusters allowed in triggering
+
     # cluster
-    data_labeled = cluster_heimdall.cluster_data(data, metric='euclidean', allow_single_cluster=True, return_clusterer=False)
-    clsnr = cluster_heimdall.get_peak(data_labeled, snrs) 
-    clsnr = cluster_heimdall.filter_clustered(clsnr, min_snr=8)
+    cluster_heimdall.cluster_data(tab, metric='euclidean', allow_single_cluster=True, return_clusterer=False)
+    tab2 = cluster_heimdall.get_peak(tab)
+    tab3 = cluster_heimdall.filter_clustered(tab2, min_snr=min_snr, min_dm=min_dm, max_ibox=max_ibox)
 
     # send T2 cluster results to outputfile
-    if outputfile is not None and len(clsnr):
-        cluster_heimdall.dump_cluster_results_heimdall(tab, clsnr, outputfile+str(gulp_i)+".cand")
-        cluster_heimdall.dump_cluster_results_json(tab, clsnr, outputfile+str(gulp_i)+".json", trigger=trigger)
+    if outputfile is not None and len(tab3):
+#        cluster_heimdall.dump_cluster_results_heimdall(tab, clsnr, outputfile+str(gulp_i)+".cand")
+        cluster_heimdall.dump_cluster_results_json(tab3, outputfile+str(gulp_i)+".json", trigger=trigger, max_ncl=max_ncl)
 
 #    if plot_dir is not None: 
 #         plotting.plot_giants(tab, plot_dir=plot_dir+str(gulp_i)+"_") # plot giants      

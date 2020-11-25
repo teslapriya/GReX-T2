@@ -22,16 +22,17 @@ def test_T2():
     candsfile = os.path.join(_install_dir, 'data/giants_1.cand')
 
     # read in giants 
-    tab, data, snrs = T2.cluster_heimdall.parse_candsfile(candsfile, selectcols=['itime', 'dm', 'ibox', 'ibeam'])
+    tab = T2.cluster_heimdall.parse_candsfile(candsfile)
 
     # T2 cluster 
-    clusterer, data_labeled = T2.cluster_heimdall.cluster_data(data, min_cluster_size=10, min_samples=10,
-                                                               metric='euclidean', allow_single_cluster=True,
-                                                               return_clusterer=True)
-    clsnr = T2.cluster_heimdall.get_peak(data_labeled, snrs) 
+    clusterer = T2.cluster_heimdall.cluster_data(tab, min_cluster_size=10, min_samples=10,
+                                                 selectcols=['itime', 'dm', 'ibox', 'ibeam'],
+                                                 metric='euclidean', allow_single_cluster=True,
+                                                 return_clusterer=True)
+    tab2 = T2.cluster_heimdall.get_peak(tab)
     
     # send T2 cluster results to outputfile
-    T2.cluster_heimdall.dump_cluster_results_json(tab, clsnr, outputfile, output_cols=['mjds', 'snr', 'ibox', 'dm'])
+    T2.cluster_heimdall.dump_cluster_results_json(tab, outputfile, output_cols=['mjds', 'snr', 'ibox', 'dm'])
     
 #    if plot: 
 #        T2.cluster_heimdall.plot_giants(tab, plot_dir=plot_dir) # plot giants      

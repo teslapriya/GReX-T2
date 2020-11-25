@@ -15,9 +15,8 @@ logger.subsystem('software')
 logger.app('T2')
 
 
-def parse_candsfile(candsfile, selectcols=['itime', 'idm', 'ibox', 'ibeam']):
+def parse_candsfile(candsfile):
     """ Takes standard MBHeimdall giants output and returns full table, classifier inputs and snr tables.
-    selectcols will take a subset of the standard MBHeimdall output
     (Can add cleaning here, eventually)
     """
 
@@ -37,17 +36,19 @@ def parse_candsfile(candsfile, selectcols=['itime', 'idm', 'ibox', 'ibeam']):
         return ([], [], [])
 
     tab['ibeam'] = tab['ibeam'].astype(int)
-    data = np.lib.recfunctions.structured_to_unstructured(tab[selectcols].as_array())  # ok for single dtype (int)
-    snrs = tab['snr']
+#
+#    snrs = tab['snr']
     # how to use ibeam?
-    
-    return tab, data, snrs
+   
+#    return tab, data, snrs
+    return tab
 
-
-def cluster_data(data, min_cluster_size=3, min_samples=5, metric='hamming', return_clusterer=False, allow_single_cluster=True):
+def cluster_data(tab, selectcols=['itime', 'idm', 'ibox', 'ibeam'], min_cluster_size=3, min_samples=5, metric='hamming', return_clusterer=False, allow_single_cluster=True):
     """ Take data from parse_candsfile and identify clusters via hamming metric.
+    selectcols will take a subset of the standard MBHeimdall output
     """
 
+    data = np.lib.recfunctions.structured_to_unstructured(tab[selectcols].as_array())  # ok for single dtype (int)
     try:
         clusterer = hdbscan.HDBSCAN(metric=metric, min_cluster_size=min_cluster_size,
                                     min_samples=min_samples, cluster_selection_method='eom',
@@ -75,68 +76,84 @@ def cluster_data(data, min_cluster_size=3, min_samples=5, metric='hamming', retu
         cntc[ww] = len(ww[0]) 
         ubl = np.unique(bl[ww])
         for j in ubl:
-            wwb = np.where(j == bl)
+            wwb = np.where(j == bl[ww])
             cntb[wwb] = len(wwb[0]) 
 
     # append useful metastats to original data
-    data_labeled = np.hstack((data, cl[:,None], cntb, cntc)) 
-    
+#    data_labeled = np.hstack((data, cl[:,None], cntb, cntc))
+    # modifies tab in place
+    tab['cl'] = cl.tolist()
+    tab['cntc'] = cntc.flatten().tolist()
+    tab['cntb'] = cntb.flatten().tolist()
+
     if return_clusterer:
-        return clusterer, data_labeled
-    else:
-        return data_labeled
+#        return clusterer, data_labeled
+        return clusterer
+#    else:
+#        return data_labeled
 
 
-def get_peak(datal, snrs):
+
+def get_peak(tab):
     """ Given labeled data, find max snr row per cluster
     Adds in count of candidates in same beam and same cluster.
+    Note that unclustered candidates are ignored.
     """
 
-    clsnr = []
-    cl = datal[:, 4].astype(int)   # hack. should really use table.
-    cnt_beam = datal[:, 5].astype(int)
-    cnt_cl = datal[:, 6].astype(int)
+#    clsnr = []
+#    cl = datal[:, 4].astype(int)   # hack. should really use table.
+#    cnt_beam = datal[:, 5].astype(int)
+#    cnt_cl = datal[:, 6].astype(int)
+    cl = tab['cl'].astype(int)
+#    cnt_beam = tab['cntb'].astype(int)
+#    cnt_cl = tab['cntc'].astype(int)
+    snrs = tab['snr']
+    ipeak = []
     for i in np.unique(cl):
+        if i == -1:
+            continue
         clusterinds = np.where(i == cl)[0]
         maxsnr = snrs[clusterinds].max()
         imaxsnr = np.where(snrs == maxsnr)[0][0]
-        print(f"\tCluster {imaxsnr}: maxsnr {maxsnr}, cnt_bbeam {cnt_beam[imaxsnr]}, cnt_cl {cnt_cl[imaxsnr]}")
-        clsnr.append((imaxsnr, maxsnr, cnt_beam[imaxsnr], cnt_cl[imaxsnr]))
+        ipeak.append(imaxsnr)
+#        clsnr.append((imaxsnr, maxsnr, cnt_beam[imaxsnr], cnt_cl[imaxsnr]))
+    print(f"Cluster peaks at {ipeak}:\n{tab[ipeak]}")
 
-    return clsnr
+    return tab[ipeak]
 
 
-def filter_clustered(clsnr, min_snr=None, min_cntb=None, max_cntb=None, min_cntc=None,
+def filter_clustered(tab, min_snr=None, min_dm=None, max_ibox=None, min_cntb=None, max_cntb=None, min_cntc=None,
                      max_cntc=None):
     """ Function to select a subset of clustered output.
     Can set minimum SNR, min/max number of beams in cluster, min/max total count in cluster.
     """
 
-    clsnr_out = []
-    for (imaxsnr, snr, cntb, cntc) in clsnr:
-        if min_snr is not None:
-            if snr < min_snr:
-                continue
-        if min_cntb is not None:
-            if cntb < min_cntb:
-                continue
-        if max_cntb is not None:
-            if cntb > max_cntb:
-                continue
-        if min_cntc is not None:
-            if cntc < min_cntc:
-                continue
-        if max_cntc is not None:
-            if cntc > max_cntc:
-                continue
+ #    for (imaxsnr, snr, cntb, cntc) in clsnr:
+    good = [True] * len(tab)
 
-        clsnr_out.append((imaxsnr, snr, cntb, cntc))
+    if min_snr is not None:
+        good *= tab['snr'] > min_snr
+    if min_dm is not None:
+        good *= tab['dm'] > min_dm
+    if max_ibox is not None:
+        good *= tab['ibox'] < max_ibox
+    if min_cntb is not None:
+        good *= tab['cntb'] > min_cntb
+    if max_cntb is not None:
+        good *= tab['cntb'] < max_cntb
+    if min_cntc is not None:
+        good *= tab['cntc'] > min_cntc
+    if max_cntc is not None:
+        good *= tab['cntc'] < max_cntc
 
-    print(f'Filtering from {len(clsnr)} to {len(clsnr_out)} candidates.')
-    return clsnr_out
+    #    clsnr_out.append((imaxsnr, snr, cntb, cntc))
+    tab_out = tab[good]
+
+    print(f'Filtering from {len(tab)} to {len(tab_out)} candidates.')
+    return tab_out
 
 
-def dump_cluster_results_json(tab, clsnr, outputfile, output_cols=['mjds', 'snr', 'ibox', 'dm', 'ibeam'], trigger=False):
+def dump_cluster_results_json(tab, outputfile, output_cols=['mjds', 'snr', 'ibox', 'dm', 'ibeam', 'cntb', 'cntc'], trigger=False, max_ncl=10):
     """   
     Takes tab from parse_candsfile and clsnr from get_peak, 
     output columns output_cols into a jason file outputfile. 
@@ -144,53 +161,38 @@ def dump_cluster_results_json(tab, clsnr, outputfile, output_cols=['mjds', 'snr'
     """
 
     output_dict = {}
-    for i, (imaxsnr, maxsnr, cnt_beam, cnt_cl) in enumerate(clsnr):
-        output_dict[str(tab['itime'][imaxsnr])] = {}
+    for i, row in enumerate(tab):
+        output_dict[str(row['itime'])] = {}
         for col in output_cols:
-            if type(tab[col][imaxsnr]) == np.int64:
-                output_dict[str(tab['itime'][imaxsnr])][col] = int(tab[col][imaxsnr])
+            if type(row[col]) == np.int64:
+                output_dict[str(row['itime'])][col] = int(row[col])
             else:
-                output_dict[str(tab['itime'][imaxsnr])][col] = tab[col][imaxsnr]
-
-        # append fields from clsnr for now
-        output_dict[str(tab['itime'][imaxsnr])]['nbeam'] = int(cnt_beam)
-        output_dict[str(tab['itime'][imaxsnr])]['ncluster'] = int(cnt_cl)
+                output_dict[str(row['itime'])][col] = row[col]
 
     with open(outputfile, 'w') as f: #encoding='utf-8'
-        print('Writing candidates to json')
+        print(f'Writing {len(output_dict)} candidates to json {outputfile}')
         json.dump(output_dict, f, ensure_ascii=False, indent=4) 
 
-    if trigger and len(output_dict):
-        print('*Triggering on first candidate*')
-        itimes = list(output_dict.keys())
-#        for i, dd in enumerate(output_dict.values()):
-#            send = True
-#            for kk, vv in dd.items():
-#                if kk == 'dm':
-#                    if vv < dmmin:
-#                        send = False
-#                elif kk == 'snr':
-#                    if vv < snrmin:
-#                        send = False
-#                elif kk == 'ibox':
-#                    if vv > boxmax:
-#                        send = False
-        itime = (int(itimes[0])-477)*16  # just take first
+    if trigger and len(tab) and (len(tab) < max_ncl):
+        itimes = tab['itime']
+        maxsnr = tab['snr'].max()
+        imaxsnr = np.where(tab['snr'] == maxsnr)[0][0]
+        print(f'Triggering on candidate {imaxsnr} with SNR={maxsnr}')
+        itime = (int(itimes[imaxsnr])-477)*16
         ds.put_dict('/cmd/corr/0', {'cmd': 'trigger', 'val': f'{itime}'})
+    elif len(tab) >= max_ncl:
+        print(f'Not triggering on block with {len(tab)} > {max_ncl} candidates')
 
-
-def dump_cluster_results_heimdall(tab, clsnr, outputfile): 
+def dump_cluster_results_heimdall(tab, outputfile): 
     """   
     Takes tab from parse_candsfile and clsnr from get_peak, 
     output T2-clustered results with the same columns as heimdall.cand into a file outputfile.
     The output is in pandas format with column names in the 1st row.
     """
 
-    imaxsnr = [clsnr[i][0] for i in range(len(clsnr))] 
-    cnt_cl =  [clsnr[i][3] for i in range(len(clsnr))] 
-    
-    output = tab['snr','if','itime', 'mjds','ibox','idm', 'dm'][imaxsnr] 
-    output['members'] = cnt_cl 
-    output['ibeam'] = tab['ibeam'][imaxsnr]
+    # **TODO: remove clsnr**
+    output = tab['snr', 'if', 'itime', 'mjds', 'ibox', 'idm', 'dm']
+    output['members'] = tab['cntc']
+    output['ibeam'] = tab['ibeam']
 
     output.write(outputfile, format='ascii')
