@@ -76,7 +76,7 @@ def cluster_data(tab, selectcols=['itime', 'idm', 'ibox', 'ibeam'], min_cluster_
         cntc[ww] = len(ww[0]) 
         ubl = np.unique(bl[ww])
         for j in ubl:
-            wwb = np.where(j == bl)
+            wwb = np.where(j == bl[ww])
             cntb[wwb] = len(wwb[0]) 
 
     # append useful metastats to original data
