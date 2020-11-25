@@ -174,7 +174,7 @@ def dump_cluster_results_json(tab, outputfile, output_cols=['mjds', 'snr', 'ibox
         json.dump(output_dict, f, ensure_ascii=False, indent=4) 
 
     if trigger and len(tab) and (len(tab) < max_ncl):
-        itimes = list(output_dict.keys())
+        itimes = tab['itime']
         maxsnr = tab['snr'].max()
         imaxsnr = np.where(tab['snr'] == maxsnr)[0][0]
         print(f'Triggering on candidate {imaxsnr} with SNR={maxsnr}')
