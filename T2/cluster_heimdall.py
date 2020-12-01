@@ -193,4 +193,4 @@ def dump_cluster_results_heimdall(tab, outputfile):
     output['members'] = tab['cntc']
     output['ibeam'] = tab['ibeam']
 
-    output.write(outputfile, format='ascii')
+    output.write(outputfile, format='ascii.no_header')
