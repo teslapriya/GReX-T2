@@ -113,8 +113,10 @@ def cluster_and_plot(tab, gulp_i, selectcols=['itime', 'idm', 'ibox', 'ibeam'], 
     tab3 = cluster_heimdall.filter_clustered(tab2, min_snr=min_snr, min_dm=min_dm, max_ibox=max_ibox)
 
     # send T2 cluster results to outputfile
-    if outputfile is not None and len(tab3) and len(tab2):
+    if outputfile is not None and len(tab2):
         cluster_heimdall.dump_cluster_results_heimdall(tab2, outputfile+str(gulp_i)+".cand")
+
+    if outputfile is not None and len(tab3):
         cluster_heimdall.dump_cluster_results_json(tab3, outputfile+str(gulp_i)+".json", trigger=trigger, max_ncl=max_ncl)
 
 #    if plot_dir is not None: 
