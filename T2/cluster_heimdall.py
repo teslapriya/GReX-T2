@@ -91,7 +91,6 @@ def cluster_data(tab, selectcols=['itime', 'idm', 'ibox', 'ibeam'], min_cluster_
 #        return data_labeled
 
 
-
 def get_peak(tab):
     """ Given labeled data, find max snr row per cluster
     Adds in count of candidates in same beam and same cluster.
