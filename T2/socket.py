@@ -114,6 +114,8 @@ def cluster_and_plot(tab, gulp_i, selectcols=['itime', 'idm', 'ibox', 'ibeam'], 
 
     if outputfile is not None and len(tab3):
         col_trigger = cluster_heimdall.dump_cluster_results_json(tab3, outputfile+str(gulp_i)+".json", trigger=trigger, max_ncl=max_ncl)
+    else:
+        col_trigger = np.zeros(len(tab3), dtype=int)
 
     # send T2 cluster results to outputfile
     if outputfile is not None and len(tab2):
