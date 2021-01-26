@@ -98,13 +98,14 @@ def cluster_and_plot(tab, gulp_i, selectcols=['itime', 'idm', 'ibox', 'ibeam'], 
                      trigger=False):
     """ 
     Run clustering and plotting on read data.
+    Can optionally save clusters as heimdall candidate table before filtering and json version of buffer trigger.
     """
 
     # TODO: put these in json config file
     min_dm = 50  # smallest dm in filtering
-    max_ibox = 8  # largest ibox in filtering
-    min_snr = 10  # smallest snr in filtering
-    max_ncl = 5  # largest number of clusters allowed in triggering
+    max_ibox = 14  # largest ibox in filtering
+    min_snr = 8.0  # smallest snr in filtering
+    max_ncl = 10  # largest number of clusters allowed in triggering
 
     # cluster
     cluster_heimdall.cluster_data(tab, metric='euclidean', allow_single_cluster=True, return_clusterer=False)
@@ -112,8 +113,10 @@ def cluster_and_plot(tab, gulp_i, selectcols=['itime', 'idm', 'ibox', 'ibeam'], 
     tab3 = cluster_heimdall.filter_clustered(tab2, min_snr=min_snr, min_dm=min_dm, max_ibox=max_ibox)
 
     # send T2 cluster results to outputfile
+    if outputfile is not None and len(tab2):
+        cluster_heimdall.dump_cluster_results_heimdall(tab2, outputfile+str(gulp_i)+".cand")
+
     if outputfile is not None and len(tab3):
-#        cluster_heimdall.dump_cluster_results_heimdall(tab, clsnr, outputfile+str(gulp_i)+".cand")
         cluster_heimdall.dump_cluster_results_json(tab3, outputfile+str(gulp_i)+".json", trigger=trigger, max_ncl=max_ncl)
 
 #    if plot_dir is not None: 

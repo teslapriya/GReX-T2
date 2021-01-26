@@ -17,7 +17,7 @@ def main(argv):
     trigger = args.trigger
 
     print(f'Running parse_socket to ip {ip} and ports {ports} with voltage trigger={trigger}')
-    T2.socket.parse_socket(host=ip, ports=ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outputfile="output/cluster_output", plot_dir=None, trigger=trigger)
+    T2.socket.parse_socket(host=ip, ports=ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outputfile="/home/ubuntu/T2_output/cluster_output", plot_dir=None, trigger=trigger)
 
 if __name__ == '__main__':
     main(sys.argv)

@@ -82,9 +82,7 @@ def cluster_data(tab, selectcols=['itime', 'idm', 'ibox', 'ibeam'], min_cluster_
         ww = np.where(i == cl)
         cntc[ww] = len(ww[0]) 
         ubl = np.unique(bl[ww])
-        for j in ubl:
-            wwb = np.where(j == bl[ww])
-            cntb[wwb] = len(wwb[0]) 
+        cntb[ww] = len(ubl) 
 
     # append useful metastats to original data
 #    data_labeled = np.hstack((data, cl[:,None], cntb, cntc))
@@ -98,7 +96,6 @@ def cluster_data(tab, selectcols=['itime', 'idm', 'ibox', 'ibeam'], min_cluster_
         return clusterer
 #    else:
 #        return data_labeled
-
 
 
 def get_peak(tab):
@@ -167,26 +164,27 @@ def dump_cluster_results_json(tab, outputfile, output_cols=['mjds', 'snr', 'ibox
     trigger is bool to update DsaStore to trigger data dump.
     """
 
-    output_dict = {}
-    for i, row in enumerate(tab):
-        output_dict[str(row['itime'])] = {}
-        for col in output_cols:
-            if type(row[col]) == np.int64:
-                output_dict[str(row['itime'])][col] = int(row[col])
-            else:
-                output_dict[str(row['itime'])][col] = row[col]
-
-    with open(outputfile, 'w') as f: #encoding='utf-8'
-        print(f'Writing {len(output_dict)} candidates to json {outputfile}')
-        json.dump(output_dict, f, ensure_ascii=False, indent=4) 
+    itimes = tab['itime']
+    maxsnr = tab['snr'].max()
+    imaxsnr = np.where(tab['snr'] == maxsnr)[0][0]
+    itime = str(itimes[imaxsnr])
+    row = tab[imaxsnr]
+    output_dict = {itime: {}}
+    for col in output_cols:
+        if type(row[col]) == np.int64:
+            output_dict[itime][col] = int(row[col])
+        else:
+            output_dict[itime][col] = row[col]
 
     if trigger and len(tab) and (len(tab) < max_ncl):
-        itimes = tab['itime']
-        maxsnr = tab['snr'].max()
-        imaxsnr = np.where(tab['snr'] == maxsnr)[0][0]
         print(f'Triggering on candidate {imaxsnr} with SNR={maxsnr}')
         itime = (int(itimes[imaxsnr])-477)*16
         ds.put_dict('/cmd/corr/0', {'cmd': 'trigger', 'val': f'{itime}'})
+
+        with open(outputfile, 'w') as f: #encoding='utf-8'
+            print(f'Writing trigger info to json {outputfile}')
+            json.dump(output_dict, f, ensure_ascii=False, indent=4) 
+
     elif len(tab) >= max_ncl:
         print(f'Not triggering on block with {len(tab)} > {max_ncl} candidates')
 
@@ -201,4 +199,4 @@ def dump_cluster_results_heimdall(tab, outputfile):
     output['members'] = tab['cntc']
     output['ibeam'] = tab['ibeam']
 
-    output.write(outputfile, format='ascii')
+    output.write(outputfile, format='ascii.no_header')
