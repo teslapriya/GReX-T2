@@ -29,7 +29,7 @@ def parse_candsfile(candsfile):
 #    candsfile = '\n'.join([line for line in candsfile.split('\n') if line.count(' ') == 7])
 #    print(f'Received {ncands0} candidates, removed {ncands0-ncands} lines.')
     col_heimdall = ['snr', 'if', 'itime', 'mjds', 'ibox', 'idm', 'dm', 'ibeam']
-    col_clustered = ['snr', 'if', 'itime', 'mjds', 'ibox', 'idm', 'dm', 'ibeam', 'cl', 'cntc', 'cntb']
+    col_T2 = ['snr', 'if', 'itime', 'mjds', 'ibox', 'idm', 'dm', 'ibeam', 'cl', 'cntc', 'cntb', 'trigger']
 #    col_T2out = ['snr', 'if', 'itime', 'mjds', 'ibox', 'idm', 'dm', 'cntc', 'ibeam']  # old style
 
     try:
@@ -37,7 +37,7 @@ def parse_candsfile(candsfile):
     except InconsistentTableError:
         print('Could not read with heimdal cols. Trying clustered cols...')
         try:
-            tab = ascii.read(candsfile, names=col_clustered, guess=True, fast_reader=False, format='no_header')
+            tab = ascii.read(candsfile, names=col_T2, guess=True, fast_reader=False, format='no_header')
         except InconsistentTableError:
             print('Inconsistent table. Skipping...')              
             return ([], [], [])
@@ -184,9 +184,11 @@ def dump_cluster_results_json(tab, outputfile, output_cols=['mjds', 'snr', 'ibox
         with open(outputfile, 'w') as f: #encoding='utf-8'
             print(f'Writing trigger info to json {outputfile}')
             json.dump(output_dict, f, ensure_ascii=False, indent=4) 
-
+        return (tab['snr'] == maxsnr).astype(int)
     elif len(tab) >= max_ncl:
         print(f'Not triggering on block with {len(tab)} > {max_ncl} candidates')
+        return np.zeros(len(tab), dtype=int)
+
 
 def dump_cluster_results_heimdall(tab, outputfile): 
     """   
