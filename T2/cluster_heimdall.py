@@ -30,14 +30,14 @@ def parse_candsfile(candsfile):
 #    print(f'Received {ncands0} candidates, removed {ncands0-ncands} lines.')
     col_heimdall = ['snr', 'if', 'itime', 'mjds', 'ibox', 'idm', 'dm', 'ibeam']
     col_clustered = ['snr', 'if', 'itime', 'mjds', 'ibox', 'idm', 'dm', 'ibeam', 'cl', 'cntc', 'cntb']
-    col_T2out = ['snr', 'if', 'itime', 'mjds', 'ibox', 'idm', 'dm', 'cntc', 'ibeam']
+#    col_T2out = ['snr', 'if', 'itime', 'mjds', 'ibox', 'idm', 'dm', 'cntc', 'ibeam']  # old style
 
     try:
         tab = ascii.read(candsfile, names=col_heimdall, guess=True, fast_reader=False, format='no_header')
     except InconsistentTableError:
-        print('Could not read with heimdal cols. Trying T2out cols...')
+        print('Could not read with heimdal cols. Trying clustered cols...')
         try:
-            tab = ascii.read(candsfile, names=col_T2out, guess=True, fast_reader=False, format='no_header')
+            tab = ascii.read(candsfile, names=col_clustered, guess=True, fast_reader=False, format='no_header')
         except InconsistentTableError:
             print('Inconsistent table. Skipping...')              
             return ([], [], [])
@@ -195,8 +195,11 @@ def dump_cluster_results_heimdall(tab, outputfile):
     The output is in pandas format with column names in the 1st row.
     """
 
-    output = tab['snr', 'if', 'itime', 'mjds', 'ibox', 'idm', 'dm']
-    output['members'] = tab['cntc']
-    output['ibeam'] = tab['ibeam']
+# comment out to simplify parsing to two types
+# 1) heimdall output
+# 2) post-clustered output (adds cl, cntc, cntb)
+#    output = tab['snr', 'if', 'itime', 'mjds', 'ibox', 'idm', 'dm']
+#    output['members'] = tab['cntc']
+#    output['ibeam'] = tab['ibeam']
 
     output.write(outputfile, format='ascii.no_header')
