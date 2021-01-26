@@ -102,9 +102,9 @@ def cluster_and_plot(tab, gulp_i, selectcols=['itime', 'idm', 'ibox', 'ibeam'], 
     """
 
     # TODO: put these in json config file
-    min_dm = 50  # smallest dm in filtering
-    max_ibox = 14  # largest ibox in filtering
-    min_snr = 8.0  # smallest snr in filtering
+    min_dm = 100.0  # smallest dm in filtering
+    max_ibox = 20  # largest ibox in filtering
+    min_snr = 8.  # smallest snr in filtering
     max_ncl = 10  # largest number of clusters allowed in triggering
 
     # cluster
