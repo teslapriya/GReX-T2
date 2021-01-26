@@ -112,10 +112,11 @@ def cluster_and_plot(tab, gulp_i, selectcols=['itime', 'idm', 'ibox', 'ibeam'], 
     tab2 = cluster_heimdall.get_peak(tab)
     tab3 = cluster_heimdall.filter_clustered(tab2, min_snr=min_snr, min_dm=min_dm, max_ibox=max_ibox)
 
+    col_trigger = np.zeros(len(tab2), dtype=int)
     if outputfile is not None and len(tab3):
-        col_trigger = cluster_heimdall.dump_cluster_results_json(tab3, outputfile+str(gulp_i)+".json", trigger=trigger, max_ncl=max_ncl)
-    else:
-        col_trigger = np.zeros(len(tab3), dtype=int)
+        tab4 = cluster_heimdall.dump_cluster_results_json(tab3, outputfile+str(gulp_i)+".json", trigger=trigger, max_ncl=max_ncl)
+        if tab4 is not None:
+            col_trigger = np.where(tab4 == tab2, 1, 0)  # if trigger, then overload
 
     # send T2 cluster results to outputfile
     if outputfile is not None and len(tab2):
