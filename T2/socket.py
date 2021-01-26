@@ -102,9 +102,9 @@ def cluster_and_plot(tab, gulp_i, selectcols=['itime', 'idm', 'ibox', 'ibeam'], 
     """
 
     # TODO: put these in json config file
-    min_dm = 50  # smallest dm in filtering
-    max_ibox = 14  # largest ibox in filtering
-    min_snr = 8.0  # smallest snr in filtering
+    min_dm = 100.0  # smallest dm in filtering
+    max_ibox = 20  # largest ibox in filtering
+    min_snr = 8.  # smallest snr in filtering
     max_ncl = 10  # largest number of clusters allowed in triggering
 
     # cluster
@@ -112,12 +112,16 @@ def cluster_and_plot(tab, gulp_i, selectcols=['itime', 'idm', 'ibox', 'ibeam'], 
     tab2 = cluster_heimdall.get_peak(tab)
     tab3 = cluster_heimdall.filter_clustered(tab2, min_snr=min_snr, min_dm=min_dm, max_ibox=max_ibox)
 
+    col_trigger = np.zeros(len(tab2), dtype=int)
+    if outputfile is not None and len(tab3):
+        tab4 = cluster_heimdall.dump_cluster_results_json(tab3, outputfile+str(gulp_i)+".json", trigger=trigger, max_ncl=max_ncl)
+        if tab4 is not None:
+            col_trigger = np.where(tab4 == tab2, 1, 0)  # if trigger, then overload
+
     # send T2 cluster results to outputfile
     if outputfile is not None and len(tab2):
+        tab2['trigger'] = col_trigger
         cluster_heimdall.dump_cluster_results_heimdall(tab2, outputfile+str(gulp_i)+".cand")
-
-    if outputfile is not None and len(tab3):
-        cluster_heimdall.dump_cluster_results_json(tab3, outputfile+str(gulp_i)+".json", trigger=trigger, max_ncl=max_ncl)
 
 #    if plot_dir is not None: 
 #         plotting.plot_giants(tab, plot_dir=plot_dir+str(gulp_i)+"_") # plot giants      
