@@ -8,7 +8,7 @@ import argparse
 
 def main(argv):
     parser = argparse.ArgumentParser(description='Parse input to T2 socket clients')
-    parser.add_argument('--ip', type=str, default='10.41.0.126', help='ip address of heimdall', required=False)
+    parser.add_argument('--ip', type=str, default='10.41.0.69', help='ip address of heimdall', required=False)
     parser.add_argument('--ports', type=str, default='12345,12346,12347,12348', help='ports address of heimdall (comma-delimited list)', required=False)
     parser.add_argument('--trigger', type=bool, default=True, help='send trigger to dump buffer', required=False)
     args = parser.parse_args()

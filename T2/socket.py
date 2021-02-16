@@ -18,6 +18,9 @@ def parse_socket(host, ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outp
     selectcol: list of str.  Select columns for clustering. 
     """
 
+    # count of output - separate from gulps
+    globct = 0
+    
     if isinstance(ports, int):
         ports = [ports]
 
@@ -84,8 +87,9 @@ def parse_socket(host, ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outp
             logger.info(f"Table has {len(tab)} rows")
             if len(tab) == 0:
                 continue
-            cluster_and_plot(tab, set(gulps).pop(), selectcols=selectcols, outputfile=outputfile, plot_dir=plot_dir,
-                             trigger=trigger)
+            #cluster_and_plot(tab, set(gulps).pop(), selectcols=selectcols, outputfile=outputfile, plot_dir=plot_dir,trigger=trigger)
+            cluster_and_plot(tab, globct, selectcols=selectcols, outputfile=outputfile, plot_dir=plot_dir,trigger=trigger)
+            globct += 1
         except KeyboardInterrupt:
             logger.info("Escaping parsing and plotting")
             break
@@ -102,9 +106,9 @@ def cluster_and_plot(tab, gulp_i, selectcols=['itime', 'idm', 'ibox', 'ibeam'], 
     """
 
     # TODO: put these in json config file
-    min_dm = 100.0  # smallest dm in filtering
-    max_ibox = 20  # largest ibox in filtering
-    min_snr = 8.  # smallest snr in filtering
+    min_dm = 50.0  # smallest dm in filtering
+    max_ibox = 25  # largest ibox in filtering
+    min_snr = 8.0  # smallest snr in filtering
     max_ncl = 10  # largest number of clusters allowed in triggering
 
     # cluster
@@ -123,6 +127,7 @@ def cluster_and_plot(tab, gulp_i, selectcols=['itime', 'idm', 'ibox', 'ibeam'], 
         tab2['trigger'] = col_trigger
         cluster_heimdall.dump_cluster_results_heimdall(tab2, outputfile+str(gulp_i)+".cand")
 
+        
 #    if plot_dir is not None: 
 #         plotting.plot_giants(tab, plot_dir=plot_dir+str(gulp_i)+"_") # plot giants      
 #         plotting.plot_clustered(clusterer, clsnr, snrs, data, tab, cols=['itime', 'idm', 'ibox'], plot_dir=plot_dir+str(gulp_i)+"_") # plot cluster results  
