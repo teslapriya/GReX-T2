@@ -185,7 +185,9 @@ def dump_cluster_results_json(tab, outputfile, output_cols=['mjds', 'snr', 'ibox
         print(f'Triggering on candidate {imaxsnr} with SNR={maxsnr}')
         itime = (int(itimes[imaxsnr])-477)*16
         ds.put_dict('/cmd/corr/0', {'cmd': 'trigger', 'val': f'{itime}'})
-
+        # add output_dict to etcd
+        ds.put_dict('/mon/corr/1/trigger',output_dict)
+        
         with open(outputfile, 'w') as f: #encoding='utf-8'
             print(f'Writing trigger info to json {outputfile}')
             json.dump(output_dict, f, ensure_ascii=False, indent=4) 
