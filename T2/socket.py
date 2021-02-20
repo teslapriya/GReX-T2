@@ -1,6 +1,7 @@
 import numpy as np
 import socket 
 from T2 import cluster_heimdall, plotting
+import time
 
 import dsautils.dsa_syslog as dsl
 logger = dsl.DsaSyslogger()
@@ -77,6 +78,7 @@ def parse_socket(host, ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outp
         if len(set(gulps)) > 1:
             logger.info(f"not all clients received from same gulp: {set(gulps)}")
             print(f"not all clients received from same gulp: {set(gulps)}.")
+            time.sleep(1)
             continue
 
         if candsfile == '\n' or candsfile == '':  # skip empty candsfile
@@ -107,8 +109,8 @@ def cluster_and_plot(tab, gulp_i, selectcols=['itime', 'idm', 'ibox', 'ibeam'], 
 
     # TODO: put these in json config file
     min_dm = 50.0  # smallest dm in filtering
-    max_ibox = 25  # largest ibox in filtering
-    min_snr = 8.0  # smallest snr in filtering
+    max_ibox = 15  # largest ibox in filtering
+    min_snr = 7.5  # smallest snr in filtering
     max_ncl = 10  # largest number of clusters allowed in triggering
 
     # cluster
@@ -125,7 +127,7 @@ def cluster_and_plot(tab, gulp_i, selectcols=['itime', 'idm', 'ibox', 'ibeam'], 
     # send T2 cluster results to outputfile
     if outputfile is not None and len(tab2):
         tab2['trigger'] = col_trigger
-        cluster_heimdall.dump_cluster_results_heimdall(tab2, outputfile+str(gulp_i)+".cand")
+        cluster_heimdall.dump_cluster_results_heimdall(tab2, outputfile+str(np.floor(time.time()).astype('int'))+".cand")
 
         
 #    if plot_dir is not None: 

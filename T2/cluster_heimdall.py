@@ -48,6 +48,12 @@ def parse_candsfile(candsfile):
                 return ([], [], [])
 
     tab['ibeam'] = tab['ibeam'].astype(int)
+    try:
+        ret_time = ds.get_dict('/mon/snap/1/armed_mjd')['armed_mjd']+float(ds.get_dict('/mon/snap/1/utc_start')['utc_start'])*4.*8.192e-6/86400.
+    except:
+        ret_time = 55000.0
+    tab['mjds'] = tab['mjds']/86400.+ret_time
+    
 #
 #    snrs = tab['snr']
     # how to use ibeam?
@@ -175,12 +181,21 @@ def dump_cluster_results_json(tab, outputfile, output_cols=['mjds', 'snr', 'ibox
     itime = str(itimes[imaxsnr])
     row = tab[imaxsnr]
     output_dict = {itime: {}}
+
+#    # find time
+#    try:
+#        ret_time = ds.get_dict('/mon/snap/1/armed_mjd')['armed_mjd']+float(ds.get_dict('/mon/snap/1/utc_start')['utc_start'])*4.*8.192e-6/86400.
+#    except:
+#        ret_time = 55000.0
+        
     for col in output_cols:
         if type(row[col]) == np.int64:
             output_dict[itime][col] = int(row[col])
         else:
             output_dict[itime][col] = row[col]
 
+#    output_dict[itime]['mjds'] = ret_time
+            
     if trigger and len(tab) and (len(tab) < max_ncl):
         print(f'Triggering on candidate {imaxsnr} with SNR={maxsnr}')
         itime = (int(itimes[imaxsnr])-477)*16
