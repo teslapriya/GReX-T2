@@ -36,6 +36,7 @@ def parse_socket(host, ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outp
 
     while True:
         cls = []
+        ss = list(reversed(ss))  # reverse it to change order of reading
         try:
             for s in ss:
                 clientsocket, address = s.accept() # stores the socket details in 2 variables
@@ -49,18 +50,32 @@ def parse_socket(host, ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outp
         logger.info(f"Reading candsfile from {len(cls)} sockets...")
         candsfile = ''
         gulps = []
-        for i, cl in enumerate(cls):
+        for cl in cls:
             cf = recvall(cl, 100000000).decode('utf-8')
-            cl.close()
 
             gulp, *lines = cf.split('\n')
             try:
                 gulp = int(gulp)
-                gulps.append(gulp)
 #                print(f"received gulp {gulp} with {len(lines)-1} lines")
             except ValueError:
                 print(f'Could not get int from gulp: {gulp}.')
                 continue
+
+            # catch and retry stale gulp
+            if len(gulps) and (gulp < min(gulps)):
+                print(f"One gulp ({glup}) is out of sync with others ({gulps}). Reading again.")
+                cf = recvall(cl, 100000000).decode('utf-8')
+
+                gulp, *lines = cf.split('\n')
+                try:
+                    gulp = int(gulp)
+#                    print(f"received gulp {gulp} with {len(lines)-1} lines")
+                except ValueError:
+                    print(f'Could not get int from gulp: {gulp}.')
+                    continue
+
+            gulps.append(gulp)
+            cl.close()
 
             if len(lines) > 1:
                 if len(lines[0]) > 0:
@@ -109,8 +124,8 @@ def cluster_and_plot(tab, gulp_i, selectcols=['itime', 'idm', 'ibox', 'ibeam'], 
 
     # TODO: put these in json config file
     min_dm = 50.0  # smallest dm in filtering
-    max_ibox = 15  # largest ibox in filtering
-    min_snr = 7.5  # smallest snr in filtering
+    max_ibox = 20  # largest ibox in filtering
+    min_snr = 7.75  # smallest snr in filtering
     max_ncl = 10  # largest number of clusters allowed in triggering
 
     # cluster
