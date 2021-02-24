@@ -8,6 +8,9 @@ logger = dsl.DsaSyslogger()
 logger.subsystem('software')
 logger.app('T2')
 
+#import dsautils.dsa_cnf as cnf
+#my_cnf = cnf.Conf()
+#t2_cnf = my_cnf.get('t2')
 
 def parse_socket(host, ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outputfile=None, plot_dir=None, trigger=False):
     """ 
