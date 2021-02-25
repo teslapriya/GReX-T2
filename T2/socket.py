@@ -31,7 +31,7 @@ def parse_socket(host, ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outp
     for port in ports:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
         s.bind((host, port))    # assigns the socket with an address
-        s.listen(5)             # accept no. of incoming connections
+        s.listen(1)             # accept no. of incoming connections
         ss.append(s)
 
     while True:
@@ -58,21 +58,8 @@ def parse_socket(host, ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outp
                 gulp = int(gulp)
 #                print(f"received gulp {gulp} with {len(lines)-1} lines")
             except ValueError:
-                print(f'Could not get int from gulp: {gulp}.')
+                print(f'Could not get int from this read ({gulp}). Skipping this client.')
                 continue
-
-            # catch and retry stale gulp
-            if len(gulps) and (gulp < min(gulps)):
-                print(f"One gulp ({glup}) is out of sync with others ({gulps}). Reading again.")
-                cf = recvall(cl, 100000000).decode('utf-8')
-
-                gulp, *lines = cf.split('\n')
-                try:
-                    gulp = int(gulp)
-#                    print(f"received gulp {gulp} with {len(lines)-1} lines")
-                except ValueError:
-                    print(f'Could not get int from gulp: {gulp}.')
-                    continue
 
             gulps.append(gulp)
             cl.close()
@@ -83,17 +70,24 @@ def parse_socket(host, ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outp
 
         print(f'Received gulp_i {gulps}')
         if len(gulps) != len(cls):
-            logger.info(f"not all clients are gulping gulp {gulp_i}.")
-            print(f"not all clients are gulping gulp {gulp_i}. Skipping...")
+            print(f"not all clients are gulping gulp {gulps}. Skipping...")
             continue
         else:
             #print(f"receiving from all ports")
             pass
 
         if len(set(gulps)) > 1:
-            logger.info(f"not all clients received from same gulp: {set(gulps)}")
-            print(f"not all clients received from same gulp: {set(gulps)}.")
-            time.sleep(1)
+            logger.info(f"not all clients received from same gulp: {set(gulps)}. Restarting socket connections.")
+            print(f"not all clients received from same gulp: {set(gulps)}. Restarting socket connections.")
+
+            for s in ss:
+                s.close()
+            ss = []
+            for port in ports:
+                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
+                s.bind((host, port))    # assigns the socket with an address
+                s.listen(1)             # accept no. of incoming connections
+                ss.append(s)
             continue
 
         if candsfile == '\n' or candsfile == '':  # skip empty candsfile
