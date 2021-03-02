@@ -37,3 +37,17 @@ def test_T2():
 #    if plot: 
 #        T2.cluster_heimdall.plot_giants(tab, plot_dir=plot_dir) # plot giants      
 #        T2.cluster_heimdall.plot_clustered(clusterer, clsnr, snrs, data, tab, cols=['itime', 'idm', 'ibox'], plot_dir=plot_dir) # plot cluster results  
+
+
+def test_cluster_and_plot():
+    """
+    Run socket.cluster_and_plot
+    """
+
+    outputfile = os.path.join(_install_dir, 'data/T2_output.txt')
+    candsfile = os.path.join(_install_dir, 'data/giants_1.cand')
+
+    # read in giants 
+    tab = T2.cluster_heimdall.parse_candsfile(candsfile)
+
+    T2.socket.cluster_and_plot(tab, 0) 
