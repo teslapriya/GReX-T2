@@ -8,6 +8,9 @@ logger = dsl.DsaSyslogger()
 logger.subsystem('software')
 logger.app('T2')
 
+from dsautils import cnf
+my_cnf = cnf.Conf()
+t2_cnf = my_cnf.get('t2')
 
 def parse_socket(host, ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outputfile=None, plot_dir=None, trigger=False):
     """ 
@@ -117,10 +120,10 @@ def cluster_and_plot(tab, gulp_i, selectcols=['itime', 'idm', 'ibox', 'ibeam'], 
     """
 
     # TODO: put these in json config file
-    min_dm = 50.0  # smallest dm in filtering
-    max_ibox = 20  # largest ibox in filtering
-    min_snr = 7.75  # smallest snr in filtering
-    max_ncl = 10  # largest number of clusters allowed in triggering
+    min_dm = t2_cnf['min_dm']  # smallest dm in filtering
+    max_ibox = t2_cnf['max_ibox']  # largest ibox in filtering
+    min_snr = t2_cnf['min_snr']  # smallest snr in filtering
+    max_ncl = t2_cnf['max_ncl']  # largest number of clusters allowed in triggering
 
     # cluster
     cluster_heimdall.cluster_data(tab, metric='euclidean', allow_single_cluster=True, return_clusterer=False)
