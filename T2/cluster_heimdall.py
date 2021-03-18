@@ -195,10 +195,14 @@ def dump_cluster_results_json(tab, outputfile, output_cols=['mjds', 'snr', 'ibox
             output_dict[itime][col] = row[col]
 
 #    output_dict[itime]['mjds'] = ret_time
+
+    # half second at heimdall time resolution (after march 18)
+    offset = 1907
+    downsample = 4
             
     if trigger and len(tab) and (len(tab) < max_ncl):
         print(f'Triggering on candidate {imaxsnr} with SNR={maxsnr}')
-        itime = (int(itimes[imaxsnr])-477)*16
+        itime = (int(itimes[imaxsnr])-offset)*downsample
         ds.put_dict('/cmd/corr/0', {'cmd': 'trigger', 'val': f'{itime}'})
         # add output_dict to etcd
         ds.put_dict('/mon/corr/1/trigger',output_dict)
