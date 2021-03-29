@@ -31,18 +31,19 @@ def parse_socket(host, ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outp
     assert isinstance(ports, list)
 
     ss = []
-    for port in ports:
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
-        s.bind((host, port))    # assigns the socket with an address
-        s.listen(1)             # accept no. of incoming connections
-        ss.append(s)
 
     while True:
+        if len(ss) != len(ports):
+            for port in ports:
+                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
+                s.bind((host, port))    # assigns the socket with an address
+                s.listen(1)             # accept no. of incoming connections
+                ss.append(s)
+
         ds.put_dict('/mon/service/T2service',
                     {"cadence": 60, "time": Time(datetime.datetime.utcnow()).mjd})
 
         cls = []
-        ss = list(reversed(ss))  # reverse it to change order of reading
         try:
             for s in ss:
                 clientsocket, address = s.accept() # stores the socket details in 2 variables
@@ -87,8 +88,12 @@ def parse_socket(host, ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outp
                 s.close()
             ss = []
             for port in ports:
-                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
-                s.bind((host, port))    # assigns the socket with an address
+                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                try:
+                    s.bind((host, port))    # assigns the socket with an address
+                except OSError:
+                    print('socket bind failed.')
+                    continue
                 s.listen(1)             # accept no. of incoming connections
                 ss.append(s)
             continue
