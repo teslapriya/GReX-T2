@@ -2,13 +2,13 @@ import numpy as np
 import socket 
 from T2 import cluster_heimdall, plotting
 import time
+import datetime
 
-import dsautils.dsa_syslog as dsl
-logger = dsl.DsaSyslogger()
+from dsautils import dsa_store, dsa_syslog, cnf
+ds = dsa_store.DsaStore()
+logger = dsa_syslog.DsaSyslogger()
 logger.subsystem('software')
 logger.app('T2')
-
-from dsautils import cnf
 my_cnf = cnf.Conf()
 t2_cnf = my_cnf.get('t2')
 
@@ -31,15 +31,19 @@ def parse_socket(host, ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outp
     assert isinstance(ports, list)
 
     ss = []
-    for port in ports:
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
-        s.bind((host, port))    # assigns the socket with an address
-        s.listen(1)             # accept no. of incoming connections
-        ss.append(s)
 
     while True:
+        if len(ss) != len(ports):
+            for port in ports:
+                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
+                s.bind((host, port))    # assigns the socket with an address
+                s.listen(1)             # accept no. of incoming connections
+                ss.append(s)
+
+        ds.put_dict('/mon/service/T2service',
+                    {"cadence": 60, "time": Time(datetime.datetime.utcnow()).mjd})
+
         cls = []
-        ss = list(reversed(ss))  # reverse it to change order of reading
         try:
             for s in ss:
                 clientsocket, address = s.accept() # stores the socket details in 2 variables
@@ -75,10 +79,7 @@ def parse_socket(host, ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outp
         if len(gulps) != len(cls):
             print(f"not all clients are gulping gulp {gulps}. Skipping...")
             continue
-        else:
-            #print(f"receiving from all ports")
-            pass
-
+                
         if len(set(gulps)) > 1:
             logger.info(f"not all clients received from same gulp: {set(gulps)}. Restarting socket connections.")
             print(f"not all clients received from same gulp: {set(gulps)}. Restarting socket connections.")
@@ -87,11 +88,18 @@ def parse_socket(host, ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outp
                 s.close()
             ss = []
             for port in ports:
-                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
-                s.bind((host, port))    # assigns the socket with an address
+                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                try:
+                    s.bind((host, port))    # assigns the socket with an address
+                except OSError:
+                    print('socket bind failed.')
+                    continue
                 s.listen(1)             # accept no. of incoming connections
                 ss.append(s)
             continue
+        else:
+            ds.put_dict('/mon/service/T2gulp',
+                        {"cadence": 60, "time": Time(datetime.datetime.utcnow()).mjd})
 
         if candsfile == '\n' or candsfile == '':  # skip empty candsfile
             continue
