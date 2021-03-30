@@ -2,6 +2,7 @@ import numpy as np
 import socket 
 from T2 import cluster_heimdall, plotting
 import time
+from astropy.time import Time
 import datetime
 
 from dsautils import dsa_store, dsa_syslog, cnf
