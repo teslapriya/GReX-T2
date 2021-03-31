@@ -56,6 +56,7 @@ def parse_socket(host, ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outp
 
         # read in heimdall socket output  
         logger.info(f"Reading candsfile from {len(cls)} sockets...")
+        print(f"Reading candsfile from {len(cls)} sockets...")
         candsfile = ''
         gulps = []
         for cl in cls:
