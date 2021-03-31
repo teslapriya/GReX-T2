@@ -21,11 +21,11 @@ def parse_candsfile(candsfile):
     """
 
     if os.path.exists(candsfile):
-        print(f'Candsfile {candsfile} is path, so opening it')
+        logger.debug(f'Candsfile {candsfile} is path, so opening it')
         candsfile = open(candsfile, 'r').read()
     else:
         ncands = len(candsfile.split('\n'))-1
-        print(f'Received {ncands} candidates')
+        logger.debug(f'Received {ncands} candidates')
 #    candsfile = '\n'.join([line for line in candsfile.split('\n') if line.count(' ') == 7])
 #    print(f'Received {ncands0} candidates, removed {ncands0-ncands} lines.')
     col_heimdall = ['snr', 'if', 'itime', 'mjds', 'ibox', 'idm', 'dm', 'ibeam']
@@ -34,17 +34,17 @@ def parse_candsfile(candsfile):
 
     try:
         tab = ascii.read(candsfile, names=col_heimdall, guess=True, fast_reader=False, format='no_header')
-        print('Read with heimdall columns')
+        logger.debug('Read with heimdall columns')
     except InconsistentTableError:
         try:
             tab = ascii.read(candsfile, names=col_T2, guess=True, fast_reader=False, format='no_header')
-            print('Read with T2 columns')
+            logger.debug('Read with T2 columns')
         except InconsistentTableError:
             try:
                 tab = ascii.read(candsfile, names=col_T2old, guess=True, fast_reader=False, format='no_header')
-                print('Read with old style T2 columns')
+                logger.debug('Read with old style T2 columns')
             except InconsistentTableError:
-                print('Inconsistent table. Skipping...')              
+                logger.warning('Inconsistent table. Skipping...')              
                 return ([], [], [])
 
     tab['ibeam'] = tab['ibeam'].astype(int)
@@ -81,8 +81,7 @@ def cluster_data(tab, selectcols=['itime', 'idm', 'ibox', 'ibeam'], min_cluster_
         nclustered = 0
         nunclustered = len(cl)
 
-    print(f'Found {nclustered} clustered and {nunclustered} unclustered rows')
-    logger.info('Found {0} clustered and {1} unclustered rows'.format(nclustered, nunclustered))
+    logger.info(f'Found {nclustered} clustered and {nunclustered} unclustered rows')
 
     # hack assumes fixed columns
     bl = data[:, 3]
@@ -132,22 +131,34 @@ def get_peak(tab):
         imaxsnr = np.where(snrs == maxsnr)[0][0]
         ipeak.append(imaxsnr)
 #        clsnr.append((imaxsnr, maxsnr, cnt_beam[imaxsnr], cnt_cl[imaxsnr]))
+    logger.info(f"Cluster peaks at {ipeak}:\n{tab[ipeak]}")
     print(f"Cluster peaks at {ipeak}:\n{tab[ipeak]}")
 
     return tab[ipeak]
 
 
 def filter_clustered(tab, min_snr=None, min_dm=None, max_ibox=None, min_cntb=None, max_cntb=None, min_cntc=None,
-                     max_cntc=None):
+                     max_cntc=None, target_params=None):
     """ Function to select a subset of clustered output.
     Can set minimum SNR, min/max number of beams in cluster, min/max total count in cluster.
+    target_params is a tuple (min_dmt, max_dmt, min_snrt) for custom snr threshold for target.
     """
 
- #    for (imaxsnr, snr, cntb, cntc) in clsnr:
+    if target_params is not None:
+        min_dmt, max_dmt, min_snrt = target_params
+    else:
+        min_dmt, max_dmt, min_snrt = None, None, None
+
     good = [True] * len(tab)
 
     if min_snr is not None:
-        good *= tab['snr'] > min_snr
+        if min_snrt is None:
+            good *= tab['snr'] > min_snr
+        else:
+            good0 = (tab['snr'] > min_snr)*(tab['dm'] > max_dmt)
+            good1 = (tab['snr'] > min_snr)*(tab['dm'] < min_dmt)
+            good2 = (tab['snr'] > min_snrt)*(tab['dm'] > min_dmt)*(tab['dm'] < max_dmt)
+            good *= np.logical_or(good0, good1, good2)
     if min_dm is not None:
         good *= tab['dm'] > min_dm
     if max_ibox is not None:
@@ -164,7 +175,9 @@ def filter_clustered(tab, min_snr=None, min_dm=None, max_ibox=None, min_cntb=Non
     #    clsnr_out.append((imaxsnr, snr, cntb, cntc))
     tab_out = tab[good]
 
+    logger.info(f'Filtering from {len(tab)} to {len(tab_out)} candidates.')
     print(f'Filtering from {len(tab)} to {len(tab_out)} candidates.')
+
     return tab_out
 
 
@@ -202,17 +215,18 @@ def dump_cluster_results_json(tab, outputfile, output_cols=['mjds', 'snr', 'ibox
             
     if trigger and len(tab) and (len(tab) < max_ncl):
         print(f'Triggering on candidate {imaxsnr} with SNR={maxsnr}')
+        logger.info(f'Triggering on candidate {imaxsnr} with SNR={maxsnr}')
         itime = (int(itimes[imaxsnr])-offset)*downsample
         ds.put_dict('/cmd/corr/0', {'cmd': 'trigger', 'val': f'{itime}'})
         # add output_dict to etcd
         ds.put_dict('/mon/corr/1/trigger',output_dict)
         
         with open(outputfile, 'w') as f: #encoding='utf-8'
-            print(f'Writing trigger info to json {outputfile}')
+            logger.info(f'Writing trigger info to json {outputfile}')
             json.dump(output_dict, f, ensure_ascii=False, indent=4) 
         return row
     elif len(tab) >= max_ncl:
-        print(f'Not triggering on block with {len(tab)} > {max_ncl} candidates')
+        logger.info(f'Not triggering on block with {len(tab)} > {max_ncl} candidates')
         return None
 
 
