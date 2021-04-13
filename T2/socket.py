@@ -134,12 +134,13 @@ def cluster_and_plot(tab, gulp_i, selectcols=['itime', 'idm', 'ibox', 'ibeam'], 
     max_ibox = t2_cnf['max_ibox']  # largest ibox in filtering
     min_snr = t2_cnf['min_snr']  # smallest snr in filtering
     max_ncl = t2_cnf['max_ncl']  # largest number of clusters allowed in triggering
-    target_params = (400, 425, 6.5)  # R67?
+    target_params = (405., 420., 6.5)  # R67?
 
     # cluster
     cluster_heimdall.cluster_data(tab, metric='euclidean', allow_single_cluster=True, return_clusterer=False)
     tab2 = cluster_heimdall.get_peak(tab)
-    tab3 = cluster_heimdall.filter_clustered(tab2, min_snr=min_snr, min_dm=min_dm, max_ibox=max_ibox, target_params=target_params)
+    #tab3 = cluster_heimdall.filter_clustered(tab2, min_snr=min_snr, min_dm=min_dm, max_ibox=max_ibox, target_params=target_params)
+    tab3 = cluster_heimdall.filter_clustered(tab2, min_snr=min_snr, min_dm=min_dm, max_ibox=max_ibox)
 
     col_trigger = np.zeros(len(tab2), dtype=int)
     if outputfile is not None and len(tab3):

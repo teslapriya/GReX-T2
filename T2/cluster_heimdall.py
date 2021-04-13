@@ -155,10 +155,13 @@ def filter_clustered(tab, min_snr=None, min_dm=None, max_ibox=None, min_cntb=Non
         if min_snrt is None:
             good *= tab['snr'] > min_snr
         else:
+            #print(f'min_snr={min_snr}, min_snrt={min_snrt}, min_dmt={min_dmt}, max_dmt={max_dmt}, tab={tab[["snr", "dm"]]}')
             good0 = (tab['snr'] > min_snr)*(tab['dm'] > max_dmt)
             good1 = (tab['snr'] > min_snr)*(tab['dm'] < min_dmt)
             good2 = (tab['snr'] > min_snrt)*(tab['dm'] > min_dmt)*(tab['dm'] < max_dmt)
-            good *= np.logical_or(good0, good1, good2)
+            good *= good0 + good1 + good2
+            print('good0, good1, good2, good:')
+            print(good0, good1, good2, good)
     if min_dm is not None:
         good *= tab['dm'] > min_dm
     if max_ibox is not None:
