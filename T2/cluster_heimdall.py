@@ -61,7 +61,7 @@ def parse_candsfile(candsfile):
 #    return tab, data, snrs
     return tab
 
-def cluster_data(tab, selectcols=['itime', 'idm', 'ibox', 'ibeam'], min_cluster_size=3, min_samples=5, metric='hamming', return_clusterer=False, allow_single_cluster=True):
+def cluster_data(tab, selectcols=['itime', 'idm', 'ibox', 'ibeam'], min_cluster_size=2, min_samples=5, metric='hamming', return_clusterer=False, allow_single_cluster=True):
     """ Take data from parse_candsfile and identify clusters via hamming metric.
     selectcols will take a subset of the standard MBHeimdall output
     """
@@ -131,6 +131,7 @@ def get_peak(tab):
         imaxsnr = np.where(snrs == maxsnr)[0][0]
         ipeak.append(imaxsnr)
 #        clsnr.append((imaxsnr, maxsnr, cnt_beam[imaxsnr], cnt_cl[imaxsnr]))
+    ipeak += [i for i in range(len(tab)) if cl[i] == -1]  # append unclustered
     logger.info(f"Cluster peaks at {ipeak}:\n{tab[ipeak]}")
     print(f"Cluster peaks at {ipeak}:\n{tab[ipeak]}")
 
