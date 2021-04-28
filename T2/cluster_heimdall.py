@@ -14,6 +14,10 @@ logger = dsl.DsaSyslogger()
 logger.subsystem('software')
 logger.app('T2')
 
+# half second at heimdall time resolution (after march 18)
+offset = 1907
+downsample = 4
+
 
 def parse_candsfile(candsfile):
     """ Takes standard MBHeimdall giants output and returns full table, classifier inputs and snr tables.
@@ -212,16 +216,12 @@ def dump_cluster_results_json(tab, outputfile, output_cols=['mjds', 'snr', 'ibox
             output_dict[itime][col] = row[col]
 
 #    output_dict[itime]['mjds'] = ret_time
-
-    # half second at heimdall time resolution (after march 18)
-    offset = 1907
-    downsample = 4
             
     if trigger and len(tab) and (len(tab) < max_ncl):
         print(f'Triggering on candidate {imaxsnr} with SNR={maxsnr}')
         logger.info(f'Triggering on candidate {imaxsnr} with SNR={maxsnr}')
-        itime = (int(itimes[imaxsnr])-offset)*downsample
-        ds.put_dict('/cmd/corr/0', {'cmd': 'trigger', 'val': f'{itime}'})
+        specnum = (int(itimes[imaxsnr])-offset)*downsample
+        ds.put_dict('/cmd/corr/0', {'cmd': 'trigger', 'val': f'{specnum}'})
         # add output_dict to etcd
         ds.put_dict('/mon/corr/1/trigger',output_dict)
         
@@ -247,5 +247,7 @@ def dump_cluster_results_heimdall(tab, outputfile):
 #    output = tab['snr', 'if', 'itime', 'mjds', 'ibox', 'idm', 'dm']
 #    output['members'] = tab['cntc']
 #    output['ibeam'] = tab['ibeam']
+
+    tab['itime'] = (tab['itime']-offset)*downsample  # transform to specnum
 
     tab.write(outputfile, format='ascii.no_header')
