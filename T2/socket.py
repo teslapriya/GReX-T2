@@ -4,6 +4,7 @@ from T2 import cluster_heimdall, plotting
 import time
 from astropy.time import Time
 import datetime
+from event import names
 
 from dsautils import dsa_store, dsa_syslog, cnf
 ds = dsa_store.DsaStore()
@@ -13,7 +14,7 @@ logger.app('T2')
 my_cnf = cnf.Conf()
 t2_cnf = my_cnf.get('t2')
 
-def parse_socket(host, ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outputfile=None, plot_dir=None, trigger=False):
+def parse_socket(host, ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outroot=None, plot_dir=None, trigger=False):
     """ 
     Takes standard MBHeimdall giants socket output and returns full table, classifier inputs and snr tables.
     selectcols will take a subset of the standard MBHeimdall output for cluster. 
@@ -30,6 +31,8 @@ def parse_socket(host, ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outp
         ports = [ports]
 
     assert isinstance(ports, list)
+
+    lastname = names.get_lastname()
 
     ss = []
 
@@ -111,8 +114,8 @@ def parse_socket(host, ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outp
             logger.info(f"Table has {len(tab)} rows")
             if len(tab) == 0:
                 continue
-            #cluster_and_plot(tab, set(gulps).pop(), selectcols=selectcols, outputfile=outputfile, plot_dir=plot_dir,trigger=trigger)
-            cluster_and_plot(tab, globct, selectcols=selectcols, outputfile=outputfile, plot_dir=plot_dir,trigger=trigger)
+            lastname = cluster_and_plot(tab, globct, selectcols=selectcols, outroot=outroot,
+                                        plot_dir=plot_dir, trigger=trigger, lastname=lastname)
             globct += 1
         except KeyboardInterrupt:
             logger.info("Escaping parsing and plotting")
@@ -122,11 +125,12 @@ def parse_socket(host, ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outp
             continue
 
 
-def cluster_and_plot(tab, gulp_i, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outputfile=None, plot_dir=None,
-                     trigger=False):
+def cluster_and_plot(tab, gulp_i, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outroot=None, plot_dir=None,
+                     trigger=False, lastname=None):
     """ 
     Run clustering and plotting on read data.
     Can optionally save clusters as heimdall candidate table before filtering and json version of buffer trigger.
+    lastname is name of previously triggered/named candidate.
     """
 
     # TODO: put these in json config file
@@ -143,20 +147,20 @@ def cluster_and_plot(tab, gulp_i, selectcols=['itime', 'idm', 'ibox', 'ibeam'], 
     tab3 = cluster_heimdall.filter_clustered(tab2, min_snr=min_snr, min_dm=min_dm, max_ibox=max_ibox)
 
     col_trigger = np.zeros(len(tab2), dtype=int)
-    if outputfile is not None and len(tab3):
-        tab4 = cluster_heimdall.dump_cluster_results_json(tab3, outputfile+str(gulp_i)+".json", trigger=trigger, max_ncl=max_ncl)
-        if tab4 is not None:
+    if outroot is not None and len(tab3):
+        outputfile = outroot+str(gulp_i)+".json"
+        tab4, lastname = cluster_heimdall.dump_cluster_results_json(tab3, outputfile, trigger=trigger,
+                                                                    max_ncl=max_ncl, lastname=lastname)
+        if tab4 is not None and trigger:
             col_trigger = np.where(tab4 == tab2, 1, 0)  # if trigger, then overload
+            cluster_output.send_output(outputfile)
 
-    # send T2 cluster results to outputfile
-    if outputfile is not None and len(tab2):
+    # write T2 cluster results
+    if outroot is not None and len(tab2):
         tab2['trigger'] = col_trigger
-        cluster_heimdall.dump_cluster_results_heimdall(tab2, outputfile+str(np.floor(time.time()).astype('int'))+".cand")
-
+        cluster_heimdall.dump_cluster_results_heimdall(tab2, outroot+str(np.floor(time.time()).astype('int'))+".cand")
         
-#    if plot_dir is not None: 
-#         plotting.plot_giants(tab, plot_dir=plot_dir+str(gulp_i)+"_") # plot giants      
-#         plotting.plot_clustered(clusterer, clsnr, snrs, data, tab, cols=['itime', 'idm', 'ibox'], plot_dir=plot_dir+str(gulp_i)+"_") # plot cluster results  
+    return lastname
 
 
 def recvall(sock, n):

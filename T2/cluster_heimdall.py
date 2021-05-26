@@ -7,6 +7,7 @@ import numpy as np
 import hdbscan
 import json
 import os.path
+from event import names
 from dsautils import dsa_store
 ds = dsa_store.DsaStore()
 import dsautils.dsa_syslog as dsl
@@ -189,49 +190,58 @@ def filter_clustered(tab, min_snr=None, min_dm=None, max_ibox=None, min_cntb=Non
     return tab_out
 
 
-def dump_cluster_results_json(tab, outputfile, output_cols=['mjds', 'snr', 'ibox', 'dm', 'ibeam', 'cntb', 'cntc'], trigger=False, max_ncl=10):
+def dump_cluster_results_json(tab, outputfile, output_cols=['mjds', 'snr', 'ibox', 'dm', 'ibeam', 'cntb', 'cntc'], trigger=False, max_ncl=10, lastname=None):
     """   
     Takes tab from parse_candsfile and clsnr from get_peak, 
     output columns output_cols into a jason file outputfile. 
+    candidate name and specnum is calculated. name is unique.
     trigger is bool to update DsaStore to trigger data dump.
+    returns row of table that triggered, along with name generated for candidate.
     """
 
     itimes = tab['itime']
     maxsnr = tab['snr'].max()
     imaxsnr = np.where(tab['snr'] == maxsnr)[0][0]
     itime = str(itimes[imaxsnr])
-    row = tab[imaxsnr]
-    output_dict = {itime: {}}
+    specnum = (int(itimes[imaxsnr])-offset)*downsample
+    mjd = tab['mjds'][imaxsnr]
+    candname = names.increment_name(mjd, lastname=lastname)
+    output_dict = {candname: {}}
 
-#    # find time
-#    try:
-#        ret_time = ds.get_dict('/mon/snap/1/armed_mjd')['armed_mjd']+float(ds.get_dict('/mon/snap/1/utc_start')['utc_start'])*4.*8.192e-6/86400.
-#    except:
-#        ret_time = 55000.0
-        
+    row = tab[imaxsnr]
     for col in output_cols:
         if type(row[col]) == np.int64:
-            output_dict[itime][col] = int(row[col])
+            output_dict[candname][col] = int(row[col])
         else:
-            output_dict[itime][col] = row[col]
+            output_dict[candname][col] = row[col]
 
-#    output_dict[itime]['mjds'] = ret_time
-            
-    if trigger and len(tab) and (len(tab) < max_ncl):
-        print(f'Triggering on candidate {imaxsnr} with SNR={maxsnr}')
-        logger.info(f'Triggering on candidate {imaxsnr} with SNR={maxsnr}')
-        specnum = (int(itimes[imaxsnr])-offset)*downsample
-        ds.put_dict('/cmd/corr/0', {'cmd': 'trigger', 'val': f'{specnum}'})
-        # add output_dict to etcd
-        ds.put_dict('/mon/corr/1/trigger',output_dict)
-        
+    output_dict[candname]['specnum'] = specnum
+#    output_dict['width'] =    # calc from heimdall configuration
+#    output_dict['ra'] =     # calc from time and beamnum
+#    output_dict['dec'] =    # calc from elevation
+#    output_dict['radecerr'] =   # incoherent beam FWHM
+
+    if len(tab) and (len(tab) < max_ncl):
         with open(outputfile, 'w') as f: #encoding='utf-8'
-            logger.info(f'Writing trigger info to json {outputfile}')
+            print(f'Writing trigger file for candidate {imaxsnr} with SNR={maxsnr}')
+            logger.info(f'Writing trigger file for candidate {imaxsnr} with SNR={maxsnr}')
             json.dump(output_dict, f, ensure_ascii=False, indent=4) 
-        return row
+        return row, candname
     elif len(tab) >= max_ncl:
         logger.info(f'Not triggering on block with {len(tab)} > {max_ncl} candidates')
-        return None
+        return None, None
+
+
+def send_trigger(outputfile):
+    """
+    """
+
+    with open(outputfile, 'w') as f:
+        output_dict = json.load(f)
+
+    ds.put_dict('/cmd/corr/0', {'cmd': 'trigger', 'val': f'{output_dict[specnum]}'})
+    # add output_dict to etcd
+    ds.put_dict('/mon/corr/1/trigger', output_dict)
 
 
 def dump_cluster_results_heimdall(tab, outputfile): 
