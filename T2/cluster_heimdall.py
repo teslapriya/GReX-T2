@@ -4,6 +4,7 @@
 from astropy.io import ascii
 from astropy.io.ascii.core import InconsistentTableError
 import numpy as np
+#from sklearn import cluster  # for dbscan
 import hdbscan
 import json
 import os.path
@@ -76,6 +77,8 @@ def cluster_data(tab, selectcols=['itime', 'idm', 'ibox', 'ibeam'], min_cluster_
         clusterer = hdbscan.HDBSCAN(metric=metric, min_cluster_size=min_cluster_size,
                                     min_samples=min_samples, cluster_selection_method='eom',
                                     allow_single_cluster=allow_single_cluster).fit(data) 
+#        clusterer = cluster.DBSCAN(metric='chebyshev', min_samples=min_samples,
+#                                   eps=14, algorithm='auto', leaf_size=23).fit(data)
 
         nclustered = np.max(clusterer.labels_ + 1) 
         nunclustered = len(np.where(clusterer.labels_ == -1)[0]) 

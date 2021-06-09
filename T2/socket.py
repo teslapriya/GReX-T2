@@ -126,7 +126,7 @@ def parse_socket(host, ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outr
 
 
 def cluster_and_plot(tab, gulp_i, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outroot=None, plot_dir=None,
-                     trigger=False, lastname=None):
+                     trigger=False, lastname=None, max_ncl=None):
     """ 
     Run clustering and plotting on read data.
     Can optionally save clusters as heimdall candidate table before filtering and json version of buffer trigger.
@@ -137,7 +137,8 @@ def cluster_and_plot(tab, gulp_i, selectcols=['itime', 'idm', 'ibox', 'ibeam'], 
     min_dm = t2_cnf['min_dm']  # smallest dm in filtering
     max_ibox = t2_cnf['max_ibox']  # largest ibox in filtering
     min_snr = t2_cnf['min_snr']  # smallest snr in filtering
-    max_ncl = t2_cnf['max_ncl']  # largest number of clusters allowed in triggering
+    if max_ncl is None:
+        max_ncl = t2_cnf['max_ncl']  # largest number of clusters allowed in triggering
     target_params = (405., 420., 6.5)  # R67?
 
     # cluster
