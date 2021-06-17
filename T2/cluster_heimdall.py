@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # dsahead python 3.7
-from astropy.io import ascii
+from astropy.io import ascii, time
 from astropy.io.ascii.core import InconsistentTableError
 import numpy as np
 #from sklearn import cluster  # for dbscan
@@ -219,32 +219,62 @@ def dump_cluster_results_json(tab, outputfile, output_cols=['mjds', 'snr', 'ibox
             output_dict[candname][col] = row[col]
 
     output_dict[candname]['specnum'] = specnum
-#    output_dict['width'] =    # calc from heimdall configuration
-#    output_dict['ra'] =     # calc from time and beamnum
-#    output_dict['dec'] =    # calc from elevation
+# TODO: available with cnf?
+#    dmgrid = ?
+#    output_dict['width'] = dmgrid[output_dict[candname]['ibox']]
+    output_dict['ra'], output_dict['dec'] = get_radec(output_dict[candname]['mjds'], output_dict[candname]['ibeam'])
 #    output_dict['radecerr'] =   # incoherent beam FWHM
 
     if len(tab) and (len(tab) < max_ncl):
         with open(outputfile, 'w') as f: #encoding='utf-8'
             print(f'Writing trigger file for candidate {imaxsnr} with SNR={maxsnr}')
             logger.info(f'Writing trigger file for candidate {imaxsnr} with SNR={maxsnr}')
-            json.dump(output_dict, f, ensure_ascii=False, indent=4) 
+            json.dump(output_dict, f, ensure_ascii=False, indent=4)
+
+        if trigger:
+            send_trigger(output_dict=output_dict)
+
         return row, candname
     elif len(tab) >= max_ncl:
         logger.info(f'Not triggering on block with {len(tab)} > {max_ncl} candidates')
+
         return None, None
 
 
-def send_trigger(outputfile):
-    """
+def get_radec(mjd, beamnum):
+    """ Use time, beam number, and and antenna elevation to get RA, Dec of beam.
     """
 
-    with open(outputfile, 'w') as f:
-        output_dict = json.load(f)
+    # Notes
+    c = SkyCoord(ra=RA, dec=Dec, frame=‘icrs’)
+    t = Time(mjd, format=‘mjd’, scale=‘utc’)
+    c_ITRS = c.transform_to(ITRS(obstime=t))
+    local_ha = loc.lon - c_ITRS.spherical.lon
+    RA_pt = (t.sidereal_time(‘apparent’, longitude=ovro_lon))  # beam 127.
 
-    ds.put_dict('/cmd/corr/0', {'cmd': 'trigger', 'val': f'{output_dict[specnum]}'})
-    # add output_dict to etcd
-    ds.put_dict('/mon/corr/1/trigger', output_dict)
+    tt = time.Time(mjd, format='mjd')
+    ovro = EarthLocation(lat='37d14m02s', lon='-118d16m55s')
+    dec = 0.  # TODO get dec from elevation
+    hourangle = beamnum*(n-127)*units.arcmin/np.cos(dec)
+    aa = coordinates.AltAz(location=ovro, obstime=tt, az=, alt=30*units.deg)
+
+    return 0., 0.
+
+
+def send_trigger(output_dict=None, outputfile=None):
+    """ Use either json file or dict to send trigger for voltage dumps via etcd.
+    """
+
+    if outputfile is not None:
+        logger.info('Overloading output_dict trigger info with that from outputfile')
+        with open(outputfile, 'w') as f:
+            output_dict = json.load(f)
+
+    candname, val = output_dict.popitem()
+    logger.info(f"Sending trigger for candidate {candname} with specnum {val['specnum']}")
+    
+    ds.put_dict('/cmd/corr/0', {'cmd': 'trigger', 'val': f'{val["specnum"]}-{candname}-'})  # triggers voltage dump in corr.py
+    ds.put_dict('/mon/corr/1/trigger', output_dict)  # tells look_after_dumps.py to manage data
 
 
 def dump_cluster_results_heimdall(tab, outputfile): 
