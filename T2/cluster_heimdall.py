@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # dsahead python 3.7
-from astropy.io import ascii, time
-from astropy.io.ascii.core import InconsistentTableError
+import json
+import os.path
 import numpy as np
 #from sklearn import cluster  # for dbscan
 import hdbscan
-import json
-import os.path
+from astropy import time
+from astropy.io import ascii
+from astropy.io.ascii.core import InconsistentTableError
 from event import names
 from dsautils import dsa_store
 ds = dsa_store.DsaStore()
@@ -246,17 +247,17 @@ def get_radec(mjd, beamnum):
     """
 
     # Notes
-    c = SkyCoord(ra=RA, dec=Dec, frame=‘icrs’)
-    t = Time(mjd, format=‘mjd’, scale=‘utc’)
+    c = SkyCoord(ra=RA, dec=Dec, frame='icrs')
+    t = Time(mjd, format='mjd', scale='utc')
     c_ITRS = c.transform_to(ITRS(obstime=t))
     local_ha = loc.lon - c_ITRS.spherical.lon
-    RA_pt = (t.sidereal_time(‘apparent’, longitude=ovro_lon))  # beam 127.
+    RA_pt = (t.sidereal_time('apparent', longitude=ovro_lon))  # beam 127.
 
     tt = time.Time(mjd, format='mjd')
     ovro = EarthLocation(lat='37d14m02s', lon='-118d16m55s')
     dec = 0.  # TODO get dec from elevation
     hourangle = beamnum*(n-127)*units.arcmin/np.cos(dec)
-    aa = coordinates.AltAz(location=ovro, obstime=tt, az=, alt=30*units.deg)
+#    aa = coordinates.AltAz(location=ovro, obstime=tt, az=, alt=30*units.deg)
 
     return 0., 0.
 
