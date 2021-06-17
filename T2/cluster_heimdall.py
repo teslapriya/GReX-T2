@@ -6,7 +6,7 @@ import os.path
 import numpy as np
 #from sklearn import cluster  # for dbscan
 import hdbscan
-from astropy import time
+from astropy import time, coordinates
 from astropy.io import ascii
 from astropy.io.ascii.core import InconsistentTableError
 from event import names
@@ -222,14 +222,14 @@ def dump_cluster_results_json(tab, outputfile, output_cols=['mjds', 'snr', 'ibox
     output_dict[candname]['specnum'] = specnum
 # TODO: available with cnf?
 #    dmgrid = ?
-#    output_dict['width'] = dmgrid[output_dict[candname]['ibox']]
-    output_dict['ra'], output_dict['dec'] = get_radec(output_dict[candname]['mjds'], output_dict[candname]['ibeam'])
-#    output_dict['radecerr'] =   # incoherent beam FWHM
+#    output_dict[candname]['width'] = dmgrid[output_dict[candname]['ibox']]
+    output_dict[candname]['ra'], output_dict[candname]['dec'] = get_radec(output_dict[candname]['mjds'], output_dict[candname]['ibeam'])
+#    output_dict[candname]['radecerr'] =   # incoherent beam FWHM
 
     if len(tab) and (len(tab) < max_ncl):
         with open(outputfile, 'w') as f: #encoding='utf-8'
-            print(f'Writing trigger file for candidate {imaxsnr} with SNR={maxsnr}')
-            logger.info(f'Writing trigger file for candidate {imaxsnr} with SNR={maxsnr}')
+            print(f'Writing trigger file for index {imaxsnr} with SNR={maxsnr}')
+            logger.info(f'Writing trigger file for index {imaxsnr} with SNR={maxsnr}')
             json.dump(output_dict, f, ensure_ascii=False, indent=4)
 
         if trigger:
@@ -247,16 +247,16 @@ def get_radec(mjd, beamnum):
     """
 
     # Notes
-    c = SkyCoord(ra=RA, dec=Dec, frame='icrs')
-    t = Time(mjd, format='mjd', scale='utc')
-    c_ITRS = c.transform_to(ITRS(obstime=t))
-    local_ha = loc.lon - c_ITRS.spherical.lon
-    RA_pt = (t.sidereal_time('apparent', longitude=ovro_lon))  # beam 127.
+#    c = SkyCoord(ra=RA, dec=Dec, frame='icrs')
+#    t = Time(mjd, format='mjd', scale='utc')
+#    c_ITRS = c.transform_to(ITRS(obstime=t))
+#    local_ha = loc.lon - c_ITRS.spherical.lon
+#    RA_pt = (t.sidereal_time('apparent', longitude=ovro_lon))  # beam 127.
 
     tt = time.Time(mjd, format='mjd')
-    ovro = EarthLocation(lat='37d14m02s', lon='-118d16m55s')
+    ovro = coordinates.EarthLocation(lat='37d14m02s', lon='-118d16m55s')
     dec = 0.  # TODO get dec from elevation
-    hourangle = beamnum*(n-127)*units.arcmin/np.cos(dec)
+#    hourangle = beamnum*(n-127)*units.arcmin/np.cos(dec)
 #    aa = coordinates.AltAz(location=ovro, obstime=tt, az=, alt=30*units.deg)
 
     return 0., 0.
@@ -272,6 +272,7 @@ def send_trigger(output_dict=None, outputfile=None):
             output_dict = json.load(f)
 
     candname, val = output_dict.popitem()
+    print(candname, val)
     logger.info(f"Sending trigger for candidate {candname} with specnum {val['specnum']}")
     
     ds.put_dict('/cmd/corr/0', {'cmd': 'trigger', 'val': f'{val["specnum"]}-{candname}-'})  # triggers voltage dump in corr.py

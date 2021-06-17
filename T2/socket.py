@@ -139,13 +139,14 @@ def cluster_and_plot(tab, gulp_i, selectcols=['itime', 'idm', 'ibox', 'ibeam'], 
     min_snr = t2_cnf['min_snr']  # smallest snr in filtering
     if max_ncl is None:
         max_ncl = t2_cnf['max_ncl']  # largest number of clusters allowed in triggering
-    target_params = (405., 420., 6.5)  # R67?
+#    target_params = (405., 420., 6.5)  # R67?
+    target_params = (0, 1000, 6.5)
 
     # cluster
     cluster_heimdall.cluster_data(tab, metric='euclidean', allow_single_cluster=True, return_clusterer=False)
     tab2 = cluster_heimdall.get_peak(tab)
-    #tab3 = cluster_heimdall.filter_clustered(tab2, min_snr=min_snr, min_dm=min_dm, max_ibox=max_ibox, target_params=target_params)
-    tab3 = cluster_heimdall.filter_clustered(tab2, min_snr=min_snr, min_dm=min_dm, max_ibox=max_ibox)
+    tab3 = cluster_heimdall.filter_clustered(tab2, min_snr=min_snr, min_dm=min_dm, max_ibox=max_ibox, target_params=target_params)
+#    tab3 = cluster_heimdall.filter_clustered(tab2, min_snr=min_snr, min_dm=min_dm, max_ibox=max_ibox)
 
     col_trigger = np.zeros(len(tab2), dtype=int)
     if outroot is not None and len(tab3):
@@ -154,7 +155,6 @@ def cluster_and_plot(tab, gulp_i, selectcols=['itime', 'idm', 'ibox', 'ibeam'], 
                                                                     max_ncl=max_ncl, lastname=lastname)
         if tab4 is not None and trigger:
             col_trigger = np.where(tab4 == tab2, 1, 0)  # if trigger, then overload
-            cluster_output.send_output(outputfile)
 
     # write T2 cluster results
     if outroot is not None and len(tab2):
