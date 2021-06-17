@@ -271,7 +271,8 @@ def send_trigger(output_dict=None, outputfile=None):
         with open(outputfile, 'w') as f:
             output_dict = json.load(f)
 
-    candname, val = output_dict.popitem()
+    candname = list(output_dict)[0]
+    val = output_dict.get(candname)
     print(candname, val)
     logger.info(f"Sending trigger for candidate {candname} with specnum {val['specnum']}")
     
