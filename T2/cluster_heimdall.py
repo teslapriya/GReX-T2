@@ -239,7 +239,7 @@ def dump_cluster_results_json(tab, outputfile, output_cols=['mjds', 'snr', 'ibox
     elif len(tab) >= max_ncl:
         logger.info(f'Not triggering on block with {len(tab)} > {max_ncl} candidates')
 
-        return None, None
+        return None, lastname
 
 
 def get_radec(mjd, beamnum):
