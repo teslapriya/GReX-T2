@@ -5,6 +5,7 @@ import time
 from astropy.time import Time
 import datetime
 from event import names
+from etcd3.exceptions import ConnectionFailedError
 
 from dsautils import dsa_store, dsa_syslog, cnf
 ds = dsa_store.DsaStore()
@@ -14,7 +15,7 @@ logger.app('T2')
 my_cnf = cnf.Conf(use_etcd=True)
 try:
     t2_cnf = my_cnf.get('t2')
-except KeyError:
+except (KeyError, ConnectionFailedError):
     print('Cannot find t2 cnf using etcd. Falling back to hard coded values.')
     logger.warning('Cannot find t2 cnf using etcd. Falling back to hard coded values.')
     my_cnf = cnf.Conf(use_etcd=False)
