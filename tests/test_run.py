@@ -32,7 +32,7 @@ def test_T2():
     tab2 = T2.cluster_heimdall.get_peak(tab)
     
     # send T2 cluster results to outputfile
-    row, candname = T2.cluster_heimdall.dump_cluster_results_json(tab, outputfile, output_cols=['mjds', 'snr', 'ibox', 'ibeam', 'dm'])
+    row, candname = T2.cluster_heimdall.dump_cluster_results_json(tab, outputfile=outputfile, output_cols=['mjds', 'snr', 'ibox', 'ibeam', 'dm'])
 
     assert candname is None   # if too many, as for giants_1.cand
     
