@@ -157,8 +157,8 @@ def cluster_and_plot(tab, gulp_i, selectcols=['itime', 'idm', 'ibox', 'ibeam'], 
 
     col_trigger = np.zeros(len(tab2), dtype=int)
     if outroot is not None and len(tab3):
-        outputfile = outroot+str(gulp_i)+".json"
-        tab4, lastname = cluster_heimdall.dump_cluster_results_json(tab3, outputfile, trigger=trigger,
+#        outputfile = outroot+str(gulp_i)+".json"
+        tab4, lastname = cluster_heimdall.dump_cluster_results_json(tab3, trigger=trigger,
                                                                     max_ncl=max_ncl, lastname=lastname)
         if tab4 is not None and trigger:
             col_trigger = np.where(tab4 == tab2, 1, 0)  # if trigger, then overload

@@ -194,10 +194,10 @@ def filter_clustered(tab, min_snr=None, min_dm=None, max_ibox=None, min_cntb=Non
     return tab_out
 
 
-def dump_cluster_results_json(tab, outputfile, output_cols=['mjds', 'snr', 'ibox', 'dm', 'ibeam', 'cntb', 'cntc'], trigger=False, max_ncl=10, lastname=None):
+def dump_cluster_results_json(tab, outputfile=None, output_cols=['mjds', 'snr', 'ibox', 'dm', 'ibeam', 'cntb', 'cntc'], trigger=False, max_ncl=10, lastname=None):
     """   
     Takes tab from parse_candsfile and clsnr from get_peak, 
-    output columns output_cols into a jason file outputfile. 
+    json file will be named with generated name, unless outputfile is set
     candidate name and specnum is calculated. name is unique.
     trigger is bool to update DsaStore to trigger data dump.
     returns row of table that triggered, along with name generated for candidate.
@@ -211,6 +211,8 @@ def dump_cluster_results_json(tab, outputfile, output_cols=['mjds', 'snr', 'ibox
     mjd = tab['mjds'][imaxsnr]
     candname = names.increment_name(mjd, lastname=lastname)
     output_dict = {candname: {}}
+    if outputfile is None:
+        outputfile = f'{candname}.json'
 
     row = tab[imaxsnr]
     for col in output_cols:
