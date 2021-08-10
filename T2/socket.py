@@ -1,6 +1,6 @@
 import numpy as np
 import socket 
-from T2 import cluster_heimdall, plotting
+from T2 import cluster_heimdall
 import time
 from astropy.time import Time
 import datetime
