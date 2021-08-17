@@ -17,6 +17,7 @@ from dsautils import dsa_store
 from progress.bar import Bar
 import dsacalib.constants as ct
 import dsautils.cnf as cnf
+from T2 import cluster_heimdall
 ds = dsa_store.DsaStore()
 import dsautils.dsa_syslog as dsl
 logger = dsl.DsaSyslogger()
@@ -36,6 +37,37 @@ HA_pointing = 0.0
 npx = 1000
 theta_min = -(nbeam/2.)*beam_separation
 
+def parse_catalog(catalog):
+    """Parse source catalog
+
+    Parameters
+    ----------
+    catalog: string path to file
+        Needs to have format <ra_sexagesimal> <dec_sexagesimal> <SNR_flag>
+
+    Returns
+    -------
+    list of astropy coordinates, list of SNRs
+    """
+    
+    coords = []
+    snrs = []
+
+    with open(catalog,"r") as reader:
+        lines = reader.readlines()
+
+    for i in np.arange(1,len(lines)):
+
+        try:
+            ra,dec,minsnr = lines[i].split()
+            c = SkyCoord(ra=ra, dec=dec, unit=(u.hourangle, u.deg), frame='icrs')
+            coords.append(c)
+            snrs.append(float(minsnr))
+        except:
+            print("")
+
+    return coords,snrs
+    
 
 def get_pointing_declination(tol=0.25):
     """Gets the pointing declination from the commanded antenna elevations.
@@ -203,7 +235,7 @@ def get_2Dbeam_model():
     # Arcminutes
     primary_width_fwhm = lamb / Ddish * 180 / np.pi * 60
 
-    beam_formed_min, beam_formed_max = -primary_width_fwhm, primary_width_fwhm
+    beam_formed_min, beam_formed_max = -2.*primary_width_fwhm, 2.*primary_width_fwhm
 
     theta = np.linspace(beam_formed_min, beam_formed_max, npx)
 
@@ -218,7 +250,8 @@ def get_2Dbeam_model():
     with Bar('Calculating beam model...',suffix='%(percent).1f%% - %(eta)ds',max=len(mus)) as bar:
         for ii, mu in enumerate(mus):
             G = gaussian2D(coords, xo=mu, yo=0, sigma_x=sb_width_fwhm/2.355, sigma_y=primary_width_fwhm/2.355*10)
-            beam_val[ii] = G*Genv
+            #beam_val[ii] = G*Genv
+            beam_val[ii] = G
             bar.next()
 
     return beam_val 
@@ -263,7 +296,7 @@ def beams_coord(ra_deg,dec_deg,mjd,dec=None,response=0.1,beam_model=None):
     # Arcminutes
     primary_width_fwhm = lamb / Ddish * 180 / np.pi * 60
     
-    beam_formed_min, beam_formed_max = -primary_width_fwhm, primary_width_fwhm
+    beam_formed_min, beam_formed_max = -2.*primary_width_fwhm, 2.*primary_width_fwhm
     theta = np.linspace(beam_formed_min, beam_formed_max, npx)
     coords = np.meshgrid(theta,theta)
         
@@ -309,7 +342,67 @@ def beams_coord(ra_deg,dec_deg,mjd,dec=None,response=0.1,beam_model=None):
     return beams_out,vals
 
 
+def check_clustered_sources(tab,coords,snrs,beam_model=None):
+    """ Reduces tab according to sources
 
+    Parameters
+    ----------
+    tab: astropy table of clustered candidates
+    coords: list of astropy coordinates of sources
+    snrs: list of snr flags for sources (-1 is inf)
+    beam_model: standard beam model input to beams_coord (default None)
 
+    Returns
+    -------
+    filtered astropy table of candidates
+    """
 
+    good = [True] * len(tab)
     
+    # mjds and ibeam and snr are the three columns of interest
+    mjd = tab['mjds']
+    ibeam = tab['ibeam']
+    snr = tab['snr']
+    ncand = len(mjd)
+    is_not_src = [True] * ncand
+
+    # select based on beam and snr
+    for i in np.arange(ncand):
+
+        for j in np.arange(len(snrs)):        
+            beams,resps = beams_coord(coords[j].ra.deg,coords[j].dec.deg,mjd[i],beam_model=beam_model)
+            if ibeam[i]+1 in beams: # +1 is for model v T1/T2 offset
+                if snr[i]<snrs[j]:
+                    is_not_src[i] = False
+                if snrs[j]==-1.:
+                    is_not_src[i] = False
+
+    tab_out = tab[is_not_src]
+
+    print(f'Filtering from {len(tab)} to {len(tab_out)} candidates (source check).')
+    return tab_out
+                    
+def test_on_clustered(T2_cands_file,source_check=False,catalog=None,beam_model=None,max_ncl=10,outputfile='tmp.dat'):
+
+    tab = cluster_heimdall.parse_candsfile(T2_cands_file)
+    tab2 = cluster_heimdall.filter_clustered(tab,min_snr=8.0,min_dm=20.0,max_ibox=33.0)
+    tab2['gulp_ncl'] = [len(tab)] * len(tab2)
+
+    if len(tab2) and len(tab2)<max_ncl:
+        
+        maxsnr = tab2['snr'].max()
+        imaxsnr = np.where(tab2['snr'] == maxsnr)[0][0]
+        tab3 = tab2[imaxsnr:imaxsnr+1]
+
+        if source_check is True and catalog is not None:
+
+            coords,snrs = parse_catalog(catalog)
+            tab4 = check_clustered_sources(tab3,coords,snrs,beam_model=beam_model)
+
+            if len(tab4):
+                tab4.write(outputfile, format='ascii.no_header')
+
+        else:
+            tab3.write(outputfile, format='ascii.no_header')
+
+            
