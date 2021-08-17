@@ -287,13 +287,13 @@ def beams_coord(ra_deg,dec_deg,mjd,dec=None,response=0.1,beam_model=None):
     xy = w.wcs_world2pix((RA_pt+HA_src), c.dec.deg, 0)
 
     if xy[1]>=npx:
-        return []
+        return [],[]
     if xy[1]<0:
-        return []
+        return [],[]
     if xy[0]>=npx:
-        return []
+        return [],[]
     if xy[0]<0:
-        return []
+        return [],[]
     
     result = beam_val[:, int(xy[1]), int(xy[0])]
     beams_out = []
