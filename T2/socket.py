@@ -162,7 +162,7 @@ def cluster_and_plot(tab, gulp_i, selectcols=['itime', 'idm', 'ibox', 'ibeam'], 
     min_snr = t2_cnf['min_snr']  # smallest snr in filtering
     if max_ncl is None:
         max_ncl = t2_cnf['max_ncl']  # largest number of clusters allowed in triggering
-    max_cntb = t2_cnf['min_cntb']
+    max_cntb = t2_cnf['max_ctb']
 #    target_params = (405., 420., 6.5)  # R67?
 
     # cluster
@@ -177,7 +177,7 @@ def cluster_and_plot(tab, gulp_i, selectcols=['itime', 'idm', 'ibox', 'ibeam'], 
         tab4, lastname = cluster_heimdall.dump_cluster_results_json(tab3, trigger=trigger,
                                                                     max_ncl=max_ncl, lastname=lastname,
                                                                     cat=cat, beam_model=beam_model,
-                                                                    coords=coords, snrs=snrs)
+                                                                    coords=coords, snrs=snrs, outroot=outroot)
         if tab4 is not None and trigger:
             col_trigger = np.where(tab4 == tab2, 1, 0)  # if trigger, then overload
 

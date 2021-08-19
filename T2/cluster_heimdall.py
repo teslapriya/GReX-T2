@@ -203,7 +203,7 @@ def filter_clustered(tab, min_snr=None, min_dm=None, max_ibox=None, min_cntb=Non
     return tab_out
 
 
-def dump_cluster_results_json(tab, outputfile=None, output_cols=['mjds', 'snr', 'ibox', 'dm', 'ibeam', 'cntb', 'cntc'], trigger=False, max_ncl=10, lastname=None, cat=None, beam_model=None, coords=None, snrs=None):
+def dump_cluster_results_json(tab, outputfile=None, output_cols=['mjds', 'snr', 'ibox', 'dm', 'ibeam', 'cntb', 'cntc'], trigger=False, max_ncl=10, lastname=None, cat=None, beam_model=None, coords=None, snrs=None, outroot=''):
     """   
     Takes tab from parse_candsfile and clsnr from get_peak, 
     json file will be named with generated name, unless outputfile is set
@@ -229,7 +229,7 @@ def dump_cluster_results_json(tab, outputfile=None, output_cols=['mjds', 'snr', 
     candname = names.increment_name(mjd, lastname=lastname)
     output_dict = {candname: {}}
     if outputfile is None:
-        outputfile = f'{candname}.json'
+        outputfile = f'{outroot}{candname}.json'
 
     row = tab[imaxsnr]
     red_tab = tab[imaxsnr:imaxsnr+1]

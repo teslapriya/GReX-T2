@@ -2,5 +2,8 @@ dist
 build
 __pycache__
 */__pycache__
+tests/*.cand
+tests/*.json
+*.json
 RELEASE-VERSION
 dsa110_T2.egg-info
