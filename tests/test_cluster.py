@@ -53,7 +53,7 @@ def test_json(tab):
 
     
 def test_json(tab):
-    outfile = os.path.join(_install_dir, 'outout.cand')
+    outfile = os.path.join(_install_dir, 'output.cand')
     cluster_heimdall.cluster_data(tab, return_clusterer=False)
 
     tab2 = cluster_heimdall.get_peak(tab)
