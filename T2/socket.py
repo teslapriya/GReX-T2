@@ -1,6 +1,7 @@
 import numpy as np
 import socket 
 from T2 import cluster_heimdall
+from T2 import triggering
 import time
 from astropy.time import Time
 import datetime
@@ -22,7 +23,7 @@ except (KeyError, ConnectionFailedError):
     t2_cnf = my_cnf.get('t2')
 
 
-def parse_socket(host, ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outroot=None, plot_dir=None, trigger=False):
+def parse_socket(host, ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outroot=None, plot_dir=None, trigger=False, source_catalog=None):
     """ 
     Takes standard MBHeimdall giants socket output and returns full table, classifier inputs and snr tables.
     selectcols will take a subset of the standard MBHeimdall output for cluster. 
@@ -30,6 +31,7 @@ def parse_socket(host, ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outr
     host, ports: same with heimdall -coincidencer host:port
     ports can be list of integers.
     selectcol: list of str.  Select columns for clustering. 
+    source_catalog: path to file containing source catalog for source rejection. default None
     """
 
     # count of output - separate from gulps
@@ -44,6 +46,15 @@ def parse_socket(host, ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outr
 
     ss = []
 
+    # pre-calculate beam model and get source catalog
+    if source_catalog is not None:
+        model = triggering.get_2Dbeam_model()
+        coords, snrs = triggering.parse_catalog(source_catalog)
+    else:
+        model=None
+        coords=None
+        snrs=None
+    
     while True:
         if len(ss) != len(ports):
             for port in ports:
@@ -123,7 +134,8 @@ def parse_socket(host, ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outr
             if len(tab) == 0:
                 continue
             lastname = cluster_and_plot(tab, globct, selectcols=selectcols, outroot=outroot,
-                                        plot_dir=plot_dir, trigger=trigger, lastname=lastname)
+                                        plot_dir=plot_dir, trigger=trigger, lastname=lastname,
+                                        cat=source_catalog, beam_model=model, coords=coords, snrs=snrs)
             globct += 1
         except KeyboardInterrupt:
             logger.info("Escaping parsing and plotting")
@@ -134,11 +146,14 @@ def parse_socket(host, ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outr
 
 
 def cluster_and_plot(tab, gulp_i, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outroot=None, plot_dir=None,
-                     trigger=False, lastname=None, max_ncl=None):
+                     trigger=False, lastname=None, max_ncl=None, cat=None, beam_model=None, coords=None, snrs=None):
     """ 
     Run clustering and plotting on read data.
     Can optionally save clusters as heimdall candidate table before filtering and json version of buffer trigger.
     lastname is name of previously triggered/named candidate.
+    cat: path to source catalog (default None)
+    beam_model: pre-calculated beam model (default None)
+    coords and snrs: from source catalog (default None)
     """
 
     # TODO: put these in json config file
@@ -147,19 +162,22 @@ def cluster_and_plot(tab, gulp_i, selectcols=['itime', 'idm', 'ibox', 'ibeam'], 
     min_snr = t2_cnf['min_snr']  # smallest snr in filtering
     if max_ncl is None:
         max_ncl = t2_cnf['max_ncl']  # largest number of clusters allowed in triggering
+    max_cntb = t2_cnf['max_ctb']
 #    target_params = (405., 420., 6.5)  # R67?
 
     # cluster
     cluster_heimdall.cluster_data(tab, metric='euclidean', allow_single_cluster=True, return_clusterer=False)
     tab2 = cluster_heimdall.get_peak(tab)
 #    tab3 = cluster_heimdall.filter_clustered(tab2, min_snr=min_snr, min_dm=min_dm, max_ibox=max_ibox, target_params=target_params)
-    tab3 = cluster_heimdall.filter_clustered(tab2, min_snr=min_snr, min_dm=min_dm, max_ibox=max_ibox)
+    tab3 = cluster_heimdall.filter_clustered(tab2, min_snr=min_snr, min_dm=min_dm, max_ibox=max_ibox, max_cntb=max_cntb)
 
     col_trigger = np.zeros(len(tab2), dtype=int)
     if outroot is not None and len(tab3):
 #        outputfile = outroot+str(gulp_i)+".json"
         tab4, lastname = cluster_heimdall.dump_cluster_results_json(tab3, trigger=trigger,
-                                                                    max_ncl=max_ncl, lastname=lastname)
+                                                                    max_ncl=max_ncl, lastname=lastname,
+                                                                    cat=cat, beam_model=beam_model,
+                                                                    coords=coords, snrs=snrs, outroot=outroot)
         if tab4 is not None and trigger:
             col_trigger = np.where(tab4 == tab2, lastname, 0)  # if trigger, then overload
 

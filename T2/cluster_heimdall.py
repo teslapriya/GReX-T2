@@ -9,6 +9,7 @@ import hdbscan
 from astropy import time, coordinates
 from astropy.io import ascii
 from astropy.io.ascii.core import InconsistentTableError
+from T2 import triggering
 from event import names
 from dsautils import dsa_store
 ds = dsa_store.DsaStore()
@@ -39,27 +40,35 @@ def parse_candsfile(candsfile):
     col_T2old = ['snr', 'if', 'itime', 'mjds', 'ibox', 'idm', 'dm', 'ibeam', 'cl', 'cntc', 'cntb']
     col_T2 = ['snr', 'if', 'itime', 'mjds', 'ibox', 'idm', 'dm', 'ibeam', 'cl', 'cntc', 'cntb', 'trigger']
 
+    # flag for heimdall file
+    hdfile = False
+
     try:
         tab = ascii.read(candsfile, names=col_heimdall, guess=True, fast_reader=False, format='no_header')
+        hdfile=True
         logger.debug('Read with heimdall columns')
     except InconsistentTableError:
         try:
             tab = ascii.read(candsfile, names=col_T2, guess=True, fast_reader=False, format='no_header')
+            hdfile=False
             logger.debug('Read with T2 columns')
         except InconsistentTableError:
             try:
                 tab = ascii.read(candsfile, names=col_T2old, guess=True, fast_reader=False, format='no_header')
+                hfdile=False
                 logger.debug('Read with old style T2 columns')
             except InconsistentTableError:
                 logger.warning('Inconsistent table. Skipping...')              
                 return ([], [], [])
 
     tab['ibeam'] = tab['ibeam'].astype(int)
-    try:
-        ret_time = ds.get_dict('/mon/snap/1/armed_mjd')['armed_mjd']+float(ds.get_dict('/mon/snap/1/utc_start')['utc_start'])*4.*8.192e-6/86400.
-    except:
-        ret_time = 55000.0
-    tab['mjds'] = tab['mjds']/86400.+ret_time
+    if hdfile is True:
+        try:
+            ret_time = ds.get_dict('/mon/snap/1/armed_mjd')['armed_mjd']+float(ds.get_dict('/mon/snap/1/utc_start')['utc_start'])*4.*8.192e-6/86400.
+        except:
+            ret_time = 55000.0
+        tab['mjds'] = tab['mjds']/86400.+ret_time
+
     
 #
 #    snrs = tab['snr']
@@ -194,15 +203,23 @@ def filter_clustered(tab, min_snr=None, min_dm=None, max_ibox=None, min_cntb=Non
     return tab_out
 
 
-def dump_cluster_results_json(tab, outputfile=None, output_cols=['mjds', 'snr', 'ibox', 'dm', 'ibeam', 'cntb', 'cntc'], trigger=False, max_ncl=10, lastname=None):
+def dump_cluster_results_json(tab, outputfile=None, output_cols=['mjds', 'snr', 'ibox', 'dm', 'ibeam', 'cntb', 'cntc'], trigger=False, max_ncl=10, lastname=None, cat=None, beam_model=None, coords=None, snrs=None, outroot=''):
     """   
     Takes tab from parse_candsfile and clsnr from get_peak, 
     json file will be named with generated name, unless outputfile is set
     candidate name and specnum is calculated. name is unique.
     trigger is bool to update DsaStore to trigger data dump.
+    cat is path to source catalog (default None)
+    beam_model is pre-calculated beam model (default None)
+    coords and snrs are parsed source file input
     returns row of table that triggered, along with name generated for candidate.
     """
 
+    if coords is None:
+        coords,snrs = parse_catalog(catalog)
+    if snrs is None:
+        coords,snrs = parse_catalog(catalog)
+    
     itimes = tab['itime']
     maxsnr = tab['snr'].max()
     imaxsnr = np.where(tab['snr'] == maxsnr)[0][0]
@@ -212,9 +229,10 @@ def dump_cluster_results_json(tab, outputfile=None, output_cols=['mjds', 'snr', 
     candname = names.increment_name(mjd, lastname=lastname)
     output_dict = {candname: {}}
     if outputfile is None:
-        outputfile = f'{candname}.json'
+        outputfile = f'{outroot}{candname}.json'
 
     row = tab[imaxsnr]
+    red_tab = tab[imaxsnr:imaxsnr+1]
     for col in output_cols:
         if type(row[col]) == np.int64:
             output_dict[candname][col] = int(row[col])
@@ -228,16 +246,39 @@ def dump_cluster_results_json(tab, outputfile=None, output_cols=['mjds', 'snr', 
     output_dict[candname]['ra'], output_dict[candname]['dec'] = get_radec(output_dict[candname]['mjds'], output_dict[candname]['ibeam'])
 #    output_dict[candname]['radecerr'] =   # incoherent beam FWHM
 
-    if len(tab) and (len(tab) < max_ncl):
-        with open(outputfile, 'w') as f: #encoding='utf-8'
-            print(f'Writing trigger file for index {imaxsnr} with SNR={maxsnr}')
-            logger.info(f'Writing trigger file for index {imaxsnr} with SNR={maxsnr}')
-            json.dump(output_dict, f, ensure_ascii=False, indent=4)
+    if len(tab) and len(tab)<max_ncl:
 
-        if trigger:
-            send_trigger(output_dict=output_dict)
+        if cat is not None:
+            tab_checked = triggering.check_clustered_sources(red_tab,coords,snrs,beam_model=beam_model)
 
-        return row, candname
+            if len(tab_checked):            
+                with open(outputfile, 'w') as f: #encoding='utf-8'
+                    print(f'Writing trigger file for index {imaxsnr} with SNR={maxsnr}')
+                    logger.info(f'Writing trigger file for index {imaxsnr} with SNR={maxsnr}')
+                    json.dump(output_dict, f, ensure_ascii=False, indent=4)
+
+                if trigger:
+                    send_trigger(output_dict=output_dict)
+
+                return row, candname
+
+            else:
+                logger.info(f'Not triggering on source in beam')
+                return None, lastname
+
+        else:
+            with open(outputfile, 'w') as f: #encoding='utf-8'
+                print(f'Writing trigger file for index {imaxsnr} with SNR={maxsnr}')
+                logger.info(f'Writing trigger file for index {imaxsnr} with SNR={maxsnr}')
+                json.dump(output_dict, f, ensure_ascii=False, indent=4)
+
+            if trigger:
+                send_trigger(output_dict=output_dict)
+
+            return row, candname
+
+            
+                    
     elif len(tab) >= max_ncl:
         logger.info(f'Not triggering on block with {len(tab)} > {max_ncl} candidates')
 
