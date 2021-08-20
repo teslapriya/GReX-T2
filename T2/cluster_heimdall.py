@@ -323,20 +323,20 @@ def send_trigger(output_dict=None, outputfile=None):
     ds.put_dict('/mon/corr/1/trigger', output_dict)  # tells look_after_dumps.py to manage data
 
 
-def dump_cluster_results_heimdall(tab, outputfile): 
+def dump_cluster_results_heimdall(tab, outputfile, min_snr_t2out=None): 
     """   
     Takes tab from parse_candsfile and clsnr from get_peak, 
     output T2-clustered results with the same columns as heimdall.cand into a file outputfile.
     The output is in pandas format with column names in the 1st row.
+    min_snr_t2out is a min snr on candidates to write.
     """
-
-# comment out to simplify parsing to two types
-# 1) heimdall output
-# 2) post-clustered output (adds cl, cntc, cntb)
-#    output = tab['snr', 'if', 'itime', 'mjds', 'ibox', 'idm', 'dm']
-#    output['members'] = tab['cntc']
-#    output['ibeam'] = tab['ibeam']
 
     tab['itime'] = (tab['itime']-offset)*downsample  # transform to specnum
 
-    tab.write(outputfile, format='ascii.no_header')
+    if min_snr_t2out is not None:
+        good = [True] * len(tab)
+        good *= tab['snr'] > min_snr_t2out
+        tab = tab[good]
+
+    if len(tab)>0:
+        tab.write(outputfile, format='ascii.no_header')

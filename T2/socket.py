@@ -160,6 +160,7 @@ def cluster_and_plot(tab, gulp_i, selectcols=['itime', 'idm', 'ibox', 'ibeam'], 
     min_dm = t2_cnf['min_dm']  # smallest dm in filtering
     max_ibox = t2_cnf['max_ibox']  # largest ibox in filtering
     min_snr = t2_cnf['min_snr']  # smallest snr in filtering
+    min_snr_t2out = t2_cnf['min_snr_t2out']  # smallest snr to write T2 output cand file
     if max_ncl is None:
         max_ncl = t2_cnf['max_ncl']  # largest number of clusters allowed in triggering
     max_cntb = t2_cnf['max_ctb']
@@ -184,7 +185,8 @@ def cluster_and_plot(tab, gulp_i, selectcols=['itime', 'idm', 'ibox', 'ibeam'], 
     # write T2 cluster results
     if outroot is not None and len(tab2):
         tab2['trigger'] = col_trigger
-        cluster_heimdall.dump_cluster_results_heimdall(tab2, outroot+str(np.floor(time.time()).astype('int'))+".cand")
+        cluster_heimdall.dump_cluster_results_heimdall(tab2, outroot+str(np.floor(time.time()).astype('int'))+".cand",
+                                                       min_snr_t2out=min_snr_t2out)
         
     return lastname
 
