@@ -169,7 +169,7 @@ def cluster_and_plot(tab, gulp_i, selectcols=['itime', 'idm', 'ibox', 'ibeam'], 
     # cluster
     cluster_heimdall.cluster_data(tab, metric='euclidean', allow_single_cluster=True, return_clusterer=False)
     tab2 = cluster_heimdall.get_peak(tab)
-    tab3 = cluster_heimdall.filter_clustered(tab2, min_snr=min_snr, min_dm=min_dm, max_ibox=max_ibox, max_cntb=max_cntb, target_params=target_params)
+    tab3,nbeams_gulp = cluster_heimdall.filter_clustered(tab2, min_snr=min_snr, min_dm=min_dm, max_ibox=max_ibox, max_cntb=max_cntb, target_params=target_params)
     #tab3 = cluster_heimdall.filter_clustered(tab2, min_snr=min_snr, min_dm=min_dm, max_ibox=max_ibox, max_cntb=max_cntb)
 
     col_trigger = np.zeros(len(tab2), dtype=int)
@@ -178,7 +178,8 @@ def cluster_and_plot(tab, gulp_i, selectcols=['itime', 'idm', 'ibox', 'ibeam'], 
         tab4, lastname = cluster_heimdall.dump_cluster_results_json(tab3, trigger=trigger,
                                                                     max_ncl=max_ncl, lastname=lastname,
                                                                     cat=cat, beam_model=beam_model,
-                                                                    coords=coords, snrs=snrs, outroot=outroot)
+                                                                    coords=coords, snrs=snrs, outroot=outroot,
+                                                                    nbeams_gulp=nbeams_gulp)
         if tab4 is not None and trigger:
             col_trigger = np.where(tab4 == tab2, lastname, 0)  # if trigger, then overload
 

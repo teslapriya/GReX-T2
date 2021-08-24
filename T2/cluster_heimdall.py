@@ -197,13 +197,19 @@ def filter_clustered(tab, min_snr=None, min_dm=None, max_ibox=None, min_cntb=Non
     #    clsnr_out.append((imaxsnr, snr, cntb, cntc))
     tab_out = tab[good]
 
+    # calculate nbeams_gulp over 7.5
+    goody = [True] * len(tab_out)
+    goody *= tab_out['snr'] > 7.5
+    tab_out2 = tab_out[goody]
+
+
     logger.info(f'Filtering from {len(tab)} to {len(tab_out)} candidates.')
     print(f'Filtering from {len(tab)} to {len(tab_out)} candidates.')
 
-    return tab_out
+    return tab_out,len(tab_out2)
 
 
-def dump_cluster_results_json(tab, outputfile=None, output_cols=['mjds', 'snr', 'ibox', 'dm', 'ibeam', 'cntb', 'cntc'], trigger=False, max_ncl=10, lastname=None, cat=None, beam_model=None, coords=None, snrs=None, outroot=''):
+def dump_cluster_results_json(tab, outputfile=None, output_cols=['mjds', 'snr', 'ibox', 'dm', 'ibeam', 'cntb', 'cntc'], trigger=False, max_ncl=10, lastname=None, cat=None, beam_model=None, coords=None, snrs=None, outroot='', nbeams_gulp=None, max_nbeams_gulp=30):
     """   
     Takes tab from parse_candsfile and clsnr from get_peak, 
     json file will be named with generated name, unless outputfile is set
@@ -240,13 +246,14 @@ def dump_cluster_results_json(tab, outputfile=None, output_cols=['mjds', 'snr', 
             output_dict[candname][col] = row[col]
 
     output_dict[candname]['specnum'] = specnum
-# TODO: available with cnf?
-#    dmgrid = ?
-#    output_dict[candname]['width'] = dmgrid[output_dict[candname]['ibox']]
     output_dict[candname]['ra'], output_dict[candname]['dec'] = get_radec(output_dict[candname]['mjds'], output_dict[candname]['ibeam'])
-#    output_dict[candname]['radecerr'] =   # incoherent beam FWHM
 
-    if len(tab) and len(tab)<max_ncl:
+    gulpsize_condition = False
+    if nbeams_gulp is not None:
+        if nbeams_gulp > max_nbeams_gulp:
+            gulpsize_condition = True
+            
+    if len(tab) and len(tab)<max_ncl and gulpsize_condition is False:
 
         if cat is not None:
             tab_checked = triggering.check_clustered_sources(red_tab,coords,snrs,beam_model=beam_model)
