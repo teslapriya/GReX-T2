@@ -179,8 +179,8 @@ def filter_clustered(tab, min_snr=None, min_dm=None, max_ibox=None, min_cntb=Non
             good1 = (tab['snr'] > min_snr)*(tab['dm'] < min_dmt)
             good2 = (tab['snr'] > min_snrt)*(tab['dm'] > min_dmt)*(tab['dm'] < max_dmt)
             good *= good0 + good1 + good2
-            print('good0, good1, good2, good:')
-            print(good0, good1, good2, good)
+            #print('good0, good1, good2, good:')
+            #print(good0, good1, good2, good)
     if min_dm is not None:
         good *= tab['dm'] > min_dm
     if max_ibox is not None:
@@ -198,15 +198,20 @@ def filter_clustered(tab, min_snr=None, min_dm=None, max_ibox=None, min_cntb=Non
     tab_out = tab[good]
 
     # calculate nbeams_gulp over 7.5
-    goody = [True] * len(tab_out)
-    goody *= tab_out['snr'] > 7.5
-    tab_out2 = tab_out[goody]
+    goody = [True] * len(tab)
+    goody *= tab['snr'] > 7.5
+    tab_out2 = tab[goody]
+    if len(tab_out2)>0:
+        ibeams = np.asarray(tab_out2['ibeam'])
+        nbeams_gulp = len(np.unique(ibeams))
+    else:
+        nbeams_gulp = None
+    
 
+    logger.info(f'Filtering from {len(tab)} to {len(tab_out)} candidates. nbeams_gulp {nbeams_gulp}')
+    print(f'Filtering from {len(tab)} to {len(tab_out)} candidates. nbeams_gulp {nbeams_gulp}')
 
-    logger.info(f'Filtering from {len(tab)} to {len(tab_out)} candidates.')
-    print(f'Filtering from {len(tab)} to {len(tab_out)} candidates.')
-
-    return tab_out,len(tab_out2)
+    return tab_out,nbeams_gulp
 
 
 def dump_cluster_results_json(tab, outputfile=None, output_cols=['mjds', 'snr', 'ibox', 'dm', 'ibeam', 'cntb', 'cntc'], trigger=False, max_ncl=10, lastname=None, cat=None, beam_model=None, coords=None, snrs=None, outroot='', nbeams_gulp=None, max_nbeams_gulp=30):
@@ -222,9 +227,9 @@ def dump_cluster_results_json(tab, outputfile=None, output_cols=['mjds', 'snr', 
     """
 
     if coords is None:
-        coords,snrs = parse_catalog(catalog)
+        coords,snrs = parse_catalog(cat)
     if snrs is None:
-        coords,snrs = parse_catalog(catalog)
+        coords,snrs = parse_catalog(cat)
     
     itimes = tab['itime']
     maxsnr = tab['snr'].max()
@@ -249,15 +254,18 @@ def dump_cluster_results_json(tab, outputfile=None, output_cols=['mjds', 'snr', 
     output_dict[candname]['ra'], output_dict[candname]['dec'] = get_radec(output_dict[candname]['mjds'], output_dict[candname]['ibeam'])
 
     gulpsize_condition = False
+    print('checking gulpsize condition with nbeams_gulp',nbeams_gulp)
     if nbeams_gulp is not None:
         if nbeams_gulp > max_nbeams_gulp:
             gulpsize_condition = True
+    print('checked!',gulpsize_condition)
             
     if len(tab) and len(tab)<max_ncl and gulpsize_condition is False:
 
-        if cat is not None:
+        print(red_tab)
+        if cat is not None and red_tab is not None:
             tab_checked = triggering.check_clustered_sources(red_tab,coords,snrs,beam_model=beam_model)
-
+            print('checked source')
             if len(tab_checked):            
                 with open(outputfile, 'w') as f: #encoding='utf-8'
                     print(f'Writing trigger file for index {imaxsnr} with SNR={maxsnr}')
@@ -290,6 +298,9 @@ def dump_cluster_results_json(tab, outputfile=None, output_cols=['mjds', 'snr', 
         logger.info(f'Not triggering on block with {len(tab)} > {max_ncl} candidates')
 
         return None, lastname
+
+    print('not triggering on gulpsize condition')
+    return None, lastname
 
 
 def get_radec(mjd, beamnum):
