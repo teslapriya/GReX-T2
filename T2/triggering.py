@@ -53,20 +53,25 @@ def parse_catalog(catalog):
     coords = []
     snrs = []
 
-    with open(catalog,"r") as reader:
-        lines = reader.readlines()
+    if catalog is not None:
+        assert os.path.exists(catalog), f"catalog file ({catalog}) not found"
 
-    for i in np.arange(1,len(lines)):
+        with open(catalog, "r") as reader:
+            lines = reader.readlines()
 
-        try:
-            ra,dec,minsnr = lines[i].split()
-            c = SkyCoord(ra=ra, dec=dec, unit=(u.hourangle, u.deg), frame='icrs')
-            coords.append(c)
-            snrs.append(float(minsnr))
-        except:
-            print("")
-
-    return coords,snrs
+        for i in np.arange(1, len(lines)):
+            try:
+                ra, dec, minsnr = lines[i].split()
+                c = SkyCoord(ra=ra, dec=dec, unit=(u.hourangle, u.deg), frame='icrs')
+                coords.append(c)
+                snrs.append(float(minsnr))
+            except:
+                print("")
+    else:
+        logger.warning("No catalog found. Will not filter output based on a catalog.")
+        print("No catalog found. Will not filter output based on a catalog.")
+    
+    return coords, snrs
     
 
 def get_pointing_declination(tol=0.25):
@@ -342,7 +347,7 @@ def beams_coord(ra_deg,dec_deg,mjd,dec=None,response=0.1,beam_model=None):
     return beams_out,vals
 
 
-def check_clustered_sources(tab,coords,snrs,beam_model=None):
+def check_clustered_sources(tab, coords, snrs, beam_model=None):
     """ Reduces tab according to sources
 
     Parameters
@@ -368,7 +373,6 @@ def check_clustered_sources(tab,coords,snrs,beam_model=None):
 
     # select based on beam and snr
     for i in np.arange(ncand):
-
         for j in np.arange(len(snrs)):        
             beams,resps = beams_coord(coords[j].ra.deg,coords[j].dec.deg,mjd[i],beam_model=beam_model)
             if ibeam[i]+1 in beams: # +1 is for model v T1/T2 offset
@@ -381,28 +385,3 @@ def check_clustered_sources(tab,coords,snrs,beam_model=None):
 
     print(f'Filtering from {len(tab)} to {len(tab_out)} candidates (source check).')
     return tab_out
-                    
-def test_on_clustered(T2_cands_file,source_check=False,catalog=None,beam_model=None,max_ncl=10,outputfile='tmp.dat'):
-
-    tab = cluster_heimdall.parse_candsfile(T2_cands_file)
-    tab2 = cluster_heimdall.filter_clustered(tab,min_snr=8.0,min_dm=20.0,max_ibox=33.0)
-    tab2['gulp_ncl'] = [len(tab)] * len(tab2)
-
-    if len(tab2) and len(tab2)<max_ncl:
-        
-        maxsnr = tab2['snr'].max()
-        imaxsnr = np.where(tab2['snr'] == maxsnr)[0][0]
-        tab3 = tab2[imaxsnr:imaxsnr+1]
-
-        if source_check is True and catalog is not None:
-
-            coords,snrs = parse_catalog(catalog)
-            tab4 = check_clustered_sources(tab3,coords,snrs,beam_model=beam_model)
-
-            if len(tab4):
-                tab4.write(outputfile, format='ascii.no_header')
-
-        else:
-            tab3.write(outputfile, format='ascii.no_header')
-
-            

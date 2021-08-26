@@ -211,7 +211,7 @@ def filter_clustered(tab, min_snr=None, min_dm=None, max_ibox=None, min_cntb=Non
     logger.info(f'Filtering from {len(tab)} to {len(tab_out)} candidates. nbeams_gulp {nbeams_gulp}')
     print(f'Filtering from {len(tab)} to {len(tab_out)} candidates. nbeams_gulp {nbeams_gulp}')
 
-    return tab_out,nbeams_gulp
+    return tab_out, nbeams_gulp
 
 
 def dump_cluster_results_json(tab, outputfile=None, output_cols=['mjds', 'snr', 'ibox', 'dm', 'ibeam', 'cntb', 'cntc'], trigger=False, max_ncl=10, lastname=None, cat=None, beam_model=None, coords=None, snrs=None, outroot='', nbeams_gulp=None, max_nbeams_gulp=30):
@@ -227,7 +227,7 @@ def dump_cluster_results_json(tab, outputfile=None, output_cols=['mjds', 'snr', 
     """
 
     if coords is None or snrs is None:
-        coords,snrs = triggering.parse_catalog(cat)
+        coords, snrs = triggering.parse_catalog(cat)
     
     itimes = tab['itime']
     maxsnr = tab['snr'].max()
