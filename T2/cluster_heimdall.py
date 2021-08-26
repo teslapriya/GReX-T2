@@ -226,10 +226,8 @@ def dump_cluster_results_json(tab, outputfile=None, output_cols=['mjds', 'snr', 
     returns row of table that triggered, along with name generated for candidate.
     """
 
-    if coords is None:
-        coords,snrs = parse_catalog(cat)
-    if snrs is None:
-        coords,snrs = parse_catalog(cat)
+    if coords is None or snrs is None:
+        coords,snrs = triggering.parse_catalog(cat)
     
     itimes = tab['itime']
     maxsnr = tab['snr'].max()
