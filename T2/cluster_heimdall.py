@@ -9,7 +9,10 @@ import hdbscan
 from astropy import time, coordinates
 from astropy.io import ascii
 from astropy.io.ascii.core import InconsistentTableError
-from T2 import triggering
+try:
+    from T2 import triggering
+except ModuleNotFoundError:
+    print('not importing triggering')
 from event import names
 from dsautils import dsa_store
 ds = dsa_store.DsaStore()

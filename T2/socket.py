@@ -1,7 +1,10 @@
 import numpy as np
 import socket 
 from T2 import cluster_heimdall
-from T2 import triggering
+try:
+    from T2 import triggering
+except ModuleNotFoundError:
+    print('not importing triggering')
 import time
 from astropy.time import Time
 import datetime
