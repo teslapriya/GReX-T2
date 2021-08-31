@@ -225,7 +225,7 @@ def get_nbeams(tab, threshold=7.5):
 
 def dump_cluster_results_json(tab, outputfile=None, output_cols=['mjds', 'snr', 'ibox', 'dm', 'ibeam', 'cntb', 'cntc'],
                               trigger=False, max_ncl=10, lastname=None, cat=None, beam_model=None, coords=None, snrs=None,
-                              outroot='', nbeams=None, max_nbeams=50):
+                              outroot='', nbeams=0, max_nbeams=50):
     """   
     Takes tab from parse_candsfile and clsnr from get_peak, 
     json file will be named with generated name, unless outputfile is set
