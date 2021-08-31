@@ -22,6 +22,9 @@ except (KeyError, ConnectionFailedError):
     my_cnf = cnf.Conf(use_etcd=False)
     t2_cnf = my_cnf.get('t2')
 
+from collections import deque
+nbeams_queue = deque(maxlen=5)
+
 
 def parse_socket(host, ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outroot=None, plot_dir=None, trigger=False, source_catalog=None):
     """ 
@@ -145,7 +148,7 @@ def parse_socket(host, ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outr
             continue
 
 
-def cluster_and_plot(tab, gulp_i, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outroot=None, plot_dir=None,
+def cluster_and_plot(tab, globct, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outroot=None, plot_dir=None,
                      trigger=False, lastname=None, max_ncl=None, cat=None, beam_model=None, coords=None, snrs=None):
     """ 
     Run clustering and plotting on read data.
@@ -169,17 +172,17 @@ def cluster_and_plot(tab, gulp_i, selectcols=['itime', 'idm', 'ibox', 'ibeam'], 
     # cluster
     cluster_heimdall.cluster_data(tab, metric='euclidean', allow_single_cluster=True, return_clusterer=False)
     tab2 = cluster_heimdall.get_peak(tab)
-    tab3,nbeams_gulp = cluster_heimdall.filter_clustered(tab2, min_snr=min_snr, min_dm=min_dm, max_ibox=max_ibox, max_cntb=max_cntb, target_params=target_params)
-    #tab3 = cluster_heimdall.filter_clustered(tab2, min_snr=min_snr, min_dm=min_dm, max_ibox=max_ibox, max_cntb=max_cntb)
+    nbeams_gulp = cluster_heimdall.get_nbeams(tab2)
+    nbeams_queue.append(nbeams_gulp)
+    tab3 = cluster_heimdall.filter_clustered(tab2, min_snr=min_snr, min_dm=min_dm, max_ibox=max_ibox, max_cntb=max_cntb, target_params=target_params)
 
     col_trigger = np.zeros(len(tab2), dtype=int)
     if outroot is not None and len(tab3):
-#        outputfile = outroot+str(gulp_i)+".json"
         tab4, lastname = cluster_heimdall.dump_cluster_results_json(tab3, trigger=trigger,
                                                                     max_ncl=max_ncl, lastname=lastname,
                                                                     cat=cat, beam_model=beam_model,
                                                                     coords=coords, snrs=snrs, outroot=outroot,
-                                                                    nbeams_gulp=nbeams_gulp)
+                                                                    nbeams=sum(nbeams_queue))
         if tab4 is not None and trigger:
             col_trigger = np.where(tab4 == tab2, lastname, 0)  # if trigger, then overload
 
