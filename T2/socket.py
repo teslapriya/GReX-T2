@@ -181,6 +181,7 @@ def cluster_and_plot(tab, globct, selectcols=['itime', 'idm', 'ibox', 'ibeam'], 
 
     col_trigger = np.zeros(len(tab2), dtype=int)
     if outroot is not None and len(tab3):
+        print(f'nbeams_queue: {nbeams_queue} (total {sum(nbeams_queue)})')
         tab4, lastname = cluster_heimdall.dump_cluster_results_json(tab3, trigger=trigger,
                                                                     max_ncl=max_ncl, lastname=lastname,
                                                                     cat=cat, beam_model=beam_model,
