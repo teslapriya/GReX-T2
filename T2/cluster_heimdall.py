@@ -263,17 +263,14 @@ def dump_cluster_results_json(tab, outputfile=None, output_cols=['mjds', 'snr', 
     output_dict[candname]['ra'], output_dict[candname]['dec'] = get_radec(output_dict[candname]['mjds'], output_dict[candname]['ibeam'])
 
     nbeams_condition = False
-    print(f'Checking nbeams condition: {nbeams}')
+    print(f'Checking nbeams condition: {nbeams}>{max_nbeams}')
     if nbeams > max_nbeams:
         nbeams_condition = True
-    print(f'Checked nbeams_condition: {nbeams_condition}')
             
     if len(tab) and len(tab)<max_ncl and nbeams_condition is False:
-
         print(red_tab)
         if cat is not None and red_tab is not None:
             tab_checked = triggering.check_clustered_sources(red_tab,coords,snrs,beam_model=beam_model)
-            print('checked source')
             if len(tab_checked):            
                 with open(outputfile, 'w') as f: #encoding='utf-8'
                     print(f'Writing trigger file for index {imaxsnr} with SNR={maxsnr}')
@@ -299,8 +296,6 @@ def dump_cluster_results_json(tab, outputfile=None, output_cols=['mjds', 'snr', 
                 send_trigger(output_dict=output_dict)
 
             return row, candname
-
-            
                     
     elif len(tab) >= max_ncl:
         logger.info(f'Not triggering on block with {len(tab)} > {max_ncl} candidates')

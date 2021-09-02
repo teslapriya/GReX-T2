@@ -177,11 +177,11 @@ def cluster_and_plot(tab, globct, selectcols=['itime', 'idm', 'ibox', 'ibeam'], 
     tab2 = cluster_heimdall.get_peak(tab)
     nbeams_gulp = cluster_heimdall.get_nbeams(tab2)
     nbeams_queue.append(nbeams_gulp)
+    print(f'nbeams_queue: {nbeams_queue} (total {sum(nbeams_queue)})')
     tab3 = cluster_heimdall.filter_clustered(tab2, min_snr=min_snr, min_dm=min_dm, max_ibox=max_ibox, max_cntb=max_cntb, target_params=target_params)
 
     col_trigger = np.zeros(len(tab2), dtype=int)
     if outroot is not None and len(tab3):
-        print(f'nbeams_queue: {nbeams_queue} (total {sum(nbeams_queue)})')
         tab4, lastname = cluster_heimdall.dump_cluster_results_json(tab3, trigger=trigger,
                                                                     max_ncl=max_ncl, lastname=lastname,
                                                                     cat=cat, beam_model=beam_model,
