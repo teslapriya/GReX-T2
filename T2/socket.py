@@ -26,7 +26,7 @@ except (KeyError, ConnectionFailedError):
     t2_cnf = my_cnf.get('t2')
 
 from collections import deque
-nbeams_queue = deque(maxlen=5)
+nbeams_queue = deque(maxlen=10)
 
 
 def parse_socket(host, ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outroot=None, plot_dir=None, trigger=False, source_catalog=None):
