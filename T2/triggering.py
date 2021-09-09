@@ -386,7 +386,7 @@ def check_clustered_sources(tab, coords, snrs, beam_model=None):
     # select based on beam and snr
     for i in np.arange(ncand):
         for j in np.arange(len(snrs)):        
-            beams,resps = beams_coord(coords[j].ra.deg,coords[j].dec.deg,mjd[i],beam_model=beam_model)
+            beams, resps = beams_coord(coords[j].ra.deg, coords[j].dec.deg, mjd[i], beam_model=beam_model)
             if ibeam[i]+1 in beams: # +1 is for model v T1/T2 offset
                 if snr[i]<snrs[j]:
                     is_not_src[i] = False
