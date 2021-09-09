@@ -37,6 +37,7 @@ HA_pointing = 0.0
 npx = 1000
 theta_min = -(nbeam/2.)*beam_separation
 
+
 def parse_catalog(catalog):
     """Parse source catalog
 
@@ -221,18 +222,20 @@ def gaussian2D(coords,  # x and y coordinates for each image.
 
 
 # this is in MD/alt coordinates
-def get_2Dbeam_model():
+def get_2Dbeam_model(aliased=True, neighbors=False):
     """Returns a 2D beam model image composed of 2D Gaussians
 
     Parameters
     ----------
-
+    aliased bool
+        For each synth beam shape, add an aliased one offset by +-128 synthesized beams
+    neighbors bool
+        For each synth beam shape, add an aliased one offset by +-1 synthesized beams
     Returns
     -------
     numpy array
         [nbeam, npix, npix] array of beam response values
     """
-
 
     # Arcminutes 
     sb_width_fwhm = lamb / dmax * 180 / np.pi * 120
@@ -256,7 +259,12 @@ def get_2Dbeam_model():
         for ii, mu in enumerate(mus):
             G = gaussian2D(coords, xo=mu, yo=0, sigma_x=sb_width_fwhm/2.355, sigma_y=primary_width_fwhm/2.355*10)
             #beam_val[ii] = G*Genv
-            beam_val[ii] = G
+            beam_val[ii] += G
+            if aliased:
+                beam_val[np.mod(128 + np.mod(ii, 128), 128)] += G  # pick either +-128 (0->128, 128->0, 255->127)
+            if neighbors:
+                beam_val[ii+1] += G
+                beam_val[ii-1] += G
             bar.next()
 
     return beam_val 
