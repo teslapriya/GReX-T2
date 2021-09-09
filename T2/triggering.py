@@ -222,7 +222,7 @@ def gaussian2D(coords,  # x and y coordinates for each image.
 
 
 # this is in MD/alt coordinates
-def get_2Dbeam_model(aliased=True, neighbors=False):
+def get_2Dbeam_model(aliased=False, neighbors=False):
     """Returns a 2D beam model image composed of 2D Gaussians
 
     Parameters
@@ -259,17 +259,24 @@ def get_2Dbeam_model(aliased=True, neighbors=False):
         for ii, mu in enumerate(mus):
             G = gaussian2D(coords, xo=mu, yo=0, sigma_x=sb_width_fwhm/2.355, sigma_y=primary_width_fwhm/2.355*10)
             #beam_val[ii] = G*Genv
-            beam_val[ii] += G
+            beam_val[ii] = G
             if aliased:
-                beam_val[np.mod(128 + np.mod(ii, 128), 128)] += G  # pick either +-128 (0->128, 128->0, 255->127)
+                # pick either +-128 (0->128, 128->0, 255->127)
+                G = gaussian2D(coords, xo=mus[np.mod(128 + np.mod(ii, 128), 128)], yo=0,
+                               sigma_x=sb_width_fwhm/2.355, sigma_y=primary_width_fwhm/2.355*10)
+                beam_val += G
             if neighbors:
+                G = gaussian2D(coords, xo=mus[ii+1], yo=0,
+                               sigma_x=sb_width_fwhm/2.355, sigma_y=primary_width_fwhm/2.355*10)
                 beam_val[ii+1] += G
+                G = gaussian2D(coords, xo=mus[ii-1], yo=0,
+                               sigma_x=sb_width_fwhm/2.355, sigma_y=primary_width_fwhm/2.355*10)
                 beam_val[ii-1] += G
             bar.next()
 
     return beam_val 
 
-def beams_coord(ra_deg,dec_deg,mjd,dec=None,response=0.1,beam_model=None):
+def beams_coord(ra_deg, dec_deg, mjd, dec=None, response=0.1, beam_model=None, aliased=True, neighbors=False):
     """Provides a list of beams with response above a given value at a coordinate
 
     Parameters
@@ -285,6 +292,10 @@ def beams_coord(ra_deg,dec_deg,mjd,dec=None,response=0.1,beam_model=None):
     response: float
         Response limit above which beam is returned, as fraction of peak (default 0.1)
     beam_model: output of get_2Dbeam_model (default None)
+    aliased: bool
+        Add aliased beam to 2D beam model used for filtering triggers
+    neighbors: bool
+        Add neighborsing beam to 2D beam model used for filtering triggers
     
         
     Returns
@@ -301,7 +312,6 @@ def beams_coord(ra_deg,dec_deg,mjd,dec=None,response=0.1,beam_model=None):
         Dec = Dec.value*180./np.pi
     else:
         Dec = dec
-
     
     # Arcminutes
     sb_width_fwhm = lamb / dmax * 180 / np.pi * 120
