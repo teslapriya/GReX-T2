@@ -262,7 +262,7 @@ def get_2Dbeam_model(aliased=False, neighbors=False):
             beam_val[ii] = G
             if aliased:
                 # pick either +-128 (0->128, 128->0, 255->127)
-                beam_val[np.mod(128 + np.mod(ii, 128), 128)] += G
+                beam_val[np.mod(ii-128, 256)] += G
             if neighbors:
                 beam_val[ii+1] += G
                 beam_val[ii-1] += G
