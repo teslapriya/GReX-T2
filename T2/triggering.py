@@ -249,7 +249,7 @@ def get_2Dbeam_model(aliased=False, neighbors=False):
 
     coords = np.meshgrid(theta,theta)
 
-    G = gaussian2D(coords, xo=0, yo=0, sigma_x=sb_width_fwhm/2.355, sigma_y=primary_width_fwhm/2.355)
+    G0 = gaussian2D(coords, xo=0, yo=0, sigma_x=sb_width_fwhm/2.355, sigma_y=primary_width_fwhm/2.355)
     beam_env = gauss1d(theta, 0, primary_width_fwhm/2.355)
     mus = (np.arange(256)*beam_separation + theta_min)
     beam_val = np.zeros([nbeam, len(theta), len(theta)])
@@ -262,7 +262,7 @@ def get_2Dbeam_model(aliased=False, neighbors=False):
             beam_val[ii] = G
             if aliased:
                 # pick either +-128 (0->128, 128->0, 255->127)
-                beam_val[np.mod(ii-128, 256)] += G
+                beam_val[np.mod(ii-128, 256)] += G0
             if neighbors:
                 beam_val[ii+1] += G
                 beam_val[ii-1] += G
