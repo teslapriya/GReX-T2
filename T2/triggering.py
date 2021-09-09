@@ -249,20 +249,23 @@ def get_2Dbeam_model(aliased=False, neighbors=False):
 
     coords = np.meshgrid(theta,theta)
 
-    G0 = gaussian2D(coords, xo=0, yo=0, sigma_x=sb_width_fwhm/2.355, sigma_y=primary_width_fwhm/2.355)
+#    G0 = gaussian2D(coords, xo=0, yo=0, sigma_x=sb_width_fwhm/2.355, sigma_y=primary_width_fwhm/2.355)
     beam_env = gauss1d(theta, 0, primary_width_fwhm/2.355)
     mus = (np.arange(256)*beam_separation + theta_min)
     beam_val = np.zeros([nbeam, len(theta), len(theta)])
-    Genv = gaussian2D(coords, xo=0, yo=0, sigma_x=primary_width_fwhm/2.355, sigma_y=primary_width_fwhm/2.355)
+#    Genv = gaussian2D(coords, xo=0, yo=0, sigma_x=primary_width_fwhm/2.355, sigma_y=primary_width_fwhm/2.355)
 
     with Bar('Calculating beam model...',suffix='%(percent).1f%% - %(eta)ds',max=len(mus)) as bar:
-        for ii, mu in enumerate(mus):
-            G = gaussian2D(coords, xo=mu, yo=0, sigma_x=sb_width_fwhm/2.355, sigma_y=primary_width_fwhm/2.355*10)
+#        for ii, mu in enumerate(mus):
+        for ii in range(len((mus))):
+            G = gaussian2D(coords, xo=mus[ii], yo=0, sigma_x=sb_width_fwhm/2.355, sigma_y=primary_width_fwhm/2.355*10)
             #beam_val[ii] = G*Genv
             beam_val[ii] = G
             if aliased:
                 # pick either +-128 (0->128, 128->0, 255->127)
-                beam_val[np.mod(ii-128, 256)] += G0
+                iia = np.mod(ii-128, 256)
+                Ga = gaussian2D(coords, xo=mus[iia], yo=0, sigma_x=sb_width_fwhm/2.355, sigma_y=primary_width_fwhm/2.355*10)
+                beam_val[iia] += Ga
             if neighbors:
                 beam_val[ii+1] += G
                 beam_val[ii-1] += G
