@@ -262,15 +262,9 @@ def get_2Dbeam_model(aliased=False, neighbors=False):
             beam_val[ii] = G
             if aliased:
                 # pick either +-128 (0->128, 128->0, 255->127)
-                G = gaussian2D(coords, xo=mus[np.mod(128 + np.mod(ii, 128), 128)], yo=0,
-                               sigma_x=sb_width_fwhm/2.355, sigma_y=primary_width_fwhm/2.355*10)
-                beam_val += G
+                beam_val[np.mod(128 + np.mod(ii, 128), 128)] += G
             if neighbors:
-                G = gaussian2D(coords, xo=mus[ii+1], yo=0,
-                               sigma_x=sb_width_fwhm/2.355, sigma_y=primary_width_fwhm/2.355*10)
                 beam_val[ii+1] += G
-                G = gaussian2D(coords, xo=mus[ii-1], yo=0,
-                               sigma_x=sb_width_fwhm/2.355, sigma_y=primary_width_fwhm/2.355*10)
                 beam_val[ii-1] += G
             bar.next()
 
