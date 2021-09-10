@@ -323,13 +323,15 @@ def beams_coord(ra_deg, dec_deg, mjd, dec=None, response=0.1, beam_model=None, a
     dalt_arr, dMD_arr = coords[0], coords[1] # these are alt, MD
     if beam_model is not None:
         beam_val = beam_model
+        print('Using provided beam_model')
     else:
         try:
             beam_val = np.load('T2_beam_model.npy')
-            print('Loaded T2_beam_mode.npy')
+            print('Loaded T2_beam_model.npy')
         except:
-            print('No beam model provided or found on disk. Generating and saving as T2_beam_mode.npy.')
+            print(f'No beam model provided or found on disk. Generating with aliased={aliased} and neighbors={neighbors}')
             beam_val = get_2Dbeam_model(aliased=aliased, neighbors=neighbors) # this is in alt / MD, not HA
+            print('Saving beam model as T2_beam_mode.npy.')
             np.save('T2_beam_model.npy', beam_val)
 
     # get results
