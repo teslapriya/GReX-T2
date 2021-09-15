@@ -264,7 +264,7 @@ def get_2Dbeam_model(aliased=False, neighbors=False):
             if aliased:
                 # pick either +-128 (0->128, 128->0, 255->127)
                 iia = np.mod(ii-128, 256)
-                Ga = gaussian2D(coords, xo=mus[iia], yo=0, sigma_x=sb_width_fwhm/2.355, sigma_y=primary_width_fwhm/2.355*10)
+                Ga = gaussian2D(coords, xo=mus[iia], yo=0, sigma_x=10*sb_width_fwhm/2.355, sigma_y=primary_width_fwhm/2.355*10)
                 beam_val[ii] += Ga
             if neighbors:
                 beam_val[ii+1] += G
