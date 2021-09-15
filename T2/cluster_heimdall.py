@@ -102,7 +102,7 @@ def cluster_data(tab, selectcols=['itime', 'idm', 'ibox', 'ibeam'], min_cluster_
         nclustered = 0
         nunclustered = len(cl)
 
-    logger.info(f'Found {nclustered} clustered and {nunclustered} unclustered rows')
+#    logger.info(f'Found {nclustered} clustered and {nunclustered} unclustered rows')
 
     # hack assumes fixed columns
     bl = data[:, 3]
@@ -153,8 +153,8 @@ def get_peak(tab):
         ipeak.append(imaxsnr)
 #        clsnr.append((imaxsnr, maxsnr, cnt_beam[imaxsnr], cnt_cl[imaxsnr]))
     ipeak += [i for i in range(len(tab)) if cl[i] == -1]  # append unclustered
-    logger.info(f"Cluster peaks at {ipeak}:\n{tab[ipeak]}")
-    print(f"Cluster peaks at {ipeak}:\n{tab[ipeak]}")
+    logger.info(f"Found {len(ipeak)} cluster peaks")
+    print(f"Found {len(ipeak)} cluster peaks")
 
     return tab[ipeak]
 
@@ -200,9 +200,8 @@ def filter_clustered(tab, min_snr=None, min_dm=None, max_ibox=None, min_cntb=Non
     #    clsnr_out.append((imaxsnr, snr, cntb, cntc))
     tab_out = tab[good]
 
-
-    logger.info(f'Filtering from {len(tab)} to {len(tab_out)} candidates.')
-    print(f'Filtering from {len(tab)} to {len(tab_out)} candidates.')
+    logger.info(f'Filtering clusters from {len(tab)} to {len(tab_out)} candidates.')
+    print(f'Filtering clusters from {len(tab)} to {len(tab_out)} candidates.')
 
     return tab_out
 

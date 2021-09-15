@@ -61,6 +61,8 @@ def parse_socket(host, ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outr
         coords=None
         snrs=None
     
+    logger.info(f"Reading from {len(ports)} sockets...")
+    print(f"Reading from {len(ports)} sockets...")
     while True:
         if len(ss) != len(ports):
             for port in ports:
@@ -76,15 +78,13 @@ def parse_socket(host, ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outr
         try:
             for s in ss:
                 clientsocket, address = s.accept() # stores the socket details in 2 variables
-                logger.info(f"Connection from {address} has been established")
+#                logger.info(f"Connection from {address} has been established")
                 cls.append(clientsocket)
         except KeyboardInterrupt:
             logger.info("Escaping socket connection")
             break
 
         # read in heimdall socket output  
-        logger.info(f"Reading candsfile from {len(cls)} sockets...")
-        print(f"Reading candsfile from {len(cls)} sockets...")
         candsfile = ''
         gulps = []
         for cl in cls:
@@ -177,7 +177,7 @@ def cluster_and_plot(tab, globct, selectcols=['itime', 'idm', 'ibox', 'ibeam'], 
     tab2 = cluster_heimdall.get_peak(tab)
     nbeams_gulp = cluster_heimdall.get_nbeams(tab2)
     nbeams_queue.append(nbeams_gulp)
-    print(f'nbeams_queue: {nbeams_queue} (total {sum(nbeams_queue)})')
+    print(f'nbeams_queue: {nbeams_queue}')
     tab3 = cluster_heimdall.filter_clustered(tab2, min_snr=min_snr, min_dm=min_dm, max_ibox=max_ibox, max_cntb=max_cntb, target_params=target_params)
 
     col_trigger = np.zeros(len(tab2), dtype=int)
