@@ -270,6 +270,7 @@ def dump_cluster_results_json(tab, outputfile=None, output_cols=['mjds', 'snr', 
     if len(tab) and len(tab)<max_ncl and nbeams_condition is False:
         print(red_tab)
         if cat is not None and red_tab is not None:
+            beam_model = triggering.read_beam_model(beam_model)
             tab_checked = triggering.check_clustered_sources(red_tab, coords, snrs, beam_model=beam_model)
             if len(tab_checked):            
                 with open(outputfile, 'w') as f: #encoding='utf-8'
