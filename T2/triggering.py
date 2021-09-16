@@ -273,7 +273,7 @@ def get_2Dbeam_model(aliased=False, neighbors=False):
 
     return beam_val 
 
-def beams_coord(ra_deg, dec_deg, mjd, dec=None, response=0.1, beam_model=None, aliased=True, neighbors=False):
+def beams_coord(ra_deg, dec_deg, mjd, dec=None, response=0.1, beam_model=None, aliased=False, neighbors=False):
     """Provides a list of beams with response above a given value at a coordinate
 
     Parameters
@@ -376,7 +376,8 @@ def read_beam_model(beam_model=None):
             print('Saving beam model as T2_beam_mode.npy.')
             np.save('T2_beam_model.npy', beam_val)
     else:
-            beam_val = beam_model
+        print('Using provided beam model')
+        beam_val = beam_model
 
     return beam_val
 
