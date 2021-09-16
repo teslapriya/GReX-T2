@@ -57,6 +57,7 @@ def parse_socket(host, ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outr
         model = triggering.get_2Dbeam_model()
         coords, snrs = triggering.parse_catalog(source_catalog)
     else:
+        print('No source catalog found. No model generated.')
         model=None
         coords=None
         snrs=None

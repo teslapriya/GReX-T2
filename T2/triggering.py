@@ -359,6 +359,64 @@ def beams_coord(ra_deg, dec_deg, mjd, dec=None, response=0.1, beam_model=None, a
 
     return beams_out,vals
 
+def primary_beams_coord(ra_deg, dec_deg, mjd, dec=None, response=0.1, beam_model=None, aliased=False, neighbors=False, source_separation=3.5):
+    """Returns all beams if source is within separation deg of pointing center
+
+    Parameters
+    ----------
+    ra_deg: float (degrees)
+        RA coordinate (ICRS) in degrees
+    dec_deg: float (degrees)
+        DEC coordinate (ICRS) in degrees
+    mjd: float
+        mjd to calculate beams at 
+    dec: float (degrees)
+        Pointing declination (default is to try to figure it out from etcd/cnf)
+    response: float
+        Response limit above which beam is returned, as fraction of peak (default 0.1)
+    beam_model: output of get_2Dbeam_model (default None)
+    aliased: bool
+        Add aliased beam to 2D beam model used for filtering triggers
+    neighbors: bool
+        Add neighborsing beam to 2D beam model used for filtering triggers
+    source_separation: float
+        Separation cutoff between source and pointing center
+    
+        
+    Returns
+    -------
+    list
+        list of beams that contribute at position (can be empty)
+    """
+
+    c = SkyCoord(ra=ra_deg*u.deg, dec=dec_deg*u.deg, frame='icrs')
+
+    if dec is None:
+        Dec = get_pointing_declination()
+        Dec = Dec.value*180./np.pi
+    else:
+        Dec = dec
+
+    # get results
+    t = Time(mjd, format='mjd', scale='utc')        
+    c_ITRS = c.transform_to(ITRS(obstime=t))
+    local_ha = ct.OVRO_LON*u.rad - c_ITRS.spherical.lon
+    HA_src = local_ha.deg+360.
+    RA_pt =  (t.sidereal_time('apparent', longitude=ct.OVRO_LON*(180./np.pi)*u.deg)).deg
+    coord_pt = SkyCoord(ra=RA_pt*u.deg, dec=Dec*u.deg, frame='icrs')
+
+    sep = coord_pt.separation(c).value
+
+    beams_out = []
+    vals = []
+
+    if sep<source_separation:
+        for i in np.arange(256):
+            beams_out.append(i)
+            vals.append(1.)
+
+    return beams_out,vals
+
 
 def read_beam_model(beam_model=None):
     """ Checks beam_model object and optionally overloads it with saved version.
@@ -389,7 +447,7 @@ def check_clustered_sources(tab, coords, snrs, beam_model=None):
     ----------
     tab: astropy table of clustered candidates
     coords: list of astropy coordinates of sources
-    snrs: list of snr flags for sources (-1 is inf)
+    snrs: list of snr flags for sources (-1 is inf, -2 is primary beam flagging)
     beam_model: standard beam model input to beams_coord (default None)
 
     Returns
@@ -408,12 +466,17 @@ def check_clustered_sources(tab, coords, snrs, beam_model=None):
 
     # select based on beam and snr
     for i in np.arange(ncand):
-        for j in np.arange(len(snrs)):        
-            beams, resps = beams_coord(coords[j].ra.deg, coords[j].dec.deg, mjd[i], beam_model=beam_model)
+        for j in np.arange(len(snrs)):
+            if snrs[j] == -2.:
+                beams, resps = primary_beams_coord(coords[j].ra.deg, coords[j].dec.deg, mjd[i], beam_model=beam_model)
+            else:
+                beams, resps = beams_coord(coords[j].ra.deg, coords[j].dec.deg, mjd[i], beam_model=beam_model)
             if ibeam[i]+1 in beams: # +1 is for model v T1/T2 offset
                 if snr[i]<snrs[j]:
                     is_not_src[i] = False
                 if snrs[j]==-1.:
+                    is_not_src[i] = False
+                if snrs[j]==-2.:
                     is_not_src[i] = False
 
     tab_out = tab[is_not_src]
