@@ -429,6 +429,8 @@ def read_beam_model(beam_model=None):
             beam_val = np.load('T2_beam_model.npy')
             print('Loaded T2_beam_model.npy')
         except:
+            aliased=False
+            neighbors=False
             print(f'No beam model provided or found on disk. Generating with aliased={aliased} and neighbors={neighbors}')
             beam_val = get_2Dbeam_model() # this is in alt / MD, not HA
             print('Saving beam model as T2_beam_mode.npy.')
