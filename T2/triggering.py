@@ -6,7 +6,7 @@ import os.path
 import numpy as np
 #from sklearn import cluster  # for dbscan
 import hdbscan
-from astropy import time, coordinates
+from astropy import time
 from astropy.io import ascii
 from astropy.io.ascii.core import InconsistentTableError
 from astropy.coordinates import SkyCoord, ITRS, EarthLocation

@@ -6,7 +6,7 @@ import os.path
 import numpy as np
 #from sklearn import cluster  # for dbscan
 import hdbscan
-from astropy import time, coordinates
+from astropy import time
 from astropy.io import ascii
 from astropy.io.ascii.core import InconsistentTableError
 try:
@@ -14,7 +14,7 @@ try:
 except ModuleNotFoundError:
     print('not importing triggering')
 from event import names
-from dsautils import dsa_store
+from dsautils import dsa_store, coordinates
 ds = dsa_store.DsaStore()
 import dsautils.dsa_syslog as dsl
 logger = dsl.DsaSyslogger()
@@ -259,7 +259,7 @@ def dump_cluster_results_json(tab, outputfile=None, output_cols=['mjds', 'snr', 
             output_dict[candname][col] = row[col]
 
     output_dict[candname]['specnum'] = specnum
-    output_dict[candname]['ra'], output_dict[candname]['dec'] = get_radec(output_dict[candname]['mjds'], output_dict[candname]['ibeam'])
+    output_dict[candname]['ra'], output_dict[candname]['dec'] = get_radec()  # quick and dirty
 
     nbeams_condition = False
     print(f'Checking nbeams condition: {nbeams}>{max_nbeams}')
@@ -306,24 +306,19 @@ def dump_cluster_results_json(tab, outputfile=None, output_cols=['mjds', 'snr', 
     return None, lastname
 
 
-def get_radec(mjd, beamnum):
+def get_radec(mjd=None, beamnum=None):
     """ Use time, beam number, and and antenna elevation to get RA, Dec of beam.
     """
 
-    # Notes
-#    c = SkyCoord(ra=RA, dec=Dec, frame='icrs')
-#    t = Time(mjd, format='mjd', scale='utc')
-#    c_ITRS = c.transform_to(ITRS(obstime=t))
-#    local_ha = loc.lon - c_ITRS.spherical.lon
-#    RA_pt = (t.sidereal_time('apparent', longitude=ovro_lon))  # beam 127.
+    if mjd is not None:
+        print('Using time to get ra,dec')
+        tt = time.Time(mjd, format='mjd')
+    else:
+        tt = None
 
-    tt = time.Time(mjd, format='mjd')
-    ovro = coordinates.EarthLocation(lat='37d14m02s', lon='-118d16m55s')
-    dec = 0.  # TODO get dec from elevation
-#    hourangle = beamnum*(n-127)*units.arcmin/np.cos(dec)
-#    aa = coordinates.AltAz(location=ovro, obstime=tt, az=, alt=30*units.deg)
+    ra, dec = coordinates.get_pointing(ibeam=beamnum, obstime=tt)
 
-    return 0., 0.
+    return ra.value, dec.value
 
 
 def send_trigger(output_dict=None, outputfile=None):
