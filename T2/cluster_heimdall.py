@@ -160,10 +160,11 @@ def get_peak(tab):
 
 
 def filter_clustered(tab, min_snr=None, min_dm=None, max_ibox=None, min_cntb=None, max_cntb=None, min_cntc=None,
-                     max_cntc=None, target_params=None):
+                     max_cntc=None, max_ncl=None, target_params=None):
     """ Function to select a subset of clustered output.
     Can set minimum SNR, min/max number of beams in cluster, min/max total count in cluster.
     target_params is a tuple (min_dmt, max_dmt, min_snrt) for custom snr threshold for target.
+    max_ncl is maximum number of clusters returned (sorted by SNR).
     """
 
     if target_params is not None:
@@ -197,8 +198,13 @@ def filter_clustered(tab, min_snr=None, min_dm=None, max_ibox=None, min_cntb=Non
     if max_cntc is not None:
         good *= tab['cntc'] < max_cntc
 
-    #    clsnr_out.append((imaxsnr, snr, cntb, cntc))
     tab_out = tab[good]
+
+    if len(tab_out) > max_ncl:
+        min_snr_cl = sorted(tab_out['snr'])[-max_ncl]
+        good = tab_out['snr'] > min_snr_cl
+        tab_out = tab_out[good]
+        print(f'Limiting output to {max_ncl} clusters with snr>{min_snr_cl}.')
 
     logger.info(f'Filtering clusters from {len(tab)} to {len(tab_out)} candidates.')
     print(f'Filtering clusters from {len(tab)} to {len(tab_out)} candidates.')
