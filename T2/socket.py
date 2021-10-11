@@ -191,12 +191,12 @@ def cluster_and_plot(tab, globct, selectcols=['itime', 'idm', 'ibox', 'ibeam'], 
                                                                     coords=coords, snrs=snrs, outroot=outroot,
                                                                     nbeams=sum(nbeams_queue))
         if tab4 is not None and trigger:
-            col_trigger = np.where(tab4 == tab2, lastname, 0)  # if trigger, then overload
+            col_trigger = np.where(tab4 == tab3, lastname, 0)  # if trigger, then overload
 
-    # write T2 cluster results
-    if outroot is not None and len(tab2):
-        tab2['trigger'] = col_trigger
-        cluster_heimdall.dump_cluster_results_heimdall(tab2, outroot+str(np.floor(time.time()).astype('int'))+".cand",
+    # write T2 clustered/filtered results
+    if outroot is not None and len(tab3):
+        tab3['trigger'] = col_trigger
+        cluster_heimdall.dump_cluster_results_heimdall(tab3, outroot+str(np.floor(time.time()).astype('int'))+".cand",
                                                        min_snr_t2out=min_snr_t2out)
         
     return lastname
