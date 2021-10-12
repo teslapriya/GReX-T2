@@ -183,7 +183,7 @@ def cluster_and_plot(tab, globct, selectcols=['itime', 'idm', 'ibox', 'ibeam'], 
     tab3 = cluster_heimdall.filter_clustered(tab2, min_snr=min_snr, min_dm=min_dm, max_ibox=max_ibox, max_cntb=max_cntb,
                                              max_ncl=max_ncl, target_params=target_params)  # max_ncl returned
 
-    col_trigger = np.zeros(len(tab2), dtype=int)
+    col_trigger = np.zeros(len(tab3), dtype=int)
     if outroot is not None and len(tab3):
         tab4, lastname = cluster_heimdall.dump_cluster_results_json(tab3, trigger=trigger,
                                                                     max_ncl=max_ncl, lastname=lastname,
