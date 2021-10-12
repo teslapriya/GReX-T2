@@ -80,9 +80,9 @@ def parse_socket(host, ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outr
         try:
             for s in ss:
                 clientsocket, address = s.accept() # stores the socket details in 2 variables
-#                logger.info(f"Connection from {address} has been established")
                 cls.append(clientsocket)
         except KeyboardInterrupt:
+            print("Escaping socket connection")
             logger.info("Escaping socket connection")
             break
 
@@ -134,21 +134,26 @@ def parse_socket(host, ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outr
                         {"cadence": 60, "time": Time(datetime.datetime.utcnow()).mjd})
 
         if candsfile == '\n' or candsfile == '':  # skip empty candsfile
+            print(f"candsfile is empty. Skipping.")
+            logger.info(f"candsfile is empty. Skipping.")
             continue
 
         try:
             tab = cluster_heimdall.parse_candsfile(candsfile)
-            logger.info(f"Table has {len(tab)} rows")
             if len(tab) == 0:
+                print(f"Table has {len(tab)} rows. Skipping.")
+                logger.info(f"Table has {len(tab)} rows. Skipping.")
                 continue
             lastname = cluster_and_plot(tab, globct, selectcols=selectcols, outroot=outroot,
                                         plot_dir=plot_dir, trigger=trigger, lastname=lastname,
                                         cat=source_catalog, beam_model=model, coords=coords, snrs=snrs)
             globct += 1
         except KeyboardInterrupt:
+            print("Escaping parsing and plotting")
             logger.info("Escaping parsing and plotting")
             break
         except OverflowError:
+            print("overflowing value. Skipping this gulp...")
             logger.warning("overflowing value. Skipping this gulp...")
             continue
 

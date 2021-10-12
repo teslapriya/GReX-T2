@@ -97,6 +97,7 @@ def cluster_data(tab, selectcols=['itime', 'idm', 'ibox', 'ibeam'], min_cluster_
         nunclustered = len(np.where(clusterer.labels_ == -1)[0]) 
         cl = clusterer.labels_
     except ValueError:
+        print("Clustering did not run. Each point assigned to unique cluster.")
         logger.info("Clustering did not run. Each point assigned to unique cluster.")
         cl = np.arange(len(data))
         nclustered = 0
@@ -289,6 +290,7 @@ def dump_cluster_results_json(tab, outputfile=None, output_cols=['mjds', 'snr', 
                 return row, candname
 
             else:
+                print(f'Not triggering on source in beam')
                 logger.info(f'Not triggering on source in beam')
                 return None, lastname
 
@@ -304,6 +306,7 @@ def dump_cluster_results_json(tab, outputfile=None, output_cols=['mjds', 'snr', 
             return row, candname
                     
     else:
+        print(f'Not triggering on block with {len(tab)} candidates and {nbeams_condition} beam count sum')
         logger.info(f'Not triggering on block with {len(tab)} candidates and {nbeams_condition} beam count sum')
         return None, lastname
 
@@ -331,6 +334,7 @@ def send_trigger(output_dict=None, outputfile=None):
     """
 
     if outputfile is not None:
+        print('Overloading output_dict trigger info with that from outputfile')
         logger.info('Overloading output_dict trigger info with that from outputfile')
         with open(outputfile, 'w') as f:
             output_dict = json.load(f)
@@ -338,6 +342,7 @@ def send_trigger(output_dict=None, outputfile=None):
     candname = list(output_dict)[0]
     val = output_dict.get(candname)
     print(candname, val)
+    print(f"Sending trigger for candidate {candname} with specnum {val['specnum']}")
     logger.info(f"Sending trigger for candidate {candname} with specnum {val['specnum']}")
     
     ds.put_dict('/cmd/corr/0', {'cmd': 'trigger', 'val': f'{val["specnum"]}-{candname}-'})  # triggers voltage dump in corr.py
