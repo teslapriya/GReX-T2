@@ -188,7 +188,7 @@ def cluster_and_plot(tab, globct, selectcols=['itime', 'idm', 'ibox', 'ibeam'], 
     tab3 = cluster_heimdall.filter_clustered(tab2, min_snr=min_snr, min_dm=min_dm, max_ibox=max_ibox, max_cntb=max_cntb,
                                              max_ncl=max_ncl, target_params=target_params)  # max_ncl rows returned
 
-    col_trigger = np.zeros(len(tab3), dtype=int)
+    col_trigger = np.zeros(len(tab2), dtype=int)
     if outroot is not None and len(tab3):
         tab4, lastname = cluster_heimdall.dump_cluster_results_json(tab3, trigger=trigger,
                                                                     lastname=lastname,
@@ -196,12 +196,12 @@ def cluster_and_plot(tab, globct, selectcols=['itime', 'idm', 'ibox', 'ibeam'], 
                                                                     coords=coords, snrs=snrs, outroot=outroot,
                                                                     nbeams=sum(nbeams_queue))
         if tab4 is not None and trigger:
-            col_trigger = np.where(tab4 == tab3, lastname, 0)  # if trigger, then overload
+            col_trigger = np.where(tab4 == tab2, lastname, 0)  # if trigger, then overload
 
     # write T2 clustered/filtered results
-    if outroot is not None and len(tab3):
-        tab3['trigger'] = col_trigger
-        cluster_heimdall.dump_cluster_results_heimdall(tab3, outroot+str(np.floor(time.time()).astype('int'))+".cand",
+    if outroot is not None and len(tab2):
+        tab2['trigger'] = col_trigger
+        cluster_heimdall.dump_cluster_results_heimdall(tab2, outroot+str(np.floor(time.time()).astype('int'))+".cand",
                                                        min_snr_t2out=min_snr_t2out, max_ncl=max_ncl)
         
     return lastname
