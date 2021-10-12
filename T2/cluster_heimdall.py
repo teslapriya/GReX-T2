@@ -229,7 +229,7 @@ def get_nbeams(tab, threshold=7.5):
 
 
 def dump_cluster_results_json(tab, outputfile=None, output_cols=['mjds', 'snr', 'ibox', 'dm', 'ibeam', 'cntb', 'cntc'],
-                              trigger=False, max_ncl=10, lastname=None, cat=None, beam_model=None, coords=None, snrs=None,
+                              trigger=False, lastname=None, cat=None, beam_model=None, coords=None, snrs=None,
                               outroot='', nbeams=0, max_nbeams=100):
     """   
     Takes tab from parse_candsfile and clsnr from get_peak, 
@@ -272,7 +272,7 @@ def dump_cluster_results_json(tab, outputfile=None, output_cols=['mjds', 'snr', 
     if nbeams > max_nbeams:
         nbeams_condition = True
             
-    if len(tab) and len(tab)<max_ncl and nbeams_condition is False:
+    if len(tab) and nbeams_condition is False:
         print(red_tab)
         if cat is not None and red_tab is not None:
             #beam_model = triggering.read_beam_model(beam_model)
@@ -303,9 +303,8 @@ def dump_cluster_results_json(tab, outputfile=None, output_cols=['mjds', 'snr', 
 
             return row, candname
                     
-    elif len(tab) >= max_ncl:
-        logger.info(f'Not triggering on block with {len(tab)} > {max_ncl} candidates')
-
+    else:
+        logger.info(f'Not triggering on block with {len(tab)} candidates and {nbeams_condition} beam count sum')
         return None, lastname
 
     print('Not triggering on nbeams condition')
@@ -345,12 +344,13 @@ def send_trigger(output_dict=None, outputfile=None):
     ds.put_dict('/mon/corr/1/trigger', output_dict)  # tells look_after_dumps.py to manage data
 
 
-def dump_cluster_results_heimdall(tab, outputfile, min_snr_t2out=None): 
+def dump_cluster_results_heimdall(tab, outputfile, min_snr_t2out=None, max_ncl=None): 
     """   
     Takes tab from parse_candsfile and clsnr from get_peak, 
     output T2-clustered results with the same columns as heimdall.cand into a file outputfile.
     The output is in pandas format with column names in the 1st row.
     min_snr_t2out is a min snr on candidates to write.
+    max_ncl is number of rows to write.
     """
 
     tab['itime'] = (tab['itime']-offset)*downsample  # transform to specnum
@@ -360,5 +360,14 @@ def dump_cluster_results_heimdall(tab, outputfile, min_snr_t2out=None):
         good *= tab['snr'] > min_snr_t2out
         tab = tab[good]
 
+    if max_ncl is not None:
+        if len(tab) > max_ncl:
+            min_snr_cl = sorted(tab['snr'])[-max_ncl]
+            good = tab['snr'] > min_snr_cl
+            tab = tab[good]
+            print(f'Limiting output to {max_ncl} clusters with snr>{min_snr_cl}.')
+    else:
+        print('max_ncl not set. Not filtering heimdall output file.')
+        
     if len(tab)>0:
         tab.write(outputfile, format='ascii.no_header')

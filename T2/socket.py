@@ -181,12 +181,12 @@ def cluster_and_plot(tab, globct, selectcols=['itime', 'idm', 'ibox', 'ibeam'], 
     nbeams_queue.append(nbeams_gulp)
     print(f'nbeams_queue: {nbeams_queue}')
     tab3 = cluster_heimdall.filter_clustered(tab2, min_snr=min_snr, min_dm=min_dm, max_ibox=max_ibox, max_cntb=max_cntb,
-                                             max_ncl=max_ncl, target_params=target_params)  # max_ncl returned
+                                             max_ncl=max_ncl, target_params=target_params)  # max_ncl rows returned
 
     col_trigger = np.zeros(len(tab3), dtype=int)
     if outroot is not None and len(tab3):
         tab4, lastname = cluster_heimdall.dump_cluster_results_json(tab3, trigger=trigger,
-                                                                    max_ncl=max_ncl, lastname=lastname,
+                                                                    lastname=lastname,
                                                                     cat=cat, beam_model=beam_model,
                                                                     coords=coords, snrs=snrs, outroot=outroot,
                                                                     nbeams=sum(nbeams_queue))
@@ -197,7 +197,7 @@ def cluster_and_plot(tab, globct, selectcols=['itime', 'idm', 'ibox', 'ibeam'], 
     if outroot is not None and len(tab3):
         tab3['trigger'] = col_trigger
         cluster_heimdall.dump_cluster_results_heimdall(tab3, outroot+str(np.floor(time.time()).astype('int'))+".cand",
-                                                       min_snr_t2out=min_snr_t2out)
+                                                       min_snr_t2out=min_snr_t2out, max_ncl=max_ncl)
         
     return lastname
 
