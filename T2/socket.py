@@ -177,7 +177,7 @@ def cluster_and_plot(tab, globct, selectcols=['itime', 'idm', 'ibox', 'ibeam'], 
     if max_ncl is None:
         max_ncl = t2_cnf['max_ncl']  # largest number of clusters allowed in triggering
     max_cntb = t2_cnf['max_ctb']
-    target_params = (25., 50., 50.)  # Galactic bursts
+    target_params = (50., 60., 20.)  # Galactic bursts
 
     # cluster
     cluster_heimdall.cluster_data(tab, metric='euclidean', allow_single_cluster=True, return_clusterer=False)
