@@ -364,10 +364,10 @@ def dump_cluster_results_heimdall(tab, outputfile, min_snr_t2out=None, max_ncl=N
         good = [True] * len(tab)
         good *= tab['snr'] > min_snr_t2out
         tab = tab[good]
-        print(f'Limiting output to SNR>{min_snr_t2out} with {len(tab)} clusters.')
+        if not all(good):
+            print(f'Limiting output to SNR>{min_snr_t2out} with {len(tab)} clusters.')
 
     if max_ncl is not None:
-        print(len(tab), max_ncl)
         if len(tab) > max_ncl:
             min_snr_cl = sorted(tab['snr'])[-max_ncl]
             good = tab['snr'] > min_snr_cl
