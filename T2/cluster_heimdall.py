@@ -306,8 +306,8 @@ def dump_cluster_results_json(tab, outputfile=None, output_cols=['mjds', 'snr', 
             return row, candname
                     
     else:
-        print(f'Not triggering on block with {len(tab)} candidates and {nbeams_condition} beam count sum')
-        logger.info(f'Not triggering on block with {len(tab)} candidates and {nbeams_condition} beam count sum')
+        print(f'Not triggering on block with {len(tab)} candidates and nbeams {nbeams}>{max_nbeams} beam count sum')
+        logger.info(f'Not triggering on block with {len(tab)} candidates and nbeams {nbeams}>{max_nbeams} beam count sum')
         return None, lastname
 
     print('Not triggering on nbeams condition')
