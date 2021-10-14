@@ -176,6 +176,7 @@ def cluster_and_plot(tab, globct, selectcols=['itime', 'idm', 'ibox', 'ibeam'], 
     min_snr_t2out = t2_cnf['min_snr_t2out']  # smallest snr to write T2 output cand file
     if max_ncl is None:
         max_ncl = t2_cnf['max_ncl']  # largest number of clusters allowed in triggering
+    max_cntb0 = t2_cnf['max_ctb0']
     max_cntb = t2_cnf['max_ctb']
     target_params = (50., 60., 20.)  # Galactic bursts
 
@@ -186,7 +187,7 @@ def cluster_and_plot(tab, globct, selectcols=['itime', 'idm', 'ibox', 'ibeam'], 
     nbeams_queue.append(nbeams_gulp)
     print(f'nbeams_queue: {nbeams_queue}')
     tab3 = cluster_heimdall.filter_clustered(tab2, min_snr=min_snr, min_dm=min_dm, max_ibox=max_ibox, max_cntb=max_cntb,
-                                             max_ncl=max_ncl, target_params=target_params)  # max_ncl rows returned
+                                             max_cntb0=max_cntb0, max_ncl=max_ncl, target_params=target_params)  # max_ncl rows returned
 
     col_trigger = np.zeros(len(tab2), dtype=int)
     if outroot is not None and len(tab3):
