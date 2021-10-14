@@ -136,6 +136,8 @@ def parse_socket(host, ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outr
         if candsfile == '\n' or candsfile == '':  # skip empty candsfile
             print(f"candsfile is empty. Skipping.")
             logger.info(f"candsfile is empty. Skipping.")
+
+            print(candsfile)
             continue
 
         try:
@@ -155,6 +157,8 @@ def parse_socket(host, ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outr
         except OverflowError:
             print("overflowing value. Skipping this gulp...")
             logger.warning("overflowing value. Skipping this gulp...")
+
+            print(candsfile)
             continue
 
 
