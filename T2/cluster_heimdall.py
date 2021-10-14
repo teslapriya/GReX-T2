@@ -58,7 +58,7 @@ def parse_candsfile(candsfile):
         except InconsistentTableError:
             try:
                 tab = ascii.read(candsfile, names=col_T2old, guess=True, fast_reader=False, format='no_header')
-                hfdile=False
+                hdfile=False
                 logger.debug('Read with old style T2 columns')
             except InconsistentTableError:
                 logger.warning('Inconsistent table. Skipping...')              
@@ -160,8 +160,8 @@ def get_peak(tab):
     return tab[ipeak]
 
 
-def filter_clustered(tab, min_snr=None, min_dm=None, max_ibox=None, min_cntb=None, max_cntb=None, min_cntc=None,
-                     max_cntc=None, max_ncl=None, target_params=None):
+def filter_clustered(tab, min_snr=None, min_dm=None, max_ibox=None, min_cntb=None, max_cntb=None, max_cntb0=None,
+                     min_cntc=None, max_cntc=None, max_ncl=None, target_params=None):
     """ Function to select a subset of clustered output.
     Can set minimum SNR, min/max number of beams in cluster, min/max total count in cluster.
     target_params is a tuple (min_dmt, max_dmt, min_snrt) for custom snr threshold for target.
@@ -193,7 +193,10 @@ def filter_clustered(tab, min_snr=None, min_dm=None, max_ibox=None, min_cntb=Non
     if min_cntb is not None:
         good *= tab['cntb'] > min_cntb
     if max_cntb is not None:
-        good *= tab['cntb'] < max_cntb
+        if max_cntb0 is not None and min_snr is not None:  # use cntb-snr relation to filter
+            good *= tab['cntb'] < (max_cntb-max_cntb0)/(100-min_snr) * tab['snr'] + max_cntb0
+        else:  # filter only on max_cntb
+            good *= tab['cntb'] < max_cntb
     if min_cntc is not None:
         good *= tab['cntc'] > min_cntc
     if max_cntc is not None:
