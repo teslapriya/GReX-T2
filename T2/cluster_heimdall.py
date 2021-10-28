@@ -206,7 +206,7 @@ def filter_clustered(tab, min_snr=None, min_dm=None, max_ibox=None, min_cntb=Non
 
     if len(tab_out) > max_ncl:
         min_snr_cl = sorted(tab_out['snr'])[-max_ncl]
-        good = tab_out['snr'] > min_snr_cl
+        good = tab_out['snr'] >= min_snr_cl
         tab_out = tab_out[good]
         print(f'Limiting output to {max_ncl} clusters with snr>{min_snr_cl}.')
 
@@ -309,8 +309,8 @@ def dump_cluster_results_json(tab, outputfile=None, output_cols=['mjds', 'snr', 
             return row, candname
                     
     else:
-        print(f'Not triggering on block with {len(tab)} candidates and {nbeams_condition} beam count sum')
-        logger.info(f'Not triggering on block with {len(tab)} candidates and {nbeams_condition} beam count sum')
+        print(f'Not triggering on block with {len(tab)} candidates and nbeams {nbeams}>{max_nbeams} beam count sum')
+        logger.info(f'Not triggering on block with {len(tab)} candidates and nbeams {nbeams}>{max_nbeams} beam count sum')
         return None, lastname
 
     print('Not triggering on nbeams condition')
@@ -373,7 +373,7 @@ def dump_cluster_results_heimdall(tab, outputfile, min_snr_t2out=None, max_ncl=N
     if max_ncl is not None:
         if len(tab) > max_ncl:
             min_snr_cl = sorted(tab['snr'])[-max_ncl]
-            good = tab['snr'] > min_snr_cl
+            good = (tab['snr'] >= min_snr_cl)+[str(tt) != '0' for tt in tab['trigger']]  # keep trigger
             tab = tab[good]
             print(f'Limiting output to {max_ncl} clusters with snr>{min_snr_cl}.')
     else:
