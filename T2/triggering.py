@@ -442,7 +442,7 @@ def read_beam_model(beam_model=None):
     return beam_val
 
 
-def check_clustered_sources(tab, coords, snrs, beam_model=None):
+def check_clustered_sources(tab, coords, snrs, beam_model=None, do_check=True):
     """ Reduces tab according to sources
 
     Parameters
@@ -457,6 +457,9 @@ def check_clustered_sources(tab, coords, snrs, beam_model=None):
     filtered astropy table of candidates
     """
 
+    if do_check is False:
+        return tab
+    
     good = [True] * len(tab)
     
     # mjds and ibeam and snr are the three columns of interest
