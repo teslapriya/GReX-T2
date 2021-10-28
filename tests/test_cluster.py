@@ -38,7 +38,7 @@ def test_filter(tab):
     cluster_heimdall.cluster_data(tab, return_clusterer=False)
     tab2 = cluster_heimdall.get_peak(tab)
     assert len(tab2) == 1
-    tab2 = cluster_heimdall.filter_clustered(tab, min_snr=1000)
+    tab2 = cluster_heimdall.filter_clustered(tab, min_snr=1000, max_ncl=30)
     assert len(tab2) == 0
 
 
