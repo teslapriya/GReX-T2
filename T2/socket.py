@@ -243,4 +243,4 @@ def gulp_status(status):
     """
 
     ds.put_dict('/mon/T2/1',
-                {"gulp_status", int(status), "time": Time(datetime.datetime.utcnow()).mjd})
+                {"gulp_status": int(status), "time": Time(datetime.datetime.utcnow()).mjd})
