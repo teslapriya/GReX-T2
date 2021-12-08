@@ -280,7 +280,7 @@ def dump_cluster_results_json(tab, outputfile=None, output_cols=['mjds', 'snr', 
         print(red_tab)
         if cat is not None and red_tab is not None:
             #beam_model = triggering.read_beam_model(beam_model)
-            tab_checked = triggering.check_clustered_sources(red_tab, coords, snrs, beam_model=beam_model, do_check=True)
+            tab_checked = triggering.check_clustered_sources(red_tab, coords, snrs, beam_model=beam_model, do_check=False)
             if len(tab_checked):            
                 with open(outputfile, 'w') as f: #encoding='utf-8'
                     print(f'Writing trigger file for index {imaxsnr} with SNR={maxsnr}')
