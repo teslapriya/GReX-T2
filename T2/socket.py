@@ -110,6 +110,7 @@ def parse_socket(host, ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outr
         print(f'Received gulp_i {gulps}')
         if len(gulps) != len(cls):
             print(f"not all clients are gulping gulp {gulps}. Skipping...")
+            gulp_status(1)
             continue
                 
         if len(set(gulps)) > 1:
@@ -128,6 +129,7 @@ def parse_socket(host, ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outr
                     continue
                 s.listen(1)             # accept no. of incoming connections
                 ss.append(s)
+            gulp_status(2)
             continue
         else:
             ds.put_dict('/mon/service/T2gulp',
@@ -138,6 +140,7 @@ def parse_socket(host, ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outr
             logger.info(f"candsfile is empty. Skipping.")
 
             print(candsfile)
+            gulp_status(3)
             continue
 
         try:
@@ -159,8 +162,9 @@ def parse_socket(host, ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outr
             logger.warning("overflowing value. Skipping this gulp...")
 
             print(candsfile)
+            gulp_status(4)
             continue
-
+        gulp_status(0)  # success!
 
 def cluster_and_plot(tab, globct, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outroot=None, plot_dir=None,
                      trigger=False, lastname=None, max_ncl=None, cat=None, beam_model=None, coords=None, snrs=None):
@@ -227,3 +231,16 @@ def recvall(sock, n):
         data.extend(packet)
 
     return data
+
+
+def gulp_status(status):
+    """ Set etcd key to track gulp status.
+    0 means good, non-zero means some kind of failure for a gulp.
+    1 means not all clients are gulping
+    2 means different gulps received, so restarting clients
+    3 means gulp was parsed as empty (maybe ok?)
+    4 means overflow error during parsing of table.
+    """
+
+    ds.put_dict('/mon/T2/1',
+                {"gulp_status", int(status), "time": Time(datetime.datetime.utcnow()).mjd})
