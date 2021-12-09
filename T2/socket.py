@@ -140,15 +140,11 @@ def parse_socket(host, ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outr
             logger.info(f"candsfile is empty. Skipping.")
 
             print(candsfile)
-            gulp_status(3)
+            gulp_status(0)
             continue
 
         try:
             tab = cluster_heimdall.parse_candsfile(candsfile)
-            if len(tab) == 0:
-                print(f"Table has {len(tab)} rows. Skipping.")
-                logger.info(f"Table has {len(tab)} rows. Skipping.")
-                continue
             lastname = cluster_and_plot(tab, globct, selectcols=selectcols, outroot=outroot,
                                         plot_dir=plot_dir, trigger=trigger, lastname=lastname,
                                         cat=source_catalog, beam_model=model, coords=coords, snrs=snrs)
@@ -162,7 +158,7 @@ def parse_socket(host, ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outr
             logger.warning("overflowing value. Skipping this gulp...")
 
             print(candsfile)
-            gulp_status(4)
+            gulp_status(3)
             continue
         gulp_status(0)  # success!
 
@@ -238,9 +234,11 @@ def gulp_status(status):
     0 means good, non-zero means some kind of failure for a gulp.
     1 means not all clients are gulping
     2 means different gulps received, so restarting clients
-    3 means gulp was parsed as empty (maybe ok?)
-    4 means overflow error during parsing of table.
+    3 means overflow error during parsing of table.
+    t2_num is the process number running T2. Only one for now.
     """
 
-    ds.put_dict('/mon/T2/1',
-                {"gulp_status": int(status), "time": Time(datetime.datetime.utcnow()).mjd})
+    t2_num = 1
+
+    ds.put_dict(f'/mon/T2/{t2_num}',
+                {"gulp_status": int(status), "t2_num": t2_num, "time": Time(datetime.datetime.utcnow()).mjd})
