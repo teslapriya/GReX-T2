@@ -161,7 +161,7 @@ def get_peak(tab):
 
 
 def filter_clustered(tab, min_snr=None, min_dm=None, max_ibox=None, min_cntb=None, max_cntb=None, max_cntb0=None,
-                     min_cntc=None, max_cntc=None, max_ncl=None, target_params=None):
+                     min_cntc=None, max_cntc=None, max_ncl=None, target_params=None, frac_wide=0.0):
     """ Function to select a subset of clustered output.
     Can set minimum SNR, min/max number of beams in cluster, min/max total count in cluster.
     target_params is a tuple (min_dmt, max_dmt, min_snrt) for custom snr threshold for target.
@@ -234,7 +234,7 @@ def get_nbeams(tab, threshold=7.5):
 
 def dump_cluster_results_json(tab, outputfile=None, output_cols=['mjds', 'snr', 'ibox', 'dm', 'ibeam', 'cntb', 'cntc'],
                               trigger=False, lastname=None, cat=None, beam_model=None, coords=None, snrs=None,
-                              outroot='', nbeams=0, max_nbeams=100):
+                              outroot='', nbeams=0, max_nbeams=100, frac_wide=0.0):
     """   
     Takes tab from parse_candsfile and clsnr from get_peak, 
     json file will be named with generated name, unless outputfile is set
@@ -275,6 +275,11 @@ def dump_cluster_results_json(tab, outputfile=None, output_cols=['mjds', 'snr', 
     print(f'Checking nbeams condition: {nbeams}>{max_nbeams}')
     if nbeams > max_nbeams:
         nbeams_condition = True
+        # Liam edit to preserve real FRBs during RFI storm:
+        # if nbeam > max_nbeams and frac_wide < 0.8: do not discard because 
+        # most FPs are wide 
+        if frac_wide<0.8:
+            nbeams_condition = False
             
     if len(tab) and nbeams_condition is False:
         print(red_tab)

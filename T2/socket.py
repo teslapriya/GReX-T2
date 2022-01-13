@@ -55,7 +55,8 @@ def parse_socket(host, ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outr
     # pre-calculate beam model and get source catalog
     if source_catalog is not None:
         #model = triggering.get_2Dbeam_model()
-        model = triggering.read_beam_model()
+        #model = triggering.read_beam_model()
+        model = None
         coords, snrs = triggering.parse_catalog(source_catalog)
     else:
         print('No source catalog found. No model generated.')
@@ -190,16 +191,38 @@ def cluster_and_plot(tab, globct, selectcols=['itime', 'idm', 'ibox', 'ibeam'], 
     nbeams_gulp = cluster_heimdall.get_nbeams(tab2)
     nbeams_queue.append(nbeams_gulp)
     print(f'nbeams_queue: {nbeams_queue}')
-    tab3 = cluster_heimdall.filter_clustered(tab2, min_snr=min_snr, min_dm=min_dm, max_ibox=max_ibox, max_cntb=max_cntb,
-                                             max_cntb0=max_cntb0, max_ncl=max_ncl, target_params=target_params)  # max_ncl rows returned
 
+    # Liam edit to preserve real FRBs during RFI storm:
+    # if nbeam > 100 and frac_wide < 0.8: do not discard
+    maxsnr = tab['snr'].max()    
+    imaxsnr = np.where(tab['snr'] == maxsnr)[0][0]
+    cl_max = tab['cl'][imaxsnr]   
+    frac_wide = np.sum(tab['ibox'][tab['cl']==cl_max]>=32)/float(len(tab['ibox'][tab['cl']==cl_max]))
+
+    if len(tab['ibox'][tab['cl']==cl_max])==1:
+        frac_wide = 0.0
+
+    # Width filter for false positives
+    ibox64_filter = False
+    if len(tab2):
+        ibox64_cnt = np.sum(tab2['ibox']==64) / float(len(tab2['ibox']))
+        print('here',ibox64_cnt,tab2['ibox'])
+        if ibox64_cnt>0.85 and len(tab2['ibox'])>15:
+            ibox64_filter = True
+            print("ibox64 filter")
+        
+    # Done
+    
+    tab3 = cluster_heimdall.filter_clustered(tab2, min_snr=min_snr, min_dm=min_dm, max_ibox=max_ibox, max_cntb=max_cntb,
+                                             max_cntb0=max_cntb0, max_ncl=max_ncl, target_params=target_params,)  # max_ncl rows returned
+    
     col_trigger = np.zeros(len(tab2), dtype=int)
-    if outroot is not None and len(tab3):
+    if outroot is not None and len(tab3) and not ibox64_filter:
         tab4, lastname = cluster_heimdall.dump_cluster_results_json(tab3, trigger=trigger,
                                                                     lastname=lastname,
                                                                     cat=cat, beam_model=beam_model,
                                                                     coords=coords, snrs=snrs, outroot=outroot,
-                                                                    nbeams=sum(nbeams_queue))
+                                                                    nbeams=sum(nbeams_queue), frac_wide=frac_wide)
         if tab4 is not None and trigger:
             col_trigger = np.where(tab4 == tab2, lastname, 0)  # if trigger, then overload
 
