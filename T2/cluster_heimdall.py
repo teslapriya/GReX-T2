@@ -6,7 +6,7 @@ import os.path
 import numpy as np
 #from sklearn import cluster  # for dbscan
 import hdbscan
-from astropy import time, coordinates
+from astropy import time
 from astropy.io import ascii
 from astropy.io.ascii.core import InconsistentTableError
 try:
@@ -14,7 +14,7 @@ try:
 except ModuleNotFoundError:
     print('not importing triggering')
 from event import names
-from dsautils import dsa_store
+from dsautils import dsa_store, coordinates
 ds = dsa_store.DsaStore()
 import dsautils.dsa_syslog as dsl
 logger = dsl.DsaSyslogger()
@@ -58,7 +58,7 @@ def parse_candsfile(candsfile):
         except InconsistentTableError:
             try:
                 tab = ascii.read(candsfile, names=col_T2old, guess=True, fast_reader=False, format='no_header')
-                hfdile=False
+                hdfile=False
                 logger.debug('Read with old style T2 columns')
             except InconsistentTableError:
                 logger.warning('Inconsistent table. Skipping...')              
@@ -97,6 +97,7 @@ def cluster_data(tab, selectcols=['itime', 'idm', 'ibox', 'ibeam'], min_cluster_
         nunclustered = len(np.where(clusterer.labels_ == -1)[0]) 
         cl = clusterer.labels_
     except ValueError:
+        print("Clustering did not run. Each point assigned to unique cluster.")
         logger.info("Clustering did not run. Each point assigned to unique cluster.")
         cl = np.arange(len(data))
         nclustered = 0
@@ -159,11 +160,12 @@ def get_peak(tab):
     return tab[ipeak]
 
 
-def filter_clustered(tab, min_snr=None, min_dm=None, max_ibox=None, min_cntb=None, max_cntb=None, min_cntc=None,
-                     max_cntc=None, target_params=None):
+def filter_clustered(tab, min_snr=None, min_dm=None, max_ibox=None, min_cntb=None, max_cntb=None,
+                     min_cntc=None, max_cntc=None, max_ncl=None, target_params=None):
     """ Function to select a subset of clustered output.
     Can set minimum SNR, min/max number of beams in cluster, min/max total count in cluster.
     target_params is a tuple (min_dmt, max_dmt, min_snrt) for custom snr threshold for target.
+    max_ncl is maximum number of clusters returned (sorted by SNR).
     """
 
     if target_params is not None:
@@ -197,8 +199,14 @@ def filter_clustered(tab, min_snr=None, min_dm=None, max_ibox=None, min_cntb=Non
     if max_cntc is not None:
         good *= tab['cntc'] < max_cntc
 
-    #    clsnr_out.append((imaxsnr, snr, cntb, cntc))
     tab_out = tab[good]
+
+    if max_ncl is not None:
+        if len(tab_out) > max_ncl:
+            min_snr_cl = sorted(tab_out['snr'])[-max_ncl]
+            good = tab_out['snr'] >= min_snr_cl
+            tab_out = tab_out[good]
+            print(f'Limiting output to {max_ncl} clusters with snr>{min_snr_cl}.')
 
     logger.info(f'Filtering clusters from {len(tab)} to {len(tab_out)} candidates.')
     print(f'Filtering clusters from {len(tab)} to {len(tab_out)} candidates.')
@@ -223,7 +231,7 @@ def get_nbeams(tab, threshold=7.5):
 
 
 def dump_cluster_results_json(tab, outputfile=None, output_cols=['mjds', 'snr', 'ibox', 'dm', 'ibeam', 'cntb', 'cntc'],
-                              trigger=False, max_ncl=10, lastname=None, cat=None, beam_model=None, coords=None, snrs=None,
+                              trigger=False, lastname=None, cat=None, beam_model=None, coords=None, snrs=None,
                               outroot='', nbeams=0, max_nbeams=100):
     """   
     Takes tab from parse_candsfile and clsnr from get_peak, 
@@ -259,18 +267,18 @@ def dump_cluster_results_json(tab, outputfile=None, output_cols=['mjds', 'snr', 
             output_dict[candname][col] = row[col]
 
     output_dict[candname]['specnum'] = specnum
-    output_dict[candname]['ra'], output_dict[candname]['dec'] = get_radec(output_dict[candname]['mjds'], output_dict[candname]['ibeam'])
+    output_dict[candname]['ra'], output_dict[candname]['dec'] = get_radec()  # quick and dirty
 
     nbeams_condition = False
     print(f'Checking nbeams condition: {nbeams}>{max_nbeams}')
     if nbeams > max_nbeams:
         nbeams_condition = True
             
-    if len(tab) and len(tab)<max_ncl and nbeams_condition is False:
+    if len(tab) and nbeams_condition is False:
         print(red_tab)
         if cat is not None and red_tab is not None:
             #beam_model = triggering.read_beam_model(beam_model)
-            tab_checked = triggering.check_clustered_sources(red_tab, coords, snrs, beam_model=beam_model)
+            tab_checked = triggering.check_clustered_sources(red_tab, coords, snrs, beam_model=beam_model, do_check=False)
             if len(tab_checked):            
                 with open(outputfile, 'w') as f: #encoding='utf-8'
                     print(f'Writing trigger file for index {imaxsnr} with SNR={maxsnr}')
@@ -283,6 +291,7 @@ def dump_cluster_results_json(tab, outputfile=None, output_cols=['mjds', 'snr', 
                 return row, candname
 
             else:
+                print(f'Not triggering on source in beam')
                 logger.info(f'Not triggering on source in beam')
                 return None, lastname
 
@@ -297,33 +306,28 @@ def dump_cluster_results_json(tab, outputfile=None, output_cols=['mjds', 'snr', 
 
             return row, candname
                     
-    elif len(tab) >= max_ncl:
-        logger.info(f'Not triggering on block with {len(tab)} > {max_ncl} candidates')
-
+    else:
+        print(f'Not triggering on block with {len(tab)} candidates and nbeams {nbeams}>{max_nbeams} beam count sum')
+        logger.info(f'Not triggering on block with {len(tab)} candidates and nbeams {nbeams}>{max_nbeams} beam count sum')
         return None, lastname
 
     print('Not triggering on nbeams condition')
     return None, lastname
 
 
-def get_radec(mjd, beamnum):
+def get_radec(mjd=None, beamnum=None):
     """ Use time, beam number, and and antenna elevation to get RA, Dec of beam.
     """
 
-    # Notes
-#    c = SkyCoord(ra=RA, dec=Dec, frame='icrs')
-#    t = Time(mjd, format='mjd', scale='utc')
-#    c_ITRS = c.transform_to(ITRS(obstime=t))
-#    local_ha = loc.lon - c_ITRS.spherical.lon
-#    RA_pt = (t.sidereal_time('apparent', longitude=ovro_lon))  # beam 127.
+    if mjd is not None:
+        print('Using time to get ra,dec')
+        tt = time.Time(mjd, format='mjd')
+    else:
+        tt = None
 
-    tt = time.Time(mjd, format='mjd')
-    ovro = coordinates.EarthLocation(lat='37d14m02s', lon='-118d16m55s')
-    dec = 0.  # TODO get dec from elevation
-#    hourangle = beamnum*(n-127)*units.arcmin/np.cos(dec)
-#    aa = coordinates.AltAz(location=ovro, obstime=tt, az=, alt=30*units.deg)
+    ra, dec = coordinates.get_pointing(ibeam=beamnum, obstime=tt)
 
-    return 0., 0.
+    return ra.value, dec.value
 
 
 def send_trigger(output_dict=None, outputfile=None):
@@ -331,6 +335,7 @@ def send_trigger(output_dict=None, outputfile=None):
     """
 
     if outputfile is not None:
+        print('Overloading output_dict trigger info with that from outputfile')
         logger.info('Overloading output_dict trigger info with that from outputfile')
         with open(outputfile, 'w') as f:
             output_dict = json.load(f)
@@ -338,18 +343,20 @@ def send_trigger(output_dict=None, outputfile=None):
     candname = list(output_dict)[0]
     val = output_dict.get(candname)
     print(candname, val)
+    print(f"Sending trigger for candidate {candname} with specnum {val['specnum']}")
     logger.info(f"Sending trigger for candidate {candname} with specnum {val['specnum']}")
     
     ds.put_dict('/cmd/corr/0', {'cmd': 'trigger', 'val': f'{val["specnum"]}-{candname}-'})  # triggers voltage dump in corr.py
     ds.put_dict('/mon/corr/1/trigger', output_dict)  # tells look_after_dumps.py to manage data
 
 
-def dump_cluster_results_heimdall(tab, outputfile, min_snr_t2out=None): 
+def dump_cluster_results_heimdall(tab, outputfile, min_snr_t2out=None, max_ncl=None): 
     """   
     Takes tab from parse_candsfile and clsnr from get_peak, 
     output T2-clustered results with the same columns as heimdall.cand into a file outputfile.
     The output is in pandas format with column names in the 1st row.
     min_snr_t2out is a min snr on candidates to write.
+    max_ncl is number of rows to write.
     """
 
     tab['itime'] = (tab['itime']-offset)*downsample  # transform to specnum
@@ -358,6 +365,17 @@ def dump_cluster_results_heimdall(tab, outputfile, min_snr_t2out=None):
         good = [True] * len(tab)
         good *= tab['snr'] > min_snr_t2out
         tab = tab[good]
+        if not all(good) and len(tab):
+            print(f'Limiting output to SNR>{min_snr_t2out} with {len(tab)} clusters.')
 
+    if max_ncl is not None:
+        if len(tab) > max_ncl:
+            min_snr_cl = sorted(tab['snr'])[-max_ncl]
+            good = (tab['snr'] >= min_snr_cl)+[str(tt) != '0' for tt in tab['trigger']]  # keep trigger
+            tab = tab[good]
+            print(f'Limiting output to {max_ncl} clusters with snr>{min_snr_cl}.')
+    else:
+        print('max_ncl not set. Not filtering heimdall output file.')
+        
     if len(tab)>0:
         tab.write(outputfile, format='ascii.no_header')

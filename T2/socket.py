@@ -80,9 +80,9 @@ def parse_socket(host, ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outr
         try:
             for s in ss:
                 clientsocket, address = s.accept() # stores the socket details in 2 variables
-#                logger.info(f"Connection from {address} has been established")
                 cls.append(clientsocket)
         except KeyboardInterrupt:
+            print("Escaping socket connection")
             logger.info("Escaping socket connection")
             break
 
@@ -110,6 +110,7 @@ def parse_socket(host, ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outr
         print(f'Received gulp_i {gulps}')
         if len(gulps) != len(cls):
             print(f"not all clients are gulping gulp {gulps}. Skipping...")
+            gulp_status(1)
             continue
                 
         if len(set(gulps)) > 1:
@@ -128,30 +129,38 @@ def parse_socket(host, ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outr
                     continue
                 s.listen(1)             # accept no. of incoming connections
                 ss.append(s)
+            gulp_status(2)
             continue
         else:
             ds.put_dict('/mon/service/T2gulp',
                         {"cadence": 60, "time": Time(datetime.datetime.utcnow()).mjd})
 
         if candsfile == '\n' or candsfile == '':  # skip empty candsfile
+            print(f"candsfile is empty. Skipping.")
+            logger.info(f"candsfile is empty. Skipping.")
+
+            print(candsfile)
+            gulp_status(0)
             continue
 
         try:
             tab = cluster_heimdall.parse_candsfile(candsfile)
-            logger.info(f"Table has {len(tab)} rows")
-            if len(tab) == 0:
-                continue
             lastname = cluster_and_plot(tab, globct, selectcols=selectcols, outroot=outroot,
                                         plot_dir=plot_dir, trigger=trigger, lastname=lastname,
                                         cat=source_catalog, beam_model=model, coords=coords, snrs=snrs)
             globct += 1
         except KeyboardInterrupt:
+            print("Escaping parsing and plotting")
             logger.info("Escaping parsing and plotting")
             break
         except OverflowError:
+            print("overflowing value. Skipping this gulp...")
             logger.warning("overflowing value. Skipping this gulp...")
-            continue
 
+            print(candsfile)
+            gulp_status(3)
+            continue
+        gulp_status(0)  # success!
 
 def cluster_and_plot(tab, globct, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outroot=None, plot_dir=None,
                      trigger=False, lastname=None, max_ncl=None, cat=None, beam_model=None, coords=None, snrs=None):
@@ -171,8 +180,9 @@ def cluster_and_plot(tab, globct, selectcols=['itime', 'idm', 'ibox', 'ibeam'], 
     min_snr_t2out = t2_cnf['min_snr_t2out']  # smallest snr to write T2 output cand file
     if max_ncl is None:
         max_ncl = t2_cnf['max_ncl']  # largest number of clusters allowed in triggering
+    max_cntb0 = t2_cnf['max_ctb0']
     max_cntb = t2_cnf['max_ctb']
-    target_params = (25., 50., 50.)  # Galactic bursts
+    target_params = (50., 100., 20.)  # Galactic bursts
 
     # cluster
     cluster_heimdall.cluster_data(tab, metric='euclidean', allow_single_cluster=True, return_clusterer=False)
@@ -180,23 +190,24 @@ def cluster_and_plot(tab, globct, selectcols=['itime', 'idm', 'ibox', 'ibeam'], 
     nbeams_gulp = cluster_heimdall.get_nbeams(tab2)
     nbeams_queue.append(nbeams_gulp)
     print(f'nbeams_queue: {nbeams_queue}')
-    tab3 = cluster_heimdall.filter_clustered(tab2, min_snr=min_snr, min_dm=min_dm, max_ibox=max_ibox, max_cntb=max_cntb, target_params=target_params)
+    tab3 = cluster_heimdall.filter_clustered(tab2, min_snr=min_snr, min_dm=min_dm, max_ibox=max_ibox, max_cntb=max_cntb,
+                                             max_cntb0=max_cntb0, max_ncl=max_ncl, target_params=target_params)  # max_ncl rows returned
 
     col_trigger = np.zeros(len(tab2), dtype=int)
     if outroot is not None and len(tab3):
         tab4, lastname = cluster_heimdall.dump_cluster_results_json(tab3, trigger=trigger,
-                                                                    max_ncl=max_ncl, lastname=lastname,
+                                                                    lastname=lastname,
                                                                     cat=cat, beam_model=beam_model,
                                                                     coords=coords, snrs=snrs, outroot=outroot,
                                                                     nbeams=sum(nbeams_queue))
         if tab4 is not None and trigger:
             col_trigger = np.where(tab4 == tab2, lastname, 0)  # if trigger, then overload
 
-    # write T2 cluster results
+    # write T2 clustered/filtered results
     if outroot is not None and len(tab2):
         tab2['trigger'] = col_trigger
         cluster_heimdall.dump_cluster_results_heimdall(tab2, outroot+str(np.floor(time.time()).astype('int'))+".cand",
-                                                       min_snr_t2out=min_snr_t2out)
+                                                       min_snr_t2out=min_snr_t2out, max_ncl=max_ncl)
         
     return lastname
 
@@ -216,3 +227,18 @@ def recvall(sock, n):
         data.extend(packet)
 
     return data
+
+
+def gulp_status(status):
+    """ Set etcd key to track gulp status.
+    0 means good, non-zero means some kind of failure for a gulp.
+    1 means not all clients are gulping
+    2 means different gulps received, so restarting clients
+    3 means overflow error during parsing of table.
+    t2_num is the process number running T2. Only one for now.
+    """
+
+    t2_num = 1
+
+    ds.put_dict(f'/mon/T2/{t2_num}',
+                {"gulp_status": int(status), "t2_num": t2_num, "time": Time(datetime.datetime.utcnow()).mjd})
