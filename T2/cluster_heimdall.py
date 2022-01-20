@@ -160,6 +160,7 @@ def get_peak(tab):
     return tab[ipeak]
 
 
+
 def filter_clustered(tab, min_snr=None, min_dm=None, max_ibox=None, min_cntb=None, max_cntb=None, max_cntb0=None,
                      min_cntc=None, max_cntc=None, max_ncl=None, target_params=None, frac_wide=0.0):
     """ Function to select a subset of clustered output.
@@ -193,10 +194,7 @@ def filter_clustered(tab, min_snr=None, min_dm=None, max_ibox=None, min_cntb=Non
     if min_cntb is not None:
         good *= tab['cntb'] > min_cntb
     if max_cntb is not None:
-        if max_cntb0 is not None and min_snr is not None:  # use cntb-snr relation to filter
-            good *= tab['cntb'] < (max_cntb-max_cntb0)/(100-min_snr) * tab['snr'] + max_cntb0
-        else:  # filter only on max_cntb
-            good *= tab['cntb'] < max_cntb
+        good *= tab['cntb'] < max_cntb
     if min_cntc is not None:
         good *= tab['cntc'] > min_cntc
     if max_cntc is not None:
@@ -204,11 +202,12 @@ def filter_clustered(tab, min_snr=None, min_dm=None, max_ibox=None, min_cntb=Non
 
     tab_out = tab[good]
 
-    if len(tab_out) > max_ncl:
-        min_snr_cl = sorted(tab_out['snr'])[-max_ncl]
-        good = tab_out['snr'] >= min_snr_cl
-        tab_out = tab_out[good]
-        print(f'Limiting output to {max_ncl} clusters with snr>{min_snr_cl}.')
+    if max_ncl is not None:
+        if len(tab_out) > max_ncl:
+            min_snr_cl = sorted(tab_out['snr'])[-max_ncl]
+            good = tab_out['snr'] >= min_snr_cl
+            tab_out = tab_out[good]
+            print(f'Limiting output to {max_ncl} clusters with snr>{min_snr_cl}.')
 
     logger.info(f'Filtering clusters from {len(tab)} to {len(tab_out)} candidates.')
     print(f'Filtering clusters from {len(tab)} to {len(tab_out)} candidates.')
