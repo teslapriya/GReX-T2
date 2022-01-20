@@ -110,6 +110,7 @@ def parse_socket(host, ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outr
         print(f'Received gulp_i {gulps}')
         if len(gulps) != len(cls):
             print(f"not all clients are gulping gulp {gulps}. Skipping...")
+            gulp_status(1)
             continue
                 
         if len(set(gulps)) > 1:
@@ -128,6 +129,7 @@ def parse_socket(host, ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outr
                     continue
                 s.listen(1)             # accept no. of incoming connections
                 ss.append(s)
+            gulp_status(2)
             continue
         else:
             ds.put_dict('/mon/service/T2gulp',
@@ -138,14 +140,11 @@ def parse_socket(host, ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outr
             logger.info(f"candsfile is empty. Skipping.")
 
             print(candsfile)
+            gulp_status(0)
             continue
 
         try:
             tab = cluster_heimdall.parse_candsfile(candsfile)
-            if len(tab) == 0:
-                print(f"Table has {len(tab)} rows. Skipping.")
-                logger.info(f"Table has {len(tab)} rows. Skipping.")
-                continue
             lastname = cluster_and_plot(tab, globct, selectcols=selectcols, outroot=outroot,
                                         plot_dir=plot_dir, trigger=trigger, lastname=lastname,
                                         cat=source_catalog, beam_model=model, coords=coords, snrs=snrs)
@@ -159,8 +158,9 @@ def parse_socket(host, ports, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outr
             logger.warning("overflowing value. Skipping this gulp...")
 
             print(candsfile)
+            gulp_status(3)
             continue
-
+        gulp_status(0)  # success!
 
 def cluster_and_plot(tab, globct, selectcols=['itime', 'idm', 'ibox', 'ibeam'], outroot=None, plot_dir=None,
                      trigger=False, lastname=None, max_ncl=None, cat=None, beam_model=None, coords=None, snrs=None):
@@ -182,7 +182,7 @@ def cluster_and_plot(tab, globct, selectcols=['itime', 'idm', 'ibox', 'ibeam'], 
         max_ncl = t2_cnf['max_ncl']  # largest number of clusters allowed in triggering
     max_cntb0 = t2_cnf['max_ctb0']
     max_cntb = t2_cnf['max_ctb']
-    target_params = (50., 60., 20.)  # Galactic bursts
+    target_params = (50., 100., 20.)  # Galactic bursts
 
     # cluster
     cluster_heimdall.cluster_data(tab, metric='euclidean', allow_single_cluster=True, return_clusterer=False)
@@ -227,3 +227,18 @@ def recvall(sock, n):
         data.extend(packet)
 
     return data
+
+
+def gulp_status(status):
+    """ Set etcd key to track gulp status.
+    0 means good, non-zero means some kind of failure for a gulp.
+    1 means not all clients are gulping
+    2 means different gulps received, so restarting clients
+    3 means overflow error during parsing of table.
+    t2_num is the process number running T2. Only one for now.
+    """
+
+    t2_num = 1
+
+    ds.put_dict(f'/mon/T2/{t2_num}',
+                {"gulp_status": int(status), "t2_num": t2_num, "time": Time(datetime.datetime.utcnow()).mjd})
