@@ -201,11 +201,12 @@ def filter_clustered(tab, min_snr=None, min_dm=None, max_ibox=None, min_cntb=Non
 
     tab_out = tab[good]
 
-    if len(tab_out) > max_ncl:
-        min_snr_cl = sorted(tab_out['snr'])[-max_ncl]
-        good = tab_out['snr'] >= min_snr_cl
-        tab_out = tab_out[good]
-        print(f'Limiting output to {max_ncl} clusters with snr>{min_snr_cl}.')
+    if max_ncl is not None:
+        if len(tab_out) > max_ncl:
+            min_snr_cl = sorted(tab_out['snr'])[-max_ncl]
+            good = tab_out['snr'] >= min_snr_cl
+            tab_out = tab_out[good]
+            print(f'Limiting output to {max_ncl} clusters with snr>{min_snr_cl}.')
 
     logger.info(f'Filtering clusters from {len(tab)} to {len(tab_out)} candidates.')
     print(f'Filtering clusters from {len(tab)} to {len(tab_out)} candidates.')
