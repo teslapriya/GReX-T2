@@ -13,6 +13,7 @@ from astropy.coordinates import SkyCoord, ITRS, EarthLocation
 from astropy.time import Time
 from astropy import units as u
 from astropy import wcs
+from dsaitils import coordinates
 from dsautils import dsa_store
 from progress.bar import Bar
 import dsacalib.constants as ct
@@ -103,36 +104,11 @@ def get_pointing_declination(tol=0.25):
 
     pt_el = np.nanmedian(commanded_els)
     if pt_el is not np.nan:
-        pt_dec = ct.OVRO_LAT*u.rad + pt_el*u.deg - 90*u.deg
+        pt_dec = coordinates.get_declination(pt_el)
     else:
         pt_el = CORR_CNF['pt_dec']
     return pt_dec
 
-
-# create WCS
-def create_WCS(c,cdelt_deg):
-    """Creates astropy wcs object for beams
-    
-    Parameters
-    ----------
-    c : astropy SkyCoord object
-        Center coordinates
-    cdelt_deg: float
-        Separation between beams in degrees
-
-    Returns
-    -------
-    astropy wcs object
-        wcs corresponding to image of beams.
-    """
-
-    w = wcs.WCS(naxis=2)
-    w.wcs.crpix = [npx/2, npx/2]
-    w.wcs.cdelt = np.array([cdelt_deg, cdelt_deg])
-    w.wcs.crval = [c.ra.deg, c.dec.deg]
-    w.wcs.ctype = ["RA---SIN", "DEC--SIN"]
-
-    return w
 
 def gauss1d(x,mu,sigma):
     """1D Gaussian envelope
@@ -334,7 +310,7 @@ def beams_coord(ra_deg, dec_deg, mjd, dec=None, response=0.1, beam_model=None, a
     HA_src = local_ha.deg+360.
     RA_pt =  (t.sidereal_time('apparent', longitude=ct.OVRO_LON*(180./np.pi)*u.deg)).deg
     coord_pt = SkyCoord(ra=RA_pt*u.deg, dec=Dec*u.deg, frame='icrs')
-    w = create_WCS(coord_pt,(theta[1]-theta[0])/60.)
+    w = coordinates.create_WCS(coord_pt,(theta[1]-theta[0])/60.)
     xy = w.wcs_world2pix((RA_pt+HA_src), c.dec.deg, 0)
 
     if xy[1]>=npx:
