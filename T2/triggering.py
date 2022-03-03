@@ -13,7 +13,7 @@ from astropy.coordinates import SkyCoord, ITRS, EarthLocation
 from astropy.time import Time
 from astropy import units as u
 from astropy import wcs
-from dsaitils import coordinates
+from dsautils import coordinates
 from dsautils import dsa_store
 from progress.bar import Bar
 import dsacalib.constants as ct
