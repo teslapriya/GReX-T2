@@ -3,20 +3,24 @@
 # dsahead python 3.7
 import json
 import os.path
-import numpy as np
+
 #from sklearn import cluster  # for dbscan
 import hdbscan
+import numpy as np
 from astropy import time
 from astropy.io import ascii
 from astropy.io.ascii.core import InconsistentTableError
+
 try:
     from T2 import triggering
 except ModuleNotFoundError:
     print('not importing triggering')
+from dsautils import coordinates, dsa_store
 from event import names
-from dsautils import dsa_store, coordinates
+
 ds = dsa_store.DsaStore()
 import dsautils.dsa_syslog as dsl
+
 logger = dsl.DsaSyslogger()
 logger.subsystem('software')
 logger.app('T2')

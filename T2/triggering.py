@@ -3,24 +3,27 @@
 # dsahead python 3.7
 import json
 import os.path
-import numpy as np
-#from sklearn import cluster  # for dbscan
-import hdbscan
-from astropy import time
-from astropy.io import ascii
-from astropy.io.ascii.core import InconsistentTableError
-from astropy.coordinates import SkyCoord, ITRS, EarthLocation
-from astropy.time import Time
-from astropy import units as u
-from astropy import wcs
-from dsautils import coordinates
-from dsautils import dsa_store
-from progress.bar import Bar
+
 import dsacalib.constants as ct
 import dsautils.cnf as cnf
+#from sklearn import cluster  # for dbscan
+import hdbscan
+import numpy as np
+from astropy import time
+from astropy import units as u
+from astropy import wcs
+from astropy.coordinates import ITRS, EarthLocation, SkyCoord
+from astropy.io import ascii
+from astropy.io.ascii.core import InconsistentTableError
+from astropy.time import Time
+from dsautils import coordinates, dsa_store
+from progress.bar import Bar
+
 from T2 import cluster_heimdall
+
 ds = dsa_store.DsaStore()
 import dsautils.dsa_syslog as dsl
+
 logger = dsl.DsaSyslogger()
 logger.subsystem('software')
 logger.app('T2')

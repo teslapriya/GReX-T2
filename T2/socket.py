@@ -1,17 +1,21 @@
+import socket
+
 import numpy as np
-import socket 
+
 from T2 import cluster_heimdall
+
 try:
     from T2 import triggering
 except ModuleNotFoundError:
     print('not importing triggering')
-import time
-from astropy.time import Time
 import datetime
-from event import names
-from etcd3.exceptions import ConnectionFailedError
+import time
 
-from dsautils import dsa_store, dsa_syslog, cnf
+from astropy.time import Time
+from dsautils import cnf, dsa_store, dsa_syslog
+from etcd3.exceptions import ConnectionFailedError
+from event import names
+
 ds = dsa_store.DsaStore()
 logger = dsa_syslog.DsaSyslogger()
 logger.subsystem('software')
@@ -26,6 +30,7 @@ except (KeyError, ConnectionFailedError):
     t2_cnf = my_cnf.get('t2')
 
 from collections import deque
+
 nbeams_queue = deque(maxlen=10)
 
 

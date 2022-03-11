@@ -1,13 +1,16 @@
-import numpy as np
 import matplotlib
+import numpy as np
+
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+
 try:
     import seaborn as sns
 except ImportError:
     print('no seaborn found. continuing...')
 import dsautils.dsa_syslog as dsl
+
 logger = dsl.DsaSyslogger()
 logger.subsystem('software')
 logger.app('T2')
