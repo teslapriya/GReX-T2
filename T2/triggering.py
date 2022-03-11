@@ -68,13 +68,17 @@ def parse_catalog(catalog):
         for i in np.arange(1, len(lines)):
             try:
                 ra, dec, minsnr = lines[i].split()
-                c = SkyCoord(ra=ra, dec=dec, unit=(u.hourangle, u.deg), frame="icrs")
+                c = SkyCoord(
+                    ra=ra, dec=dec, unit=(u.hourangle, u.deg), frame="icrs"
+                )
                 coords.append(c)
                 snrs.append(float(minsnr))
             except:
                 print("")
     else:
-        logger.warning("No catalog found. Will not filter output based on a catalog.")
+        logger.warning(
+            "No catalog found. Will not filter output based on a catalog."
+        )
         print("No catalog found. Will not filter output based on a catalog.")
 
     return coords, snrs
@@ -254,7 +258,9 @@ def get_2Dbeam_model(aliased=False, neighbors=False):
     #    Genv = gaussian2D(coords, xo=0, yo=0, sigma_x=primary_width_fwhm/2.355, sigma_y=primary_width_fwhm/2.355)
 
     with Bar(
-        "Calculating beam model...", suffix="%(percent).1f%% - %(eta)ds", max=len(mus)
+        "Calculating beam model...",
+        suffix="%(percent).1f%% - %(eta)ds",
+        max=len(mus),
     ) as bar:
         #        for ii, mu in enumerate(mus):
         for ii in range(len((mus))):
@@ -358,7 +364,9 @@ def beams_coord(
     local_ha = ct.OVRO_LON * u.rad - c_ITRS.spherical.lon
     HA_src = local_ha.deg + 360.0
     RA_pt = (
-        t.sidereal_time("apparent", longitude=ct.OVRO_LON * (180.0 / np.pi) * u.deg)
+        t.sidereal_time(
+            "apparent", longitude=ct.OVRO_LON * (180.0 / np.pi) * u.deg
+        )
     ).deg
     coord_pt = SkyCoord(ra=RA_pt * u.deg, dec=Dec * u.deg, frame="icrs")
     w = coordinates.create_WCS(coord_pt, (theta[1] - theta[0]) / 60.0)
@@ -441,7 +449,9 @@ def primary_beams_coord(
     local_ha = ct.OVRO_LON * u.rad - c_ITRS.spherical.lon
     HA_src = local_ha.deg + 360.0
     RA_pt = (
-        t.sidereal_time("apparent", longitude=ct.OVRO_LON * (180.0 / np.pi) * u.deg)
+        t.sidereal_time(
+            "apparent", longitude=ct.OVRO_LON * (180.0 / np.pi) * u.deg
+        )
     ).deg
     coord_pt = SkyCoord(ra=RA_pt * u.deg, dec=Dec * u.deg, frame="icrs")
 
@@ -516,11 +526,17 @@ def check_clustered_sources(tab, coords, snrs, beam_model=None, do_check=True):
         for j in np.arange(len(snrs)):
             if snrs[j] == -2.0:
                 beams, resps = primary_beams_coord(
-                    coords[j].ra.deg, coords[j].dec.deg, mjd[i], beam_model=beam_model
+                    coords[j].ra.deg,
+                    coords[j].dec.deg,
+                    mjd[i],
+                    beam_model=beam_model,
                 )
             else:
                 beams, resps = beams_coord(
-                    coords[j].ra.deg, coords[j].dec.deg, mjd[i], beam_model=beam_model
+                    coords[j].ra.deg,
+                    coords[j].dec.deg,
+                    mjd[i],
+                    beam_model=beam_model,
                 )
             if ibeam[i] + 1 in beams:  # +1 is for model v T1/T2 offset
                 if snr[i] < snrs[j]:
@@ -532,5 +548,7 @@ def check_clustered_sources(tab, coords, snrs, beam_model=None, do_check=True):
 
     tab_out = tab[is_not_src]
 
-    print(f"Filtering from {len(tab)} to {len(tab_out)} candidates (source check).")
+    print(
+        f"Filtering from {len(tab)} to {len(tab_out)} candidates (source check)."
+    )
     return tab_out

@@ -165,7 +165,9 @@ def cluster_data(
         cl = clusterer.labels_
     except ValueError:
         print("Clustering did not run. Each point assigned to unique cluster.")
-        logger.info("Clustering did not run. Each point assigned to unique cluster.")
+        logger.info(
+            "Clustering did not run. Each point assigned to unique cluster."
+        )
         cl = np.arange(len(data))
         nclustered = 0
         nunclustered = len(cl)
@@ -266,7 +268,9 @@ def filter_clustered(
             good0 = (tab["snr"] > min_snr) * (tab["dm"] > max_dmt)
             good1 = (tab["snr"] > min_snr) * (tab["dm"] < min_dmt)
             good2 = (
-                (tab["snr"] > min_snrt) * (tab["dm"] > min_dmt) * (tab["dm"] < max_dmt)
+                (tab["snr"] > min_snrt)
+                * (tab["dm"] > min_dmt)
+                * (tab["dm"] < max_dmt)
             )
             good *= good0 + good1 + good2
             # print('good0, good1, good2, good:')
@@ -291,9 +295,13 @@ def filter_clustered(
             min_snr_cl = sorted(tab_out["snr"])[-max_ncl]
             good = tab_out["snr"] >= min_snr_cl
             tab_out = tab_out[good]
-            print(f"Limiting output to {max_ncl} clusters with snr>{min_snr_cl}.")
+            print(
+                f"Limiting output to {max_ncl} clusters with snr>{min_snr_cl}."
+            )
 
-    logger.info(f"Filtering clusters from {len(tab)} to {len(tab_out)} candidates.")
+    logger.info(
+        f"Filtering clusters from {len(tab)} to {len(tab_out)} candidates."
+    )
     print(f"Filtering clusters from {len(tab)} to {len(tab_out)} candidates.")
 
     return tab_out
@@ -387,7 +395,9 @@ def dump_cluster_results_json(
             )
             if len(tab_checked):
                 with open(outputfile, "w") as f:  # encoding='utf-8'
-                    print(f"Writing trigger file for index {imaxsnr} with SNR={maxsnr}")
+                    print(
+                        f"Writing trigger file for index {imaxsnr} with SNR={maxsnr}"
+                    )
                     logger.info(
                         f"Writing trigger file for index {imaxsnr} with SNR={maxsnr}"
                     )
@@ -405,7 +415,9 @@ def dump_cluster_results_json(
 
         else:
             with open(outputfile, "w") as f:  # encoding='utf-8'
-                print(f"Writing trigger file for index {imaxsnr} with SNR={maxsnr}")
+                print(
+                    f"Writing trigger file for index {imaxsnr} with SNR={maxsnr}"
+                )
                 logger.info(
                     f"Writing trigger file for index {imaxsnr} with SNR={maxsnr}"
                 )
@@ -448,27 +460,34 @@ def send_trigger(output_dict=None, outputfile=None):
 
     if outputfile is not None:
         print("Overloading output_dict trigger info with that from outputfile")
-        logger.info("Overloading output_dict trigger info with that from outputfile")
+        logger.info(
+            "Overloading output_dict trigger info with that from outputfile"
+        )
         with open(outputfile, "w") as f:
             output_dict = json.load(f)
 
     candname = list(output_dict)[0]
     val = output_dict.get(candname)
     print(candname, val)
-    print(f"Sending trigger for candidate {candname} with specnum {val['specnum']}")
+    print(
+        f"Sending trigger for candidate {candname} with specnum {val['specnum']}"
+    )
     logger.info(
         f"Sending trigger for candidate {candname} with specnum {val['specnum']}"
     )
 
     ds.put_dict(
-        "/cmd/corr/0", {"cmd": "trigger", "val": f'{val["specnum"]}-{candname}-'}
+        "/cmd/corr/0",
+        {"cmd": "trigger", "val": f'{val["specnum"]}-{candname}-'},
     )  # triggers voltage dump in corr.py
     ds.put_dict(
         "/mon/corr/1/trigger", output_dict
     )  # tells look_after_dumps.py to manage data
 
 
-def dump_cluster_results_heimdall(tab, outputfile, min_snr_t2out=None, max_ncl=None):
+def dump_cluster_results_heimdall(
+    tab, outputfile, min_snr_t2out=None, max_ncl=None
+):
     """
     Takes tab from parse_candsfile and clsnr from get_peak,
     output T2-clustered results with the same columns as heimdall.cand into a file outputfile.
@@ -484,7 +503,9 @@ def dump_cluster_results_heimdall(tab, outputfile, min_snr_t2out=None, max_ncl=N
         good *= tab["snr"] > min_snr_t2out
         tab = tab[good]
         if not all(good) and len(tab):
-            print(f"Limiting output to SNR>{min_snr_t2out} with {len(tab)} clusters.")
+            print(
+                f"Limiting output to SNR>{min_snr_t2out} with {len(tab)} clusters."
+            )
 
     if max_ncl is not None:
         if len(tab) > max_ncl:
@@ -493,7 +514,9 @@ def dump_cluster_results_heimdall(tab, outputfile, min_snr_t2out=None, max_ncl=N
                 str(tt) != "0" for tt in tab["trigger"]
             ]  # keep trigger
             tab = tab[good]
-            print(f"Limiting output to {max_ncl} clusters with snr>{min_snr_cl}.")
+            print(
+                f"Limiting output to {max_ncl} clusters with snr>{min_snr_cl}."
+            )
     else:
         print("max_ncl not set. Not filtering heimdall output file.")
 

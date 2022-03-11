@@ -25,7 +25,9 @@ try:
     t2_cnf = my_cnf.get("t2")
 except (KeyError, ConnectionFailedError):
     print("Cannot find t2 cnf using etcd. Falling back to hard coded values.")
-    logger.warning("Cannot find t2 cnf using etcd. Falling back to hard coded values.")
+    logger.warning(
+        "Cannot find t2 cnf using etcd. Falling back to hard coded values."
+    )
     my_cnf = cnf.Conf(use_etcd=False)
     t2_cnf = my_cnf.get("t2")
 
@@ -227,16 +229,23 @@ def cluster_and_plot(
     min_dm = t2_cnf["min_dm"]  # smallest dm in filtering
     max_ibox = t2_cnf["max_ibox"]  # largest ibox in filtering
     min_snr = t2_cnf["min_snr"]  # smallest snr in filtering
-    min_snr_t2out = t2_cnf["min_snr_t2out"]  # smallest snr to write T2 output cand file
+    min_snr_t2out = t2_cnf[
+        "min_snr_t2out"
+    ]  # smallest snr to write T2 output cand file
     if max_ncl is None:
-        max_ncl = t2_cnf["max_ncl"]  # largest number of clusters allowed in triggering
+        max_ncl = t2_cnf[
+            "max_ncl"
+        ]  # largest number of clusters allowed in triggering
     max_cntb0 = t2_cnf["max_ctb0"]
     max_cntb = t2_cnf["max_ctb"]
     target_params = (50.0, 100.0, 20.0)  # Galactic bursts
 
     # cluster
     cluster_heimdall.cluster_data(
-        tab, metric="euclidean", allow_single_cluster=True, return_clusterer=False
+        tab,
+        metric="euclidean",
+        allow_single_cluster=True,
+        return_clusterer=False,
     )
     tab2 = cluster_heimdall.get_peak(tab)
     nbeams_gulp = cluster_heimdall.get_nbeams(tab2)

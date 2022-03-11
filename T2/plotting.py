@@ -64,18 +64,27 @@ def plot_clustered(clusterer, clsnr, snrs, data, tab, cols, plot_dir="./"):
                         c="k",
                         marker="*",
                     )
-                    ax.text(data[:, i][imaxsnr], data[:, j][imaxsnr], str(maxsnr))
+                    ax.text(
+                        data[:, i][imaxsnr], data[:, j][imaxsnr], str(maxsnr)
+                    )
 
                 ax.set_title("cluster cols:" + str(cols))
                 fig.savefig(
-                    plot_dir + "cluster_prob_" + cols[i] + "_" + cols[j] + ".pdf"
+                    plot_dir
+                    + "cluster_prob_"
+                    + cols[i]
+                    + "_"
+                    + cols[j]
+                    + ".pdf"
                 )
                 fig.clf()
                 plt.close("all")
 
 
 # Below are functions to plot giants.
-def plot_dm_hist(tab, nbins=30, plot_dir="./", multibeam=False, data_name=None):
+def plot_dm_hist(
+    tab, nbins=30, plot_dir="./", multibeam=False, data_name=None
+):
     """
     plot the giants DM histogram
 
@@ -99,17 +108,23 @@ def plot_dm_hist(tab, nbins=30, plot_dir="./", multibeam=False, data_name=None):
     dm_min = 1.0
     # tab['ibeam'] = tab['ibeam'].astype(int)
     if multibeam:
-        for beam in range(tab["ibeam"].max() + 1):  # due to zero based indexing
+        for beam in range(
+            tab["ibeam"].max() + 1
+        ):  # due to zero based indexing
             if beam in tab["ibeam"]:
                 cands = tab[tab["ibeam"] == beam]
                 logbins = np.logspace(
                     np.log10(dm_min), np.log10(cands["dm"].max()), nbins + 1
                 )
                 vals, edges = np.histogram(cands["dm"], bins=logbins)
-                ax.step(edges, np.append(vals, 0.0), where="post", label=str(beam))
+                ax.step(
+                    edges, np.append(vals, 0.0), where="post", label=str(beam)
+                )
                 ax.legend(loc=9, ncol=4, fontsize=8)
     else:
-        logbins = np.logspace(np.log10(dm_min), np.log10(tab["dm"].max()), nbins + 1)
+        logbins = np.logspace(
+            np.log10(dm_min), np.log10(tab["dm"].max()), nbins + 1
+        )
         ax.hist(tab["dm"], bins=logbins, histtype="step", label=data_name)
 
     ### Set global plot window parameters
@@ -127,7 +142,9 @@ def plot_dm_hist(tab, nbins=30, plot_dir="./", multibeam=False, data_name=None):
     ax.set_xlabel("$\\rm DM\;(pc\;cm^{-3})$", size=12)
     ax.set_ylabel("$\\rm Giants count$", size=12)
     ax.set_title("giants dm")
-    fig.savefig(plot_dir + "giants_dm_hist_multibeam_" + str(multibeam) + ".pdf")
+    fig.savefig(
+        plot_dir + "giants_dm_hist_multibeam_" + str(multibeam) + ".pdf"
+    )
     fig.clf()
     plt.close("all")
 
@@ -200,7 +217,10 @@ def plot_dm_snr(ax, ax_cbar, tab, tsamp=1048e-6):
 
     ax_cbar.axis("on")
     cbar = plt.colorbar(
-        colormap, cax=ax_cbar, use_gridspec=True, label="$\\rm Boxcar width\;(index)$"
+        colormap,
+        cax=ax_cbar,
+        use_gridspec=True,
+        label="$\\rm Boxcar width\;(index)$",
     )
     cticks = np.array(cbar.get_ticks())
     cbar.ax.set_yticklabels(
@@ -272,7 +292,10 @@ def plot_beam_time(tab, plot_dir="./"):
         alpha=0.5,
     )
     fig.colorbar(
-        colormap, ax=ax, use_gridspec=True, label="$\\rm Boxcar width\;(index)$"
+        colormap,
+        ax=ax,
+        use_gridspec=True,
+        label="$\\rm Boxcar width\;(index)$",
     )
     ax.set_xlabel("$\\rm mjd (s)$", size=12)
     ax.set_ylabel("$\\rm beam number$", size=12)
@@ -289,8 +312,12 @@ def plot_giants(tab, plot_dir="./"):
     plot_dir : optional. The default is "./".
     """
 
-    plot_dm_hist(tab, nbins=30, plot_dir=plot_dir, multibeam=False, data_name=None)
-    plot_dm_hist(tab, nbins=30, plot_dir=plot_dir, multibeam=True, data_name=None)
+    plot_dm_hist(
+        tab, nbins=30, plot_dir=plot_dir, multibeam=False, data_name=None
+    )
+    plot_dm_hist(
+        tab, nbins=30, plot_dir=plot_dir, multibeam=True, data_name=None
+    )
     plot_beam_time(tab, plot_dir=plot_dir)
 
     # subplot or just save plots in each function?
