@@ -357,6 +357,11 @@ def dump_cluster_results_json(
     itime = str(itimes[imaxsnr])
     specnum = (int(itimes[imaxsnr]) - offset) * downsample
     mjd = tab["mjds"][imaxsnr]
+
+    # TODO: add code to check trigger to injection list on disk
+    # get candname from file on disk?
+    # skip voltage trigger via etcd?
+
     candname = names.increment_name(mjd, lastname=lastname)
     output_dict = {candname: {}}
     if outputfile is None:
