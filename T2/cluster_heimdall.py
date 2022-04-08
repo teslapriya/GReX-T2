@@ -336,6 +336,7 @@ def dump_cluster_results_json(
     nbeams=0,
     max_nbeams=100,
     frac_wide=0.0,
+    injectionfile='/home/ubuntu/injection_list.txt'
 ):
     """
     Takes tab from parse_candsfile and clsnr from get_peak,
@@ -345,6 +346,7 @@ def dump_cluster_results_json(
     cat is path to source catalog (default None)
     beam_model is pre-calculated beam model (default None)
     coords and snrs are parsed source file input
+    injectionfile is path to info on injects and controls whether trigger is compared to that
     returns row of table that triggered, along with name generated for candidate.
     """
 
@@ -357,12 +359,35 @@ def dump_cluster_results_json(
     itime = str(itimes[imaxsnr])
     specnum = (int(itimes[imaxsnr]) - offset) * downsample
     mjd = tab["mjds"][imaxsnr]
+    snr = tab["snr"][imaxsnr]
+    dm = tab["dm"][imaxsnr]
+    ibeam = tab["ibeam"][imaxsnr]
+    
+    # TODO: add code to compare trigger to properties of injections in file on disk
+    isinjection = False
+    if injectionfile is not None:
+        tab_inj = ascii.read(injectionfile)["MJD", "Beam", "DM", "SNR", "FRBno"]
+        # compare (mjd, dm, ibeam, snr(?)) to tab_inj to determine if it is injection.
+        t_close = 1  # seconds
+        dm_close = 50 # pc/cm3
+        beam_close = 2 # number
+        sel_t = np.abs(tab_inj["MJD"] - mjd) < t_close/(3600*24)
+        sel_dm = np.abs(tab_inj["DM"] - dm) < dm_close
+        sel_beam = np.abs(tab_inj["Beam"] - ibeam) < beam_close
+        sel = sel_t*sel_dm*sel_beam
+        if len(sel):
+            isinjection = True
 
-    # TODO: add code to check trigger to injection list on disk
-    # get candname from file on disk?
-    # skip voltage trigger via etcd?
+    if isinjection:
+        if len(sel) > 1:
+            print("Found multiple injections coincident with this event. Using first.")
+        basename = names.increment_name(mjd, lastname=lastname)[:-4]
+        candname = f"{basename}inj{tab_inj[sel]['FRBno'][0]}"
+        # if injection is found, skip the voltage trigger via etcd
+    else:
+        # if no injection file or no coincident injection
+        candname = names.increment_name(mjd, lastname=lastname)
 
-    candname = names.increment_name(mjd, lastname=lastname)
     output_dict = {candname: {}}
     if outputfile is None:
         outputfile = f"{outroot}{candname}.json"
@@ -408,7 +433,7 @@ def dump_cluster_results_json(
                     )
                     json.dump(output_dict, f, ensure_ascii=False, indent=4)
 
-                if trigger:
+                if trigger and not isinjection:
                     send_trigger(output_dict=output_dict)
 
                 return row, candname
@@ -428,7 +453,7 @@ def dump_cluster_results_json(
                 )
                 json.dump(output_dict, f, ensure_ascii=False, indent=4)
 
-            if trigger:
+            if trigger and not isinjection:
                 send_trigger(output_dict=output_dict)
 
             return row, candname
