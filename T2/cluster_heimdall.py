@@ -480,8 +480,8 @@ def get_radec(mjd=None, beamnum=None):
     else:
         tt = None
 
-    ra, dec = coordinates.get_pointing(ibeam=beamnum, obstime=tt)
-
+    ra, dec = coordinates.get_pointing(ibeam=beamnum, obstime=tt)    
+    
     return ra.value, dec.value
 
 
