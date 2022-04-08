@@ -363,13 +363,13 @@ def dump_cluster_results_json(
     dm = tab["dm"][imaxsnr]
     ibeam = tab["ibeam"][imaxsnr]
     
-    # TODO: add code to compare trigger to properties of injections in file on disk
     isinjection = False
     if injectionfile is not None:
+        # check candidate against injectionfile
         tab_inj = ascii.read(injectionfile)["MJD", "Beam", "DM", "SNR", "FRBno"]
         # compare (mjd, dm, ibeam, snr(?)) to tab_inj to determine if it is injection.
         t_close = 1  # seconds
-        dm_close = 50 # pc/cm3
+        dm_close = 10 # pc/cm3
         beam_close = 2 # number
         sel_t = np.abs(tab_inj["MJD"] - mjd) < t_close/(3600*24)
         sel_dm = np.abs(tab_inj["DM"] - dm) < dm_close
