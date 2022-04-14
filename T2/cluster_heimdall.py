@@ -366,8 +366,10 @@ def dump_cluster_results_json(
     isinjection = False
     if injectionfile is not None:
         # check candidate against injectionfile
-        tab_inj = ascii.read(injectionfile)["MJD", "Beam", "DM", "SNR", "FRBno"]
-        # compare (mjd, dm, ibeam, snr(?)) to tab_inj to determine if it is injection.
+        tab_inj = ascii.read(injectionfile)
+        assert all([col in tab_inj.columns for col in ["MJD", "Beam", "DM", "SNR", "FRBno"]])
+
+        # is candidate proximal to any in tab_inj?
         t_close = 1  # seconds
         dm_close = 10 # pc/cm3
         beam_close = 2 # number
@@ -375,7 +377,7 @@ def dump_cluster_results_json(
         sel_dm = np.abs(tab_inj["DM"] - dm) < dm_close
         sel_beam = np.abs(tab_inj["Beam"] - ibeam) < beam_close
         sel = sel_t*sel_dm*sel_beam
-        if len(sel):
+        if len(np.where(sel)[0]):
             isinjection = True
 
     if isinjection:

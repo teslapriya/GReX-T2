@@ -30,7 +30,7 @@ for zz in range(1):
             beam = 64*(kk-17)+subbeam
             print("Injecting into beam %d"%beam)
 #            fn = flist[ii]
-            fn = '/home/ubuntu/data/test_inj_0011.dat'
+            fn = '/home/ubuntu/data/test_inj_0010.dat'
             frbno = fn.split('_')[-1][:4]
             ind = np.where(params[:,-1]==float(frbno))[0]
             DM, SNR, Width_fwhm, spec_ind = params[ind][0][0],params[ind][0][1],params[ind][0][2],params[ind][0][3]
