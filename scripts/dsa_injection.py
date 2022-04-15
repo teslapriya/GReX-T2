@@ -36,14 +36,14 @@ for zz in range(1):
             DM, SNR, Width_fwhm, spec_ind = params[ind][0][0],params[ind][0][1],params[ind][0][2],params[ind][0][3]
             d.put_dict('/cmd/corr/%d'%kk,{'cmd':'inject','val':'%d-%s-'%(subbeam,fn)})
             imjd = Time.now().mjd
-            inj_dict = {'mjd':imjd,
-                        'ibeam':beam,
-                        'dm':DM,
-                        'snr':SNR,
-                        'width':Width_fwhm,
-                        'spec_ind':spec_ind,
-                        'frbno':frbno}
-            d.put_dict('/mon/corr/injection',inj_dict)
+#            inj_dict = {'mjd':imjd,
+#                        'ibeam':beam,
+#                        'dm':DM,
+#                        'snr':SNR,
+#                        'width':Width_fwhm,
+#                        'spec_ind':spec_ind,
+#                        'frbno':frbno}
+#            d.put_dict('/mon/corr/injection',inj_dict)
             f.write(fmt_out % (imjd, beam, DM, SNR, Width_fwhm, spec_ind, frbno))
             f.close()
             time.sleep(2700)
