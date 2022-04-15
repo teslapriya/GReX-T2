@@ -35,6 +35,7 @@ for zz in range(1):
             frbno = fn.split('_')[-1][:4]
             ind = np.where(params[:,-1]==float(frbno))[0]
             DM, SNR, Width_fwhm, spec_ind = params[ind][0][0],params[ind][0][1],params[ind][0][2],params[ind][0][3]
+            print("pushing injection to command to etcd")
             d.put_dict('/cmd/corr/%d'%kk,{'cmd':'inject','val':'%d-%s-'%(subbeam,fn)})
             imjd = Time.now().mjd
 #            inj_dict = {'mjd':imjd,
@@ -45,6 +46,7 @@ for zz in range(1):
 #                        'spec_ind':spec_ind,
 #                        'frbno':frbno}
 #            d.put_dict('/mon/corr/injection',inj_dict)
+            print("writing parameters to disk")
             f.write(fmt_out % (imjd, beam, DM, SNR, Width_fwhm, spec_ind, frbno))
             f.close()
             time.sleep(2700)
