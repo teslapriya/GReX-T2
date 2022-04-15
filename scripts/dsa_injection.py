@@ -27,7 +27,6 @@ print(f"Starting loop over {nfrb} injections with name {fn} at MJD: {Time.now().
 for zz in range(1):
     for kk in range(17,21):
         for ii in range(nfrb):
-            time.sleep(900)
             f = open(fnout,'a')
             subbeam = (2*ii+1) % 64
             beam = 64*(kk-17)+subbeam
