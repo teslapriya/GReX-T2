@@ -168,7 +168,6 @@ def parse_socket(
             print(f"candsfile is empty. Skipping.")
             logger.info(f"candsfile is empty. Skipping.")
 
-            print(candsfile)
             gulp_status(0)
             continue
 
@@ -268,7 +267,7 @@ def cluster_and_plot(
     ibox64_filter = False
     if len(tab2):
         ibox64_cnt = np.sum(tab2["ibox"] == 64) / float(len(tab2["ibox"]))
-        print("here", ibox64_cnt, tab2["ibox"])
+#        print("here", ibox64_cnt, tab2["ibox"])
         if ibox64_cnt > 0.85 and len(tab2["ibox"]) > 15:
             ibox64_filter = True
             print("ibox64 filter")
