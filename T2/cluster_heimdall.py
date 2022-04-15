@@ -381,11 +381,11 @@ def dump_cluster_results_json(
             isinjection = True
 
     if isinjection:
-        basename = names.increment_name(mjd, lastname=lastname)[:-4]
-        candname = f"{basename}inj{tab_inj[sel]['FRBno'][0]}"
+        basename = names.increment_name(mjd, lastname=lastname)
+        candname = f"{basename}_inj{tab_inj[sel]['FRBno'][0]}"
         print(f"Candidate identified as injection. Naming it {candname}")
         if len(sel) > 1:
-            print("Found multiple injections coincident with this event. Using first.")
+            print(f"Found {len(sel)} injections coincident with this event. Using first.")
         # if injection is found, skip the voltage trigger via etcd
     else:
         # if no injection file or no coincident injection
@@ -436,7 +436,7 @@ def dump_cluster_results_json(
                     )
                     json.dump(output_dict, f, ensure_ascii=False, indent=4)
 
-                if trigger and not isinjection:
+                if trigger:  #  and not isinjection ?
                     send_trigger(output_dict=output_dict)
 
                 return row, candname
@@ -456,7 +456,7 @@ def dump_cluster_results_json(
                 )
                 json.dump(output_dict, f, ensure_ascii=False, indent=4)
 
-            if trigger and not isinjection:
+            if trigger:  # and not isinjection ?
                 send_trigger(output_dict=output_dict)
 
             return row, candname
