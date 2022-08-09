@@ -22,14 +22,19 @@ from progress.bar import Bar
 
 from T2 import cluster_heimdall
 
-ds = dsa_store.DsaStore()
-import dsautils.dsa_syslog as dsl
+# ds = dsa_store.DsaStore()
+# import dsautils.dsa_syslog as dsl
 
-logger = dsl.DsaSyslogger()
-logger.subsystem("software")
-logger.app("T2")
-MY_CNF = cnf.Conf()
-CORR_CNF = MY_CNF.get("corr")
+import logging as logger
+logger.basicConfig(filename='output.log', 
+                    encoding='utf-8', 
+                    level=logger.DEBUG)
+
+# logger = dsl.DsaSyslogger()
+# logger.subsystem("software")
+# logger.app("T2")
+# MY_CNF = cnf.Conf()
+# CORR_CNF = MY_CNF.get("corr")
 
 # TODO should move to calib constants
 Ddish = 4.5

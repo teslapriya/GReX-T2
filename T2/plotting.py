@@ -15,6 +15,10 @@ except ImportError:
 #logger.subsystem("software")
 #logger.app("T2")
 
+import logging as logger
+logger.basicConfig(filename='output.log', 
+                    encoding='utf-8', 
+                    level=logger.DEBUG)
 
 def plot_clustered(clusterer, clsnr, snrs, data, tab, cols, plot_dir="./"):
     """

@@ -15,6 +15,12 @@ try:
     from T2 import triggering
 except ModuleNotFoundError:
     print("not importing triggering")
+
+import logging as logger
+logger.basicConfig(filename='output.log', 
+                    encoding='utf-8', 
+                    level=logger.DEBUG)
+
 #from dsautils import coordinates, dsa_store
 #from event import names
 
