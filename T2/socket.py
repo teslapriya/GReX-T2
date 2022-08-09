@@ -94,10 +94,10 @@ def parse_socket(
                 s.listen(1)  # accept no. of incoming connections
                 ss.append(s)
 
-        ds.put_dict(
-            "/mon/service/T2service",
-            {"cadence": 60, "time": Time(datetime.datetime.utcnow()).mjd},
-        )
+        # ds.put_dict(
+        #     "/mon/service/T2service",
+        #     {"cadence": 60, "time": Time(datetime.datetime.utcnow()).mjd},
+        # )
 
         cls = []
         try:
@@ -164,10 +164,11 @@ def parse_socket(
             gulp_status(2)
             continue
         else:
-            ds.put_dict(
-                "/mon/service/T2gulp",
-                {"cadence": 60, "time": Time(datetime.datetime.utcnow()).mjd},
-            )
+            pass 
+            # ds.put_dict(
+            #     "/mon/service/T2gulp",
+            #     {"cadence": 60, "time": Time(datetime.datetime.utcnow()).mjd},
+            # )
 
         if candsfile == "\n" or candsfile == "":  # skip empty candsfile
             print(f"candsfile is empty. Skipping.")
@@ -350,11 +351,11 @@ def gulp_status(status):
 
     t2_num = 1
 
-    ds.put_dict(
-        f"/mon/T2/{t2_num}",
-        {
-            "gulp_status": int(status),
-            "t2_num": t2_num,
-            "time": Time(datetime.datetime.utcnow()).mjd,
-        },
-    )
+    # ds.put_dict(
+    #     f"/mon/T2/{t2_num}",
+    #     {
+    #         "gulp_status": int(status),
+    #         "t2_num": t2_num,
+    #         "time": Time(datetime.datetime.utcnow()).mjd,
+    #     },
+    # )
