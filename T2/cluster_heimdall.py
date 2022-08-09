@@ -138,6 +138,78 @@ def parse_candsfile(candsfile):
     #    return tab, data, snrs
     return tab
 
+def dm_range(dm_max, dm_min=5., frac=0.2):
+    """ Generate list of DM-windows in which 
+    to search for single pulse groups. 
+
+    Parameters
+    ----------
+    dm_max : float 
+        max DM 
+    dm_min : float  
+        min DM 
+    frac : float 
+        fractional size of each window 
+
+    Returns
+    -------
+    dm_list : list 
+        list of tuples containing (min, max) of each 
+        DM window
+    """
+
+    dm_list =[]
+    prefac = (1-frac)/(1+frac)
+
+    while dm_max>dm_min:
+        if dm_max < 100.:
+            prefac = (1-2*frac)/(1+2*frac)
+        if dm_max < 50.:
+            prefac = 0.0 
+
+        dm_list.append((int(prefac*dm_max), int(dm_max)))
+        dm_max = int(prefac*dm_max)
+
+    return dm_list
+
+def cluster_dumb(tab, t_window=0.5):
+    dm = tab['dm'] 
+    mjd = tab['mjds']
+    tt = 86400 * (mjd - mjd.min())
+
+    tt_start = tt.min() - .5*t_window
+    ind_full = []
+
+    snr_cut, dm_cut, tt_cut, ds_cut = [], [], [], []
+    dm_list = dm_range(1.1*dm.max(), dm_min=0.9*dm.min())
+    ntime = int(tduration / t_window)
+
+    for dms in dm_list:
+        for ii in xrange(ntime + 2):
+            try:    
+                # step through windows of t_window seconds, starting from tt.min()
+                # and find max S/N trigger in each DM/time box
+                t0, tm = t_window*ii + tt_start, t_window*(ii+1) + tt_start
+                ind = np.where((dm<dms[1]) & (dm>dms[0]) & (tt<tm) & (tt>t0))[0] 
+                ntrig_clust = len(ind)
+                print(ntrig_clust)
+
+                if ntrig_clust==0:
+                    continue
+                else:
+                    ntrig_clust_arr.append(ntrig_clust)
+                    
+                ind_maxsnr = ind[np.argmax(snr[ind])]
+                snr_cut.append(sig[ind_maxsnr])
+                dm_cut.append(dm[ind_maxsnr])
+                tt_cut.append(tt[ind_maxsnr])
+                ds_cut.append(downsample[ind_maxsnr])
+
+                ind_full.append(ind_maxsnr)
+            except:
+                continue
+
+    return ind_full
 
 def cluster_data(
     tab,
