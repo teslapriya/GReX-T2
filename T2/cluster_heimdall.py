@@ -195,15 +195,15 @@ def cluster_dumb(tab, t_window=0.5):
                 t0, tm = t_window*ii + tt_start, t_window*(ii+1) + tt_start
                 ind = np.where((dm<dms[1]) & (dm>dms[0]) & (tt<tm) & (tt>t0))[0] 
                 ntrig_clust = len(ind)
-                print(ntrig_clust)
 
                 if ntrig_clust==0:
                     continue
                 else:
                     ntrig_clust_arr.append(ntrig_clust)
-                    
+                print(ntrig_clust)
                 ind_maxsnr = ind[np.argmax(snr[ind])]
                 ind_full.append(ind_maxsnr)
+                print(ind_full)
             except:
                 continue
     print(ind_full)
