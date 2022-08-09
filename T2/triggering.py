@@ -17,7 +17,7 @@ from astropy.coordinates import ITRS, EarthLocation, SkyCoord
 from astropy.io import ascii
 from astropy.io.ascii.core import InconsistentTableError
 from astropy.time import Time
-from dsautils import coordinates, dsa_store
+#from dsautils import coordinates, dsa_store
 from progress.bar import Bar
 
 from T2 import cluster_heimdall
