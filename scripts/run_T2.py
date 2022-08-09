@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # dsahead python 3.7
+import logging as logger
 import T2 
 import sys
 import argparse
-from dsautils import dsa_syslog
-logger = dsa_syslog.DsaSyslogger()
-logger.subsystem('software')
-logger.app('T2')
+#from dsautils import dsa_syslog
+#logger = dsa_syslog.DsaSyslogger()
+#logger.subsystem('software')
+#logger.app('T2')
 
 
 def main(argv):

@@ -6,8 +6,23 @@ import time
 
 from T2 import cluster_heimdall,plotting
 
+# my_cnf = cnf.Conf(use_etcd=True)
+# t2_cnf = my_cnf.get('t2')
+# min_dm = t2_cnf['min_dm']  # smallest dm in filtering
+# max_ibox = t2_cnf['max_ibox']  # largest ibox in filtering
+# min_snr = t2_cnf['min_snr']  # smallest snr in filtering
+# min_snr_t2out = t2_cnf['min_snr_t2out']  # smallest snr to write T2 output cand file
+# #if max_ncl is None:
+# max_ncl = t2_cnf['max_ncl']  # largest number of clusters allowed in triggering
+# max_cntb0 = t2_cnf['max_ctb0']
+# max_cntb = t2_cnf['max_ctb']
+
 candsfile = sys.argv[1]
 
+max_cntb = np.inf
+min_dm = 25.
+max_ibox = 64
+nbeams_queue=[]
 tab = cluster_heimdall.parse_candsfile(candsfile)
 tabdumb = cluster_heimdall.cluster_dumb(tab, t_window=0.5)
 
