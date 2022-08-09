@@ -63,7 +63,7 @@ def parse_socket(
 
     assert isinstance(ports, list)
 
-    lastname = names.get_lastname()
+    lastname = 'blank4now'#names.get_lastname()
 
     ss = []
 

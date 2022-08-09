@@ -173,6 +173,10 @@ def dm_range(dm_max, dm_min=5., frac=0.2):
     return dm_list
 
 def cluster_dumb(tab, t_window=0.5):
+    """
+    Cluster MBHeimdall candidates by finding the 
+    highest SNR event in a given DM/time box. 
+    """
     dm = tab['dm'] 
     mjd = tab['mjds']
     snr = tab['snr']
