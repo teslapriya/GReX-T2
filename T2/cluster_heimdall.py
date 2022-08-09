@@ -182,6 +182,7 @@ def cluster_dumb(tab, t_window=0.5):
 
     snr_cut, dm_cut, tt_cut, ds_cut = [], [], [], []
     dm_list = dm_range(1.1*dm.max(), dm_min=0.9*dm.min())
+    tduration = tt.max() - tt.min()
     ntime = int(tduration / t_window)
 
     for dms in dm_list:
