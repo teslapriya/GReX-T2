@@ -26,7 +26,7 @@ from T2 import cluster_heimdall
 # import dsautils.dsa_syslog as dsl
 
 import logging as logger
-logger.basicConfig(filename='output.log', 
+logger.basicConfig(filename='logs/output.log', 
                     encoding='utf-8', 
                     level=logger.DEBUG)
 
