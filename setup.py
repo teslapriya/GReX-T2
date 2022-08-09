@@ -1,9 +1,9 @@
 from setuptools import setup
-from version import get_git_version
+#from version import get_git_version
 
-setup(name='dsa110-T2',
-      version=get_git_version(),
-      url='http://github.com/dsa110/dsa110-T2',
+setup(name='GReX-T2',
+      version='0.1.0',
+      url='https://github.com/GReX-Telescope/GReX-T2.git',
       requirements=['seaborn', 'astropy', 'hdbscan', 'progress'],
       packages=['T2'],
       zip_safe=False)
