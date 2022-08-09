@@ -178,9 +178,11 @@ def cluster_dumb(tab, t_window=0.5):
     tt = 86400 * (mjd - mjd.min())
 
     tt_start = tt.min() - .5*t_window
-    ind_full = []
 
+    ind_full = []
+    ntrig_clust_arr = [] 
     snr_cut, dm_cut, tt_cut, ds_cut = [], [], [], []
+
     dm_list = dm_range(1.1*dm.max(), dm_min=0.9*dm.min())
     tduration = tt.max() - tt.min()
     ntime = int(tduration / t_window)
@@ -201,11 +203,6 @@ def cluster_dumb(tab, t_window=0.5):
                     ntrig_clust_arr.append(ntrig_clust)
                     
                 ind_maxsnr = ind[np.argmax(snr[ind])]
-                snr_cut.append(sig[ind_maxsnr])
-                dm_cut.append(dm[ind_maxsnr])
-                tt_cut.append(tt[ind_maxsnr])
-                ds_cut.append(downsample[ind_maxsnr])
-
                 ind_full.append(ind_maxsnr)
             except:
                 continue
