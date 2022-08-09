@@ -186,7 +186,7 @@ def cluster_dumb(tab, t_window=0.5):
     ntime = int(tduration / t_window)
 
     for dms in dm_list:
-        for ii in xrange(ntime + 2):
+        for ii in range(ntime + 2):
             try:    
                 # step through windows of t_window seconds, starting from tt.min()
                 # and find max S/N trigger in each DM/time box
