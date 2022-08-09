@@ -9,11 +9,11 @@ try:
     import seaborn as sns
 except ImportError:
     print("no seaborn found. continuing...")
-import dsautils.dsa_syslog as dsl
+#import dsautils.dsa_syslog as dsl
 
-logger = dsl.DsaSyslogger()
-logger.subsystem("software")
-logger.app("T2")
+#logger = dsl.DsaSyslogger()
+#logger.subsystem("software")
+#logger.app("T2")
 
 
 def plot_clustered(clusterer, clsnr, snrs, data, tab, cols, plot_dir="./"):
