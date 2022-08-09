@@ -21,9 +21,9 @@ except ModuleNotFoundError:
 #ds = dsa_store.DsaStore()
 #import dsautils.dsa_syslog as dsl
 
-logger = dsl.DsaSyslogger()
-logger.subsystem("software")
-logger.app("T2")
+# logger = dsl.DsaSyslogger()
+# logger.subsystem("software")
+# logger.app("T2")
 
 # half second at heimdall time resolution (after march 18)
 offset = 1907
