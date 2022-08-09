@@ -12,24 +12,24 @@ import datetime
 import time
 
 from astropy.time import Time
-from dsautils import cnf, dsa_store, dsa_syslog
-from etcd3.exceptions import ConnectionFailedError
-from event import names
+#from dsautils import cnf, dsa_store, dsa_syslog
+#from etcd3.exceptions import ConnectionFailedError
+#from event import names
 
-ds = dsa_store.DsaStore()
-logger = dsa_syslog.DsaSyslogger()
-logger.subsystem("software")
-logger.app("T2")
-my_cnf = cnf.Conf(use_etcd=True)
-try:
-    t2_cnf = my_cnf.get("t2")
-except (KeyError, ConnectionFailedError):
-    print("Cannot find t2 cnf using etcd. Falling back to hard coded values.")
-    logger.warning(
-        "Cannot find t2 cnf using etcd. Falling back to hard coded values."
-    )
-    my_cnf = cnf.Conf(use_etcd=False)
-    t2_cnf = my_cnf.get("t2")
+#ds = dsa_store.DsaStore()
+#logger = dsa_syslog.DsaSyslogger()
+#logger.subsystem("software")
+#logger.app("T2")
+# my_cnf = cnf.Conf(use_etcd=True)
+# try:
+#     t2_cnf = my_cnf.get("t2")
+# except (KeyError, ConnectionFailedError):
+#     print("Cannot find t2 cnf using etcd. Falling back to hard coded values.")
+#     logger.warning(
+#         "Cannot find t2 cnf using etcd. Falling back to hard coded values."
+#     )
+#     my_cnf = cnf.Conf(use_etcd=False)
+#     t2_cnf = my_cnf.get("t2")
 
 from collections import deque
 

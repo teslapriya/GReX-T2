@@ -15,11 +15,11 @@ try:
     from T2 import triggering
 except ModuleNotFoundError:
     print("not importing triggering")
-from dsautils import coordinates, dsa_store
-from event import names
+#from dsautils import coordinates, dsa_store
+#from event import names
 
-ds = dsa_store.DsaStore()
-import dsautils.dsa_syslog as dsl
+#ds = dsa_store.DsaStore()
+#import dsautils.dsa_syslog as dsl
 
 logger = dsl.DsaSyslogger()
 logger.subsystem("software")
