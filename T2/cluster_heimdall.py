@@ -210,7 +210,7 @@ def cluster_dumb(tab, t_window=0.5):
             except:
                 continue
 
-    return ind_full
+    return tab[ind_full]
 
 def cluster_data(
     tab,
