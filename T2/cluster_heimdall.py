@@ -175,6 +175,7 @@ def dm_range(dm_max, dm_min=5., frac=0.2):
 def cluster_dumb(tab, t_window=0.5):
     dm = tab['dm'] 
     mjd = tab['mjds']
+    snr = tab['snr']
     tt = 86400 * (mjd - mjd.min())
 
     tt_start = tt.min() - .5*t_window
