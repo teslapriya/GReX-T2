@@ -4,8 +4,8 @@
 import json
 import os.path
 
-import dsacalib.constants as ct
-import dsautils.cnf as cnf
+#import dsacalib.constants as ct
+#import dsautils.cnf as cnf
 
 # from sklearn import cluster  # for dbscan
 import hdbscan
