@@ -209,7 +209,7 @@ def cluster_dumb(tab, t_window=0.5):
                 ind_full.append(ind_maxsnr)
             except:
                 continue
-
+    print(ind_full)
     return tab[ind_full]
 
 def cluster_data(
