@@ -87,7 +87,7 @@ while True:
         prev_trig_time = None
         min_timedelt = 60.
         
-        tab4, lastname, trigtime = cluster_heimdall.dump_cluster_results_json(
+        X = cluster_heimdall.dump_cluster_results_json(
             tab3,
             trigger=trigger,
             lastname=lastname,
@@ -99,6 +99,6 @@ while True:
             nbeams=1,
             frac_wide=0.0,
         )
-
+        print("beep", X)
         
 exit()
