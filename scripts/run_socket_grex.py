@@ -11,7 +11,7 @@ from astropy.io import ascii
 import numpy as np
 import  pandas as pd
 
-from T2 import cluster_heimdall
+from T2 import cluster_heimdall, names
 from astropy.io import ascii
 
 HOST = "127.0.0.1"
