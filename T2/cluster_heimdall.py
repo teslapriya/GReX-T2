@@ -397,7 +397,7 @@ def dump_cluster_results_json(
     cat=None,
     coords=None,
     snrs=None,
-    outroot="",
+    outroot="./",
     frac_wide=0.0,
     injectionfile=None,
     candname=''

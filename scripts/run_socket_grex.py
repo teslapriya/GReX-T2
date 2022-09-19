@@ -83,7 +83,7 @@ while True:
         beam_model = None
         coords = None
         snrs = None
-        outroot = './'
+        outroot = '/home/liam/data/grex/candidates/T2/'
         nbeams_queue = 0
         prev_trig_time = None
         min_timedelt = 60.
@@ -97,6 +97,7 @@ while True:
                                                 snrs=snrs,
                                                 outroot=outroot,
                                                 frac_wide=0.0,
+                                                candname='Gulp%d'%gulp
                                             )
         print("beep", X)
         
