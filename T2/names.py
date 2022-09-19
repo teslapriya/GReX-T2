@@ -25,7 +25,7 @@ def get_lastname_grex(outroot):
 
     if len(files):
         lastname_path = max(files, key = os.path.getctime)
-        lastname = lastname_path.split('/')[-1]
+        lastname = lastname_path.split('/')[-1][:10]
         return lastname
     else:
         return None
