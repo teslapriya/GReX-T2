@@ -400,6 +400,7 @@ def dump_cluster_results_json(
     outroot="",
     frac_wide=0.0,
     injectionfile=None,
+    candname=''
 ):
     """
     Takes tab from parse_candsfile and clsnr from get_peak,
@@ -444,16 +445,12 @@ def dump_cluster_results_json(
             isinjection = True
 
     if isinjection:
-        basename = names.increment_name(mjd, lastname=lastname)
+        basename = candname
         candname = f"{basename}_inj{tab_inj[sel]['FRBno'][0]}"
         print(f"Candidate identified as injection. Naming it {candname}")
         if len(sel) > 1:
             print(f"Found {len(sel)} injections coincident with this event. Using first.")
         # if injection is found, skip the voltage trigger via etcd
-    else:
-        # if no injection file or no coincident injection
-#        candname = names.increment_name(mjd, lastname=lastname)
-        candname = 'testname'
 
     output_dict = {candname: {}}
     if outputfile is None:
