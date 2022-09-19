@@ -24,7 +24,7 @@ def get_lastname_grex(outroot):
     files = glob.glob(outroot + '/*.json')
 
     if len(files):
-        return max(fl, key = os.path.getctime)
+        return max(files, key = os.path.getctime)
     else:
         return None
 
