@@ -395,7 +395,6 @@ def dump_cluster_results_json(
     trigger=False,
     lastname=None,
     cat=None,
-    beam_model=None,
     coords=None,
     snrs=None,
     outroot="",
@@ -525,7 +524,6 @@ def dump_cluster_results_json(
         )
         return None, lastname
 
-    print("Not triggering on nbeams condition")
     return None, lastname
 
 
