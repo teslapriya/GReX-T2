@@ -1,3 +1,4 @@
+import os 
 import string
 import datetime
 from astropy import time
@@ -18,6 +19,13 @@ def get_lastname():
         
     return lastname
 
+def get_lastname_grex(outroot):
+    files = glob.glob(outroot + '/*.json')
+
+    if len(files):
+        return max(fl, key = os.path.getctime)
+    else:
+        return None
 
 def increment_name(mjd, lastname=None, suffixlength=4):
     """ Use mjd to create unique name for event.

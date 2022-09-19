@@ -78,12 +78,12 @@ while True:
         print(tab3[imaxsnr])
         print("")
         trigger = False
-        lastname = names.get_lastname()
+        outroot = '/home/liam/data/grex/candidates/T2/'
+        lastname = names.get_lastname_grex(outroot)
         cat = None
         beam_model = None
         coords = None
         snrs = None
-        outroot = '/home/liam/data/grex/candidates/T2/'
         nbeams_queue = 0
         prev_trig_time = None
         min_timedelt = 60.
