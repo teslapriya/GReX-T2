@@ -54,6 +54,7 @@ while True:
     iff = int(tab.split('\t')[1])
     candsfile += tab
     if itime//gulpsize != gulp:
+        print("GULP", gulp)
         TAB = ascii.read(candsfile, names=col_heimdall,
                      guess=True, fast_reader=False,
                      format='no_header')
@@ -86,7 +87,7 @@ while True:
         nbeams_queue = 0
         prev_trig_time = None
         min_timedelt = 60.
-        
+        print("Starting dump step")
         X = cluster_heimdall.dump_cluster_results_json(
             tab3,
             trigger=trigger,
