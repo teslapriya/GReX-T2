@@ -470,7 +470,8 @@ def dump_cluster_results_json(
         # if injection is found, skip the voltage trigger via etcd
     else:
         # if no injection file or no coincident injection
-        candname = names.increment_name(mjd, lastname=lastname)
+#        candname = names.increment_name(mjd, lastname=lastname)
+        candname = 'testname'
 
     output_dict = {candname: {}}
     if outputfile is None:
