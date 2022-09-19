@@ -78,7 +78,7 @@ while True:
         print(tab3[imaxsnr])
         print("")
         trigger = False
-        lastname = 'blegh'
+        lastname = names.get_lastname()
         cat = None
         beam_model = None
         coords = None
