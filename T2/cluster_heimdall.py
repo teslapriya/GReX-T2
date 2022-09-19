@@ -417,7 +417,7 @@ def dump_cluster_results_json(
     nbeams=0,
     max_nbeams=100,
     frac_wide=0.0,
-    injectionfile='/home/ubuntu/injection_list.txt'
+    injectionfile=None,
 ):
     """
     Takes tab from parse_candsfile and clsnr from get_peak,
