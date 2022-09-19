@@ -1,6 +1,7 @@
 import os 
 import string
 import datetime
+import glob 
 from astropy import time
 
 
