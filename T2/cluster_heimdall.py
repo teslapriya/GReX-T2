@@ -403,7 +403,6 @@ def dump_cluster_results_json(
     outroot="./",
     frac_wide=0.0,
     injectionfile=None,
-    candname=''
 ):
     """
     Takes tab from parse_candsfile and clsnr from get_peak,
@@ -456,6 +455,7 @@ def dump_cluster_results_json(
         # if injection is found, skip the voltage trigger via etcd
     else:
         # if no injection file or no coincident injection
+        print(mjd, lastname)
         candname = names.increment_name(mjd, lastname=lastname)
 
     output_dict = {candname: {}}

@@ -88,7 +88,7 @@ while True:
         prev_trig_time = None
         min_timedelt = 60.
         print("Starting dump step")
-        tab3['mjd'] = 59000.00
+        tab3['mjds'] = 59000.00
         X = cluster_heimdall.dump_cluster_results_json(
                                                 tab3,
                                                 trigger=trigger,
@@ -98,8 +98,7 @@ while True:
                                                 snrs=snrs,
                                                 outroot=outroot,
                                                 frac_wide=0.0,
-                                                candname='Gulp%d'%gulp
-                                            )
+                                                    )
         print("beep", X)
         
 exit()
