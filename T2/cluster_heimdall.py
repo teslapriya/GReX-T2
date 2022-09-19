@@ -485,11 +485,11 @@ def dump_cluster_results_json(
         else:
             output_dict[candname][col] = row[col]
 
-    output_dict[candname]["specnum"] = specnum
-    (
-        output_dict[candname]["ra"],
-        output_dict[candname]["dec"],
-    ) = get_radec()  # quick and dirty
+    # output_dict[candname]["specnum"] = specnum
+    # (
+    #     output_dict[candname]["ra"],
+    #     output_dict[candname]["dec"],
+    # ) = get_radec()  # quick and dirty
 
     nbeams_condition = False
     print(f"Checking nbeams condition: {nbeams}>{max_nbeams}")
