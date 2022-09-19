@@ -388,21 +388,6 @@ def filter_clustered(
     return tab_out
 
 
-def get_nbeams(tab, threshold=7.5):
-    """Calculate number of beams in table above SNR threshold."""
-
-    goody = [True] * len(tab)
-    goody *= tab["snr"] > threshold
-    tab_out2 = tab[goody]
-    if len(tab_out2) > 0:
-        ibeams = np.asarray(tab_out2["ibeam"])
-        nbeams = len(np.unique(ibeams))
-    else:
-        nbeams = 0
-
-    return nbeams
-
-
 def dump_cluster_results_json(
     tab,
     outputfile=None,
@@ -414,8 +399,6 @@ def dump_cluster_results_json(
     coords=None,
     snrs=None,
     outroot="",
-    nbeams=0,
-    max_nbeams=100,
     frac_wide=0.0,
     injectionfile=None,
 ):
@@ -491,17 +474,7 @@ def dump_cluster_results_json(
     #     output_dict[candname]["dec"],
     # ) = get_radec()  # quick and dirty
 
-    nbeams_condition = False
-    print(f"Checking nbeams condition: {nbeams}>{max_nbeams}")
-    if nbeams > max_nbeams:
-        nbeams_condition = True
-        # Liam edit to preserve real FRBs during RFI storm:
-        # if nbeam > max_nbeams and frac_wide < 0.8: do not discard because
-        # most FPs are wide
-        if frac_wide < 0.8:
-            nbeams_condition = False
-
-    if len(tab) and nbeams_condition is False:
+    if len(tab):
         print(red_tab)
         if cat is not None and red_tab is not None:
             # beam_model = triggering.read_beam_model(beam_model)
@@ -545,10 +518,10 @@ def dump_cluster_results_json(
 
     else:
         print(
-            f"Not triggering on block with {len(tab)} candidates and nbeams {nbeams}>{max_nbeams} beam count sum"
+            f"Not triggering on block with {len(tab)} candidates"
         )
         logger.info(
-            f"Not triggering on block with {len(tab)} candidates and nbeams {nbeams}>{max_nbeams} beam count sum"
+            f"Not triggering on block with {len(tab)} candidates"
         )
         return None, lastname
 

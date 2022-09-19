@@ -89,17 +89,17 @@ while True:
         min_timedelt = 60.
         print("Starting dump step")
         X = cluster_heimdall.dump_cluster_results_json(
-            tab3,
-            trigger=trigger,
-            lastname=lastname,
-            cat=cat,
-            beam_model=beam_model,
-            coords=coords,
-            snrs=snrs,
-            outroot=outroot,
-            nbeams=1,
-            frac_wide=0.0,
-        )
+                                                tab3,
+                                                trigger=trigger,
+                                                lastname=lastname,
+                                                cat=cat,
+                                                beam_model=beam_model,
+                                                coords=coords,
+                                                snrs=snrs,
+                                                outroot=outroot,
+                                                nbeams=1,
+                                                frac_wide=0.0,
+                                            )
         print("beep", X)
         
 exit()
