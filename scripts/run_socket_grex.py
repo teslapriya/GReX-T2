@@ -88,6 +88,7 @@ while True:
         prev_trig_time = None
         min_timedelt = 60.
         print("Starting dump step")
+        tab3['mjd'] = 59000.00
         X = cluster_heimdall.dump_cluster_results_json(
                                                 tab3,
                                                 trigger=trigger,
