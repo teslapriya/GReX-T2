@@ -16,10 +16,13 @@ try:
 except ModuleNotFoundError:
     print("not importing triggering")
 
+from T2 import names 
+
 import logging as logger
 logger.basicConfig(filename='logs/output.log', 
                     encoding='utf-8', 
                     level=logger.DEBUG)
+
 
 #from dsautils import coordinates, dsa_store
 #from event import names
@@ -445,12 +448,15 @@ def dump_cluster_results_json(
             isinjection = True
 
     if isinjection:
-        basename = candname
+        basename = names.increment_name(mjd, lastname=lastname)
         candname = f"{basename}_inj{tab_inj[sel]['FRBno'][0]}"
         print(f"Candidate identified as injection. Naming it {candname}")
         if len(sel) > 1:
             print(f"Found {len(sel)} injections coincident with this event. Using first.")
         # if injection is found, skip the voltage trigger via etcd
+    else:
+        # if no injection file or no coincident injection
+        candname = names.increment_name(mjd, lastname=lastname)
 
     output_dict = {candname: {}}
     if outputfile is None:
