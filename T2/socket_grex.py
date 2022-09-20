@@ -65,6 +65,7 @@ def filter_candidates(candsfile):
                      guess=True, fast_reader=False,
                      format='no_header')
 
+    # Ensure that the candidate table is not empty
     if not len(tab):
         return 
 
@@ -74,6 +75,7 @@ def filter_candidates(candsfile):
 
     tab2 = cluster_heimdall.get_peak(tab)
 
+    # Ensure that the candidate table is not empty
     if not len(tab2):
         return 
 
@@ -85,6 +87,8 @@ def filter_candidates(candsfile):
                                             max_cntb0=max_cntb0, 
                                             max_ncl=max_ncl, 
                                             target_params=target_params)
+
+    # Ensure that the candidate table is not empty
     if not len(tab3):
         return
 
