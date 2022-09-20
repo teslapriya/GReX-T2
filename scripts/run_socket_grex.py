@@ -16,21 +16,18 @@ from T2 import socket_grex
 HOST = "127.0.0.1"
 PORT = 12346
 
-gulpsize=16384
+gulpsize=16384//4
 
 s=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-#s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
 # Create a UDP socket
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 # Bind the socket to the port
 server_address = (HOST, PORT)
-#s.close()
+
 s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 s.bind(server_address)
-print("Do Ctrl+c to exit the program !!")
-
-n = 0
-
+print("Connected to socket")
 
 candsfile = ''
 gulp = 0
