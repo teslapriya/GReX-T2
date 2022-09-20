@@ -48,6 +48,7 @@ while True:
     if itime//gulpsize != gulp:
         print("GULP", gulp)
         socket_grex.filter_candidates(candsfile)
+        gulp = itime//gulpsize
         continue
         # tab = ascii.read(candsfile, names=col_heimdall,
         #                  guess=True, fast_reader=False,
