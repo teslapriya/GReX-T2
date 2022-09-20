@@ -38,7 +38,6 @@ gulp = 0
 
 
 while True:
-    print("####### Server is listening #######")
     data, address = s.recvfrom(4096)
     candstr = data.decode('utf-8')
     itime = int(candstr.split('\t')[2])

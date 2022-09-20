@@ -80,7 +80,6 @@ def filter_candidates(candsfile):
     itime_imax = str(itimes[imaxsnr])
     mjd = tab3['mjds'][imaxsnr]
     
-    gulp = itime//gulpsize
     trigger = False
     lastname = names.get_lastname_grex(outroot)
     cat = None
