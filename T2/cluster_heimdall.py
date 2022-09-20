@@ -480,7 +480,7 @@ def dump_cluster_results_json(
     # ) = get_radec()  # quick and dirty
 
     if len(tab):
-        print(red_tab)
+        print('\n',red_tab,'\n')
         if cat is not None and red_tab is not None:
             # beam_model = triggering.read_beam_model(beam_model)
             tab_checked = triggering.check_clustered_sources(
