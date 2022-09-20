@@ -610,4 +610,4 @@ def dump_cluster_results_heimdall(
         print("max_ncl not set. Not filtering heimdall output file.")
 
     if len(tab) > 0:
-        tab.write(outputfile, format="ascii.no_header")
+        tab.write(outputfile, format="ascii.no_header", overwrite=True)
