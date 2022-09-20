@@ -44,6 +44,11 @@ nbeams_queue = deque(maxlen=10)
 
 
 def filter_candidates(candsfile):
+    """ Take a single gulp of candidates, 
+    parse, cluster, and then filter to 
+    produce highest S/N candidate and save 
+    to a json file
+    """
     outroot = '/home/liam/data/grex/candidates/T2/'
 
     col_heimdall = ['snr', 'if', 'itime', 'mjds', 'ibox', 'idm', 'dm', 'ibeam']
@@ -59,6 +64,9 @@ def filter_candidates(candsfile):
     tab = ascii.read(candsfile, names=col_heimdall,
                      guess=True, fast_reader=False,
                      format='no_header')
+
+    if not len(tab):
+        return 
 
     cluster_heimdall.cluster_data(tab, metric='euclidean', 
                                   allow_single_cluster=True, 
