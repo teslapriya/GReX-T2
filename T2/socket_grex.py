@@ -81,7 +81,6 @@ def filter_candidates(candsfile, output=True):
     imaxsnr = np.where(tab3['snr'] == maxsnr)[0][0]        
     itime_imax = str(itimes[imaxsnr])
     mjd = tab3['mjds'][imaxsnr]
-    specnum = (int(itimes[imaxsnr]) - offset) * downsample
     trigger = True
     lastname = names.get_lastname_grex(outroot)
     cat = None
