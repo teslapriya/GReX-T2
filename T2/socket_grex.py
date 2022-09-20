@@ -179,7 +179,6 @@ def cluster_and_plot(
     tab2 = cluster_heimdall.get_peak(tab)
     nbeams_gulp = cluster_heimdall.get_nbeams(tab2)
     nbeams_queue.append(nbeams_gulp)
-    print(f"nbeams_queue: {nbeams_queue}")
 
     # Liam edit to preserve real FRBs during RFI storm:
     # if nbeam > 100 and frac_wide < 0.8: do not discard
@@ -197,7 +196,6 @@ def cluster_and_plot(
     ibox64_filter = False
     if len(tab2):
         ibox64_cnt = np.sum(tab2["ibox"] == 64) / float(len(tab2["ibox"]))
-#        print("here", ibox64_cnt, tab2["ibox"])
         if ibox64_cnt > 0.85 and len(tab2["ibox"]) > 15:
             ibox64_filter = True
             print("ibox64 filter")
