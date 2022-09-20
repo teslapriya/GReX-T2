@@ -30,7 +30,6 @@ s.bind(server_address)
 
 print("Connected to socket %s:%d" % (HOST, PORT))
 
-candsfile = ''
 gulp = 0
 
 while True:
@@ -45,6 +44,7 @@ while True:
         print("GULP", gulp)
         socket_grex.filter_candidates(candsfile)
         gulp = itime//gulpsize
+        candsfile = ''
         continue
         
 exit()
