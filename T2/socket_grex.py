@@ -113,11 +113,11 @@ def filter_candidates(candsfile):
     # write T2 clustered/filtered results
     if outroot is not None and len(tab2):
         tab2["trigger"] = col_trigger
-        output_file = outroot + "cluster_output" + str(np.floor(time.time()).astype("int")) + ".cand"
-        outputted = cluster_heimdall.dump_cluster_results_heimdall(tab2,
-                                                                   output_file,
-                                                                   min_snr_t2out=min_snr_t2out,
-                                                                   max_ncl=max_ncl)
+#        output_file = outroot + "cluster_output" + str(np.floor(time.time()).astype("int")) + ".cand"
+#        outputted = cluster_heimdall.dump_cluster_results_heimdall(tab2,
+#                                                                   output_file,
+#                                                                   min_snr_t2out=min_snr_t2out,
+#                                                                   max_ncl=max_ncl)
 
         # aggregate files
         if outputted:
