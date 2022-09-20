@@ -570,13 +570,13 @@ def send_trigger(output_dict=None, outputfile=None):
         f"Sending trigger for candidate {candname} with specnum {val['specnum']}"
     )
 
-    ds.put_dict(
-        "/cmd/corr/0",
-        {"cmd": "trigger", "val": f'{val["specnum"]}-{candname}-'},
-    )  # triggers voltage dump in corr.py
-    ds.put_dict(
-        "/mon/corr/1/trigger", output_dict
-    )  # tells look_after_dumps.py to manage data
+    # ds.put_dict(
+    #     "/cmd/corr/0",
+    #     {"cmd": "trigger", "val": f'{val["specnum"]}-{candname}-'},
+    # )  # triggers voltage dump in corr.py
+    # ds.put_dict(
+    #     "/mon/corr/1/trigger", output_dict
+    # )  # tells look_after_dumps.py to manage data
 
 
 def dump_cluster_results_heimdall(
