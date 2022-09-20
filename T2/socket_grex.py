@@ -4,6 +4,7 @@ import numpy as np
 import datetime
 import time
 from astropy.time import Time
+from astropy.io import ascii
 
 from T2 import cluster_heimdall
 
