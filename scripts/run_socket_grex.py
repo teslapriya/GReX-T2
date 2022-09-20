@@ -49,24 +49,30 @@ target_params = (50., 100., 20.)  # Galactic bursts
 while True:
 #    print("####### Server is listening #######")
     data, address = s.recvfrom(4096)
-    tab = data.decode('utf-8')
-    itime = int(tab.split('\t')[2])
-    iff = int(tab.split('\t')[1])
-    candsfile += tab
+    candstr = data.decode('utf-8')
+    itime = int(candstr.split('\t')[2])
+    iff = int(candstr.split('\t')[1])
+    candsfile += candstr
     if itime//gulpsize != gulp:
         print("GULP", gulp)
-        TAB = ascii.read(candsfile, names=col_heimdall,
-                     guess=True, fast_reader=False,
-                     format='no_header')
-        print(len(TAB))
-        cluster_heimdall.cluster_data(TAB, metric='euclidean', allow_single_cluster=True, return_clusterer=False)
-        print(len(TAB))
-        tab2 = cluster_heimdall.get_peak(TAB)
-        print(len(tab2))
-        tab3 = cluster_heimdall.filter_clustered(tab2, min_snr=min_snr, min_dm=min_dm, max_ibox=max_ibox, max_cntb=max_cntb,
-                                             max_cntb0=max_cntb0, max_ncl=max_ncl, target_params=target_params)
+        tab = ascii.read(candsfile, names=col_heimdall,
+                         guess=True, fast_reader=False,
+                         format='no_header')
 
-        print(len(tab3))
+        cluster_heimdall.cluster_data(tab, metric='euclidean', 
+                                      allow_single_cluster=True, 
+                                      return_clusterer=False)
+
+        tab2 = cluster_heimdall.get_peak(tab)
+        tab3 = cluster_heimdall.filter_clustered(tab2, 
+                                                min_snr=min_snr, 
+                                                min_dm=min_dm, 
+                                                max_ibox=max_ibox, 
+                                                max_cntb=max_cntb,
+                                                max_cntb0=max_cntb0, 
+                                                max_ncl=max_ncl, 
+                                                target_params=target_params)
+
         itimes = tab3['itime']
         maxsnr = tab3['snr'].max()
         imaxsnr = np.where(tab3['snr'] == maxsnr)[0][0]        
@@ -74,9 +80,6 @@ while True:
         mjd = tab3['mjds'][imaxsnr]
         
         gulp = itime//gulpsize
-        print("")
-        print(tab3[imaxsnr])
-        print("")
         trigger = False
         outroot = '/home/liam/data/grex/candidates/T2/'
         lastname = names.get_lastname_grex(outroot)
