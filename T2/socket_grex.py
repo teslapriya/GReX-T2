@@ -41,6 +41,7 @@ def filter_candidates(candsfile):
     max_cntb = np.inf
     max_cntb0 = np.inf
     target_params = (50., 100., 20.)  # Galactic bursts
+    
 
     tab = ascii.read(candsfile, names=col_heimdall,
                      guess=True, fast_reader=False,
@@ -55,6 +56,7 @@ def filter_candidates(candsfile):
                                   return_clusterer=False)
 
     tab2 = cluster_heimdall.get_peak(tab)
+    col_trigger = np.zeros(len(tab2), dtype=int)
 
     # Ensure that the candidate table is not empty
     if not len(tab2):
@@ -90,7 +92,7 @@ def filter_candidates(candsfile):
     min_timedelt = 60.
     tab3['mjds'] = 59000.00
 
-    X = cluster_heimdall.dump_cluster_results_json(
+    tab4, lastname, trigtime = cluster_heimdall.dump_cluster_results_json(
                                                     tab3,
                                                     trigger=trigger,
                                                     lastname=lastname,
@@ -100,6 +102,11 @@ def filter_candidates(candsfile):
                                                     outroot=outroot,
                                                     frac_wide=0.0,
                                                    )
+
+    if tab4 is not None and trigger:
+        col_trigger = np.where(
+            tab4 == tab2, lastname, 0
+        )  # if trigger, then overload
 
 
     # write T2 clustered/filtered results
