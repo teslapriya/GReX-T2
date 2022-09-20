@@ -611,3 +611,6 @@ def dump_cluster_results_heimdall(
 
     if len(tab) > 0:
         tab.write(outputfile, format="ascii.no_header", overwrite=True)
+        return True 
+        
+    return False 
