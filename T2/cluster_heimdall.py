@@ -480,7 +480,6 @@ def dump_cluster_results_json(
     # ) = get_radec()  # quick and dirty
 
     if len(tab):
-        print(red_tab)
         if cat is not None and red_tab is not None:
             # beam_model = triggering.read_beam_model(beam_model)
             tab_checked = triggering.check_clustered_sources(
@@ -498,6 +497,7 @@ def dump_cluster_results_json(
 
                 if trigger:  #  and not isinjection ?
                     print(output_dict)
+                    exit()
                     send_trigger(output_dict=output_dict)
 
                 return row, candname
@@ -518,6 +518,7 @@ def dump_cluster_results_json(
                 json.dump(output_dict, f, ensure_ascii=False, indent=4)
 
             if trigger:  # and not isinjection ?
+                print(output_dict)
                 send_trigger(output_dict=output_dict)
 
             return row, candname
