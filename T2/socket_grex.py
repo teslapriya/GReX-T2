@@ -115,13 +115,13 @@ def filter_candidates(candsfile, output=True):
     if outroot is not None and len(tab2):
         tab2["trigger"] = col_trigger
         output_file = outroot + "cluster_output" + str(np.floor(time.time()).astype("int")) + ".cand"
-#        outputted = cluster_heimdall.dump_cluster_results_heimdall(tab2,
-#                                                                   output_file,
-#                                                                   min_snr_t2out=min_snr_t2out,
-#                                                                   max_ncl=max_ncl)
+        outputted = cluster_heimdall.dump_cluster_results_heimdall(tab2,
+                                                                   output_file,
+                                                                   min_snr_t2out=min_snr_t2out,
+                                                                   max_ncl=max_ncl)
 
         # aggregate files
-        if output:
+        if outputted:
             a = Time.now().mjd
             output_mjd = str(int(a))
             old_mjd = str(int(a)-1)
