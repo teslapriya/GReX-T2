@@ -473,7 +473,7 @@ def dump_cluster_results_json(
         else:
             output_dict[candname][col] = row[col]
 
-    # output_dict[candname]["specnum"] = specnum
+    output_dict[candname]["specnum"] = specnum
     # (
     #     output_dict[candname]["ra"],
     #     output_dict[candname]["dec"],
