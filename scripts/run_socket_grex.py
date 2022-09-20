@@ -11,7 +11,7 @@ from astropy.io import ascii
 import numpy as np
 import  pandas as pd
 
-from T2 import cluster_heimdall, names
+from T2 import cluster_heimdall, socket_grex, names
 from astropy.io import ascii
 
 HOST = "127.0.0.1"
@@ -31,30 +31,25 @@ s.bind(server_address)
 print("Do Ctrl+c to exit the program !!")
 
 n = 0
-x=''
 
-col_heimdall = ['snr', 'if', 'itime', 'mjds', 'ibox', 'idm', 'dm', 'ibeam']
+
 candsfile = ''
 gulp = 0
 
-min_dm = 50
-max_ibox = 64
-min_snr = 8.0
-min_snr_t2out = 10.0
-max_ncl = np.inf
-max_cntb = np.inf
-max_cntb0 = np.inf
-target_params = (50., 100., 20.)  # Galactic bursts
+
 
 while True:
-#    print("####### Server is listening #######")
+    print("####### Server is listening #######")
     data, address = s.recvfrom(4096)
     candstr = data.decode('utf-8')
     itime = int(candstr.split('\t')[2])
     iff = int(candstr.split('\t')[1])
     candsfile += candstr
+
     if itime//gulpsize != gulp:
         print("GULP", gulp)
+        socket_grex.filter_candidates(candsfile)
+        continue
         tab = ascii.read(candsfile, names=col_heimdall,
                          guess=True, fast_reader=False,
                          format='no_header')
@@ -90,18 +85,16 @@ while True:
         nbeams_queue = 0
         prev_trig_time = None
         min_timedelt = 60.
-        print("Starting dump step")
         tab3['mjds'] = 59000.00
         X = cluster_heimdall.dump_cluster_results_json(
-                                                tab3,
-                                                trigger=trigger,
-                                                lastname=lastname,
-                                                cat=cat,
-                                                coords=coords,
-                                                snrs=snrs,
-                                                outroot=outroot,
-                                                frac_wide=0.0,
-                                                    )
-        print("beep", X)
+                                                        tab3,
+                                                        trigger=trigger,
+                                                        lastname=lastname,
+                                                        cat=cat,
+                                                        coords=coords,
+                                                        snrs=snrs,
+                                                        outroot=outroot,
+                                                        frac_wide=0.0,
+                                                       )
         
 exit()

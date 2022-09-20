@@ -41,6 +41,66 @@ logger.basicConfig(filename='logs/output.log',
 nbeams_queue = deque(maxlen=10)
 
 
+def filter_candidates(candsfile):
+    outroot = '/home/liam/data/grex/candidates/T2/'
+
+    col_heimdall = ['snr', 'if', 'itime', 'mjds', 'ibox', 'idm', 'dm', 'ibeam']
+    min_dm = 50
+    max_ibox = 64
+    min_snr = 8.0
+    min_snr_t2out = 10.0
+    max_ncl = np.inf
+    max_cntb = np.inf
+    max_cntb0 = np.inf
+    target_params = (50., 100., 20.)  # Galactic bursts
+
+    tab = ascii.read(candsfile, names=col_heimdall,
+                     guess=True, fast_reader=False,
+                     format='no_header')
+
+    cluster_heimdall.cluster_data(tab, metric='euclidean', 
+                                  allow_single_cluster=True, 
+                                  return_clusterer=False)
+
+    tab2 = cluster_heimdall.get_peak(tab)
+    tab3 = cluster_heimdall.filter_clustered(tab2, 
+                                            min_snr=min_snr, 
+                                            min_dm=min_dm, 
+                                            max_ibox=max_ibox, 
+                                            max_cntb=max_cntb,
+                                            max_cntb0=max_cntb0, 
+                                            max_ncl=max_ncl, 
+                                            target_params=target_params)
+
+    itimes = tab3['itime']
+    maxsnr = tab3['snr'].max()
+    imaxsnr = np.where(tab3['snr'] == maxsnr)[0][0]        
+    itime_imax = str(itimes[imaxsnr])
+    mjd = tab3['mjds'][imaxsnr]
+    
+    gulp = itime//gulpsize
+    trigger = False
+    lastname = names.get_lastname_grex(outroot)
+    cat = None
+    beam_model = None
+    coords = None
+    snrs = None
+    nbeams_queue = 0
+    prev_trig_time = None
+    min_timedelt = 60.
+    tab3['mjds'] = 59000.00
+
+    X = cluster_heimdall.dump_cluster_results_json(
+                                                    tab3,
+                                                    trigger=trigger,
+                                                    lastname=lastname,
+                                                    cat=cat,
+                                                    coords=coords,
+                                                    snrs=snrs,
+                                                    outroot=outroot,
+                                                    frac_wide=0.0,
+                                                   )
+
 def parse_socket(
     host,
     ports,
