@@ -24,7 +24,7 @@ logger.basicConfig(filename='logs/output.log',
 nbeams_queue = deque(maxlen=10)
 
 
-def filter_candidates(candsfile):
+def filter_candidates(candsfile, output=True):
     """ Take a single gulp of candidates, 
     parse, cluster, and then filter to 
     produce highest S/N candidate and save 
@@ -120,7 +120,7 @@ def filter_candidates(candsfile):
 #                                                                   max_ncl=max_ncl)
 
         # aggregate files
-        if outputted:
+        if output:
             a = Time.now().mjd
             output_mjd = str(int(a))
             old_mjd = str(int(a)-1)
