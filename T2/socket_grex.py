@@ -82,7 +82,7 @@ def filter_candidates(candsfile, output=True):
     itime_imax = str(itimes[imaxsnr])
     mjd = tab3['mjds'][imaxsnr]
     
-    trigger = False
+    trigger = True
     lastname = names.get_lastname_grex(outroot)
     cat = None
     beam_model = None
@@ -103,7 +103,6 @@ def filter_candidates(candsfile, output=True):
                                                     outroot=outroot,
                                                     frac_wide=0.0,
                                                    )
-    print(tab4, lastname, 'bink')
 
     if tab4 is not None and trigger:
         col_trigger = np.where(
