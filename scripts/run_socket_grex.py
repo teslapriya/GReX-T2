@@ -38,7 +38,6 @@ while True:
     itime = int(candstr.split('\t')[2])
     iff = int(candstr.split('\t')[1])
     candsfile += candstr
-    print(itime//gulpsize, gulp)
 
     if itime//gulpsize != gulp:
         print("GULP", gulp)
