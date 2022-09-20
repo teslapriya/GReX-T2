@@ -23,6 +23,9 @@ logger.basicConfig(filename='logs/output.log',
                     encoding='utf-8', 
                     level=logger.DEBUG)
 
+# half second at heimdall time resolution (after march 18)
+offset = 1907
+downsample = 4
 
 #from dsautils import coordinates, dsa_store
 #from event import names
