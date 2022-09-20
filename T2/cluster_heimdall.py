@@ -494,6 +494,7 @@ def dump_cluster_results_json(
                     json.dump(output_dict, f, ensure_ascii=False, indent=4)
 
                 if trigger:  #  and not isinjection ?
+                    print(output_dict)
                     send_trigger(output_dict=output_dict)
 
                 return row, candname
@@ -612,5 +613,5 @@ def dump_cluster_results_heimdall(
     if len(tab) > 0:
         tab.write(outputfile, format="ascii.no_header", overwrite=True)
         return True 
-        
+
     return False 
