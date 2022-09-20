@@ -28,7 +28,7 @@ s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 server_address = (HOST, PORT)
 s.bind(server_address)
 
-print("Connected to socket")
+print("Connected to socket %s:%d" % (HOST, PORT))
 
 candsfile = ''
 gulp = 0
