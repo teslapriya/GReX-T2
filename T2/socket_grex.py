@@ -73,6 +73,10 @@ def filter_candidates(candsfile):
                                   return_clusterer=False)
 
     tab2 = cluster_heimdall.get_peak(tab)
+
+    if not len(tab2):
+        return 
+
     tab3 = cluster_heimdall.filter_clustered(tab2, 
                                             min_snr=min_snr, 
                                             min_dm=min_dm, 
@@ -81,6 +85,8 @@ def filter_candidates(candsfile):
                                             max_cntb0=max_cntb0, 
                                             max_ncl=max_ncl, 
                                             target_params=target_params)
+    if not len(tab3):
+        return
 
     itimes = tab3['itime']
     maxsnr = tab3['snr'].max()
