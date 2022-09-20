@@ -102,6 +102,28 @@ def filter_candidates(candsfile):
                                                    )
 
 
+    # write T2 clustered/filtered results
+    if outroot is not None and len(tab2):
+        tab2["trigger"] = col_trigger
+        output_file = outroot + "cluster_output" + str(np.floor(time.time()).astype("int")) + ".cand"
+        outputted = cluster_heimdall.dump_cluster_results_heimdall(tab2,
+                                                                   output_file,
+                                                                   min_snr_t2out=min_snr_t2out,
+                                                                   max_ncl=max_ncl)
+
+        # aggregate files
+        if outputted:
+            a = Time.now().mjd
+            output_mjd = str(int(a))
+            old_mjd = str(int(a)-1)
+            
+            os.system("cat "+output_file+" >> "+outroot+output_mjd+".csv")
+            os.system("if ! grep -Fxq 'snr,if,specnum,mjds,ibox,idm,dm,ibeam,cl,cntc,cntb,trigger' "+outroot+output_mjd+".csv; then sed -i '1s/^/snr\,if\,specnum\,mjds\,ibox\,idm\,dm\,ibeam\,cl\,cntc\,cntb\,trigger\\n/' "+outroot+output_mjd+".csv; fi")
+
+            os.system("echo 'snr,if,specnum,mjds,ibox,idm,dm,ibeam,cl,cntc,cntb,trigger' > "+outroot+"cluster_output.csv")
+            os.system("test -f "+outroot+old_mjd+".csv && tail -n +2 "+outroot+old_mjd+".csv | tr ' ' ',' >> "+outroot+"cluster_output.csv")
+            os.system("tail -n +2 "+outroot+output_mjd+".csv | tr ' ' ',' >> "+outroot+"cluster_output.csv")
+
 def cluster_and_plot(
     tab,
     globct,
