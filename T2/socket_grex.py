@@ -92,7 +92,7 @@ def filter_candidates(candsfile):
     min_timedelt = 60.
     tab3['mjds'] = 59000.00
 
-    tab4, lastname, trigtime = cluster_heimdall.dump_cluster_results_json(
+    tab4, lastname = cluster_heimdall.dump_cluster_results_json(
                                                     tab3,
                                                     trigger=trigger,
                                                     lastname=lastname,
@@ -102,6 +102,7 @@ def filter_candidates(candsfile):
                                                     outroot=outroot,
                                                     frac_wide=0.0,
                                                    )
+    print(tab4, lastname, 'bink')
 
     if tab4 is not None and trigger:
         col_trigger = np.where(
