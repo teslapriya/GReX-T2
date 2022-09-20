@@ -1,6 +1,9 @@
 import socket
 
 import numpy as np
+import datetime
+import time
+from astropy.time import Time
 
 from T2 import cluster_heimdall
 
@@ -8,10 +11,8 @@ try:
     from T2 import triggering
 except ModuleNotFoundError:
     print("not importing triggering")
-import datetime
-import time
 
-from astropy.time import Time
+
 #from dsautils import cnf, dsa_store, dsa_syslog
 #from etcd3.exceptions import ConnectionFailedError
 #from event import names
