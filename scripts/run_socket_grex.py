@@ -14,9 +14,9 @@ import  pandas as pd
 from T2 import socket_grex
 
 HOST = "127.0.0.1"
-PORT = 12346
+PORT = 12345
 
-gulpsize=16384//4
+gulpsize=16384
 
 s=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
