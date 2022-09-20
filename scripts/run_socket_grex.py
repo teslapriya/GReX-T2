@@ -31,6 +31,7 @@ s.bind(server_address)
 print("Connected to socket %s:%d" % (HOST, PORT))
 
 gulp = 0
+candsfile = ''
 
 while True:
     data, address = s.recvfrom(4096)
