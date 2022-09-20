@@ -6,7 +6,7 @@ import time
 from astropy.time import Time
 from astropy.io import ascii
 
-from T2 import cluster_heimdall
+from T2 import cluster_heimdall, socket_grex, names
 
 try:
     from T2 import triggering

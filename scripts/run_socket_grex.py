@@ -11,7 +11,7 @@ from astropy.io import ascii
 import numpy as np
 import  pandas as pd
 
-from T2 import cluster_heimdall, socket_grex, names
+from T2 import socket_grex
 
 HOST = "127.0.0.1"
 PORT = 12346
@@ -34,8 +34,6 @@ n = 0
 
 candsfile = ''
 gulp = 0
-
-
 
 while True:
     data, address = s.recvfrom(4096)
