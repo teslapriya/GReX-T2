@@ -17,7 +17,7 @@ HOST = "127.0.0.1"
 PORT = 12345
 
 # Use roughly 4 seconds as a gulp size
-gulpsize=16384
+gulpsize=16384//32
 
 s=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 # Create a UDP socket
