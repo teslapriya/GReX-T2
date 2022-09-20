@@ -463,7 +463,7 @@ def dump_cluster_results_json(
 
     output_dict = {candname: {}}
     if outputfile is None:
-        outputfile = f"{outroot}{candname}.json"
+        outputfile = f"{outroot}/json/{candname}.json"
 
     row = tab[imaxsnr]
     red_tab = tab[imaxsnr : imaxsnr + 1]
