@@ -5,6 +5,7 @@ import json
 import os.path
 
 # from sklearn import cluster  # for dbscan
+import socket
 import hdbscan
 import numpy as np
 from astropy import time
@@ -497,7 +498,6 @@ def dump_cluster_results_json(
 
                 if trigger:  #  and not isinjection ?
                     print(output_dict)
-                    exit()
                     send_trigger(output_dict=output_dict)
 
                 return row, candname
@@ -569,6 +569,11 @@ def send_trigger(output_dict=None, outputfile=None):
     logger.info(
         f"Sending trigger for candidate {candname} with specnum {val['specnum']}"
     )
+    UDP_PORT=65432
+    UDP_IP='127.0.0.1'
+    MESSAGE = b"Sending Trigger!"
+    sock = socket.socket(socket.AF_INET, # Internet
+                         socket.SOCK_DGRAM) # UDP
 
     # ds.put_dict(
     #     "/cmd/corr/0",
