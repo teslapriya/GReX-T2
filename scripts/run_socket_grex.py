@@ -16,8 +16,8 @@ from T2 import socket_grex
 HOST = "127.0.0.1"
 PORT = 12345
 
-# Use roughly 4 seconds as a gulp size
-gulpsize=16384
+# Use roughly 8 seconds as a gulp size
+gulpsize=16384*8
 
 s=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 # Create a UDP socket
@@ -30,22 +30,41 @@ s.bind(server_address)
 
 print("Connected to socket %s:%d" % (HOST, PORT))
 
-gulp = 0
-candsfile = ''
+candsfile = ['','','','','']
 
 while True:
     data, address = s.recvfrom(4096)
     candstr = data.decode('utf-8')
+
     # Read time sample to keep track of gulp number
     itime = int(candstr.split('\t')[2])
-    candsfile += candstr
-
-    # If the gulp number has changed, cluster the current gulp
-    if itime//gulpsize != gulp:
-        print("GULP", gulp)
-        socket_grex.filter_candidates(candsfile)
-        gulp = itime//gulpsize
-        candsfile = ''
+    gulp_ii = itime // gulpsize
+    #print(gulp_ii)
+    
+    if candsfile==['','','','','']:
+        gulp = gulp_ii
+        print("Starting gulp is %d" % gulp)
+    if gulp_ii-gulp < 0:
+        print("Receiving candidates gulps from before current gulp")
+        print(gulp_ii, gulp)
+        continue
+    if gulp_ii-gulp >= len(candsfile):
+        print("Receiving candidates too far ahead of current gulp")
+        print(gulp_ii, gulp)
+        continue
+    candsfile[gulp_ii-gulp] += candstr
+    # If cand is received with gulp 2 or more than
+    # current gulp, process current gulp
+    if gulp_ii >= gulp+3:
+        if candsfile[0]=='':
+            candsfile.pop(0)
+            candsfile.append('')
+            continue
+        print("Clustering gulp", gulp)
+        gulp += 1
+        socket_grex.filter_candidates(candsfile[0])
+        candsfile.pop(0)
+        candsfile.append('')
         continue
         
 exit()

@@ -42,7 +42,6 @@ def filter_candidates(candsfile, output=True):
     max_cntb = np.inf
     max_cntb0 = np.inf
     target_params = (50., 100., 20.)  # Galactic bursts
-    
 
     tab = ascii.read(candsfile, names=col_heimdall,
                      guess=True, fast_reader=False,
@@ -81,7 +80,7 @@ def filter_candidates(candsfile, output=True):
     imaxsnr = np.where(tab3['snr'] == maxsnr)[0][0]        
     itime_imax = str(itimes[imaxsnr])
     mjd = tab3['mjds'][imaxsnr]
-    trigger = True
+    trigger = False
     lastname = names.get_lastname_grex(outroot)
     cat = None
     beam_model = None

@@ -212,13 +212,10 @@ def cluster_dumb(tab, t_window=0.5):
                     continue
                 else:
                     ntrig_clust_arr.append(ntrig_clust)
-                print(ntrig_clust)
                 ind_maxsnr = ind[np.argmax(snr[ind])]
                 ind_full.append(ind_maxsnr)
-                print(ind_full)
             except:
                 continue
-    print(ind_full)
     return tab[ind_full]
 
 def cluster_data(
@@ -361,8 +358,7 @@ def filter_clustered(
                 * (tab["dm"] < max_dmt)
             )
             good *= good0 + good1 + good2
-            # print('good0, good1, good2, good:')
-            # print(good0, good1, good2, good)
+
     if min_dm is not None:
         good *= tab["dm"] > min_dm
     if max_ibox is not None:
@@ -562,7 +558,7 @@ def send_trigger(output_dict=None, outputfile=None):
 
     candname = list(output_dict)[0]
     val = output_dict.get(candname)
-    print(candname, val)
+
     print(
         f"Sending trigger for candidate {candname} with specnum {val['specnum']}"
     )
@@ -574,7 +570,7 @@ def send_trigger(output_dict=None, outputfile=None):
     MESSAGE = b"Sending Trigger!"
     sock = socket.socket(socket.AF_INET, # Internet
                          socket.SOCK_DGRAM) # UDP
-
+    sock.sendto(MESSAGE, (UDP_IP, UDP_PORT))
     # ds.put_dict(
     #     "/cmd/corr/0",
     #     {"cmd": "trigger", "val": f'{val["specnum"]}-{candname}-'},
