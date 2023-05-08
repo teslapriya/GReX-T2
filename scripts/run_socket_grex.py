@@ -1,5 +1,5 @@
 import socket
-from T2 import socket_grex
+from grex_t2 import socket_grex
 
 HOST = "127.0.0.1"
 PORT = 12345

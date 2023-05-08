@@ -1,4 +1,4 @@
-from T2 import cluster_heimdall, triggering
+from grex_t2 import cluster_heimdall, triggering
 import os.path
 import numpy as np
 

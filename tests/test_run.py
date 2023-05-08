@@ -1,4 +1,4 @@
-from T2 import cluster_heimdall, socket_grex
+from grex_t2 import cluster_heimdall, socket_grex
 import os.path
 
 _install_dir = os.path.abspath(os.path.dirname(__file__))

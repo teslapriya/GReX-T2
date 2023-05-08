@@ -1,5 +1,5 @@
 import logging as logger
-import T2
+import grex_t2
 import sys
 import argparse
 
@@ -46,7 +46,7 @@ def main(argv):
     logger.info(
         f"Running parse_socket to ip {ip} and ports {ports} with voltage trigger={trigger}"
     )
-    T2.socket.parse_socket(
+    grex_t2.socket.parse_socket(
         host=ip,
         ports=ports,
         selectcols=["itime", "idm", "ibox", "ibeam"],
