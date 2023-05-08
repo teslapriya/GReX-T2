@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "grex-t2"
+name = "grex_t2"
 version = "0.1.0"
 description = "Second trigger level for GReX"
 authors = ["Liam Connor <lconnor@caltech.edu>"]
@@ -17,6 +17,7 @@ matplotlib = "^3.7.1"
 [tool.poetry.group.dev.dependencies]
 black = "*"
 pytest = "*"
+flake8 = "^6.0.0"
 
 [build-system]
 requires = ["poetry-core"]

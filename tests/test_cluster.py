@@ -1,6 +1,6 @@
 import pytest
 import os.path
-from T2 import cluster_heimdall, plotting
+from grex_t2 import cluster_heimdall, plotting
 
 _install_dir = os.path.abspath(os.path.dirname(__file__))
 

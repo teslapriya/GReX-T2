@@ -3,7 +3,7 @@ import numpy as np
 import time
 from astropy.time import Time
 from astropy.io import ascii
-from T2 import cluster_heimdall, names
+from grex_t2 import cluster_heimdall, names
 from collections import deque
 import logging as logger
 
@@ -118,7 +118,7 @@ def filter_candidates(candsfile, output=True):
                 "if ! grep -Fxq 'snr,if,specnum,mjds,ibox,idm,dm,ibeam,cl,cntc,cntb,trigger' "
                 + outroot
                 + output_mjd
-                + ".csv; then sed -i '1s/^/snr\,if\,specnum\,mjds\,ibox\,idm\,dm\,ibeam\,cl\,cntc\,cntb\,trigger\\n/' "
+                + ".csv; then sed -i '1s/^/snr,if,specnum,mjds,ibox,idm,dm,ibeam,cl,cntc,cntb,trigger\\n/' "
                 + outroot
                 + output_mjd
                 + ".csv; fi"

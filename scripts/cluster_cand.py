@@ -1,7 +1,7 @@
 import sys
 import matplotlib.pyplot as plt
 import numpy as np
-from T2 import cluster_heimdall
+from grex_t2 import cluster_heimdall
 
 # my_cnf = cnf.Conf(use_etcd=True)
 # t2_cnf = my_cnf.get('t2')
