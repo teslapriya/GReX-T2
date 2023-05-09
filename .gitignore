@@ -7,4 +7,4 @@ tests/*.json
 *.json
 *.log
 RELEASE-VERSION
-dsa110_T2.egg-info
+.pytest_cache

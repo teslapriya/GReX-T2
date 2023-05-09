@@ -1,39 +1,26 @@
 import os
-
-import socket
 import numpy as np
-import datetime
 import time
 from astropy.time import Time
 from astropy.io import ascii
-
-from T2 import cluster_heimdall, socket_grex, names
-
-try:
-    from T2 import triggering
-except ModuleNotFoundError:
-    print("not importing triggering")
-
-
+from grex_t2 import cluster_heimdall, names
 from collections import deque
-
 import logging as logger
-logger.basicConfig(filename='logs/output.log', 
-                    encoding='utf-8', 
-                    level=logger.DEBUG)
+
+logger.basicConfig(filename="logs/output.log", encoding="utf-8", level=logger.DEBUG)
 
 nbeams_queue = deque(maxlen=10)
 
 
 def filter_candidates(candsfile, output=True):
-    """ Take a single gulp of candidates, 
-    parse, cluster, and then filter to 
-    produce highest S/N candidate and save 
+    """Take a single gulp of candidates,
+    parse, cluster, and then filter to
+    produce highest S/N candidate and save
     to a json file
     """
-    outroot = '/home/liam/data/grex/candidates/T2/'
+    outroot = "/home/liam/data/grex/candidates/T2/"
 
-    col_heimdall = ['snr', 'if', 'itime', 'mjds', 'ibox', 'idm', 'dm', 'ibeam']
+    col_heimdall = ["snr", "if", "itime", "mjds", "ibox", "idm", "dm", "ibeam"]
     min_dm = 50
     max_ibox = 64
     min_snr = 8.0
@@ -41,45 +28,47 @@ def filter_candidates(candsfile, output=True):
     max_ncl = np.inf
     max_cntb = np.inf
     max_cntb0 = np.inf
-    target_params = (50., 100., 20.)  # Galactic bursts
+    target_params = (50.0, 100.0, 20.0)  # Galactic bursts
 
-    tab = ascii.read(candsfile, names=col_heimdall,
-                     guess=True, fast_reader=False,
-                     format='no_header')
+    tab = ascii.read(
+        candsfile, names=col_heimdall, guess=True, fast_reader=False, format="no_header"
+    )
 
     # Ensure that the candidate table is not empty
     if not len(tab):
-        return 
+        return
 
-    cluster_heimdall.cluster_data(tab, metric='euclidean', 
-                                  allow_single_cluster=True, 
-                                  return_clusterer=False)
+    cluster_heimdall.cluster_data(
+        tab, metric="euclidean", allow_single_cluster=True, return_clusterer=False
+    )
 
     tab2 = cluster_heimdall.get_peak(tab)
     col_trigger = np.zeros(len(tab2), dtype=int)
 
     # Ensure that the candidate table is not empty
     if not len(tab2):
-        return 
+        return
 
-    tab3 = cluster_heimdall.filter_clustered(tab2, 
-                                            min_snr=min_snr, 
-                                            min_dm=min_dm, 
-                                            max_ibox=max_ibox, 
-                                            max_cntb=max_cntb,
-                                            max_cntb0=max_cntb0, 
-                                            max_ncl=max_ncl, 
-                                            target_params=target_params)
+    tab3 = cluster_heimdall.filter_clustered(
+        tab2,
+        min_snr=min_snr,
+        min_dm=min_dm,
+        max_ibox=max_ibox,
+        max_cntb=max_cntb,
+        max_cntb0=max_cntb0,
+        max_ncl=max_ncl,
+        target_params=target_params,
+    )
 
     # Ensure that the candidate table is not empty
     if not len(tab3):
         return
 
-    itimes = tab3['itime']
-    maxsnr = tab3['snr'].max()
-    imaxsnr = np.where(tab3['snr'] == maxsnr)[0][0]        
+    itimes = tab3["itime"]
+    maxsnr = tab3["snr"].max()
+    imaxsnr = np.where(tab3["snr"] == maxsnr)[0][0]
     itime_imax = str(itimes[imaxsnr])
-    mjd = tab3['mjds'][imaxsnr]
+    mjd = tab3["mjds"][imaxsnr]
     trigger = False
     lastname = names.get_lastname_grex(outroot)
     cat = None
@@ -88,47 +77,78 @@ def filter_candidates(candsfile, output=True):
     snrs = None
     nbeams_queue = 0
     prev_trig_time = None
-    min_timedelt = 60.
-    tab3['mjds'] = 59000.00
+    min_timedelt = 60.0
+    tab3["mjds"] = 59000.00
 
     tab4, lastname = cluster_heimdall.dump_cluster_results_json(
-                                                    tab3,
-                                                    trigger=trigger,
-                                                    lastname=lastname,
-                                                    cat=cat,
-                                                    coords=coords,
-                                                    snrs=snrs,
-                                                    outroot=outroot,
-                                                    frac_wide=0.0,
-                                                   )
+        tab3,
+        trigger=trigger,
+        lastname=lastname,
+        cat=cat,
+        coords=coords,
+        snrs=snrs,
+        outroot=outroot,
+        frac_wide=0.0,
+    )
 
     if tab4 is not None and trigger:
-        col_trigger = np.where(
-            tab4 == tab2, lastname, 0
-        )  # if trigger, then overload
-
+        col_trigger = np.where(tab4 == tab2, lastname, 0)  # if trigger, then overload
 
     # write T2 clustered/filtered results
     if outroot is not None and len(tab2):
         tab2["trigger"] = col_trigger
-        output_file = outroot + "cluster_output" + str(np.floor(time.time()).astype("int")) + ".cand"
-        outputted = cluster_heimdall.dump_cluster_results_heimdall(tab2,
-                                                                   output_file,
-                                                                   min_snr_t2out=min_snr_t2out,
-                                                                   max_ncl=max_ncl)
+        output_file = (
+            outroot
+            + "cluster_output"
+            + str(np.floor(time.time()).astype("int"))
+            + ".cand"
+        )
+        outputted = cluster_heimdall.dump_cluster_results_heimdall(
+            tab2, output_file, min_snr_t2out=min_snr_t2out, max_ncl=max_ncl
+        )
 
         # aggregate files
         if outputted:
             a = Time.now().mjd
             output_mjd = str(int(a))
-            old_mjd = str(int(a)-1)
-            
-            os.system("cat "+output_file+" >> "+outroot+output_mjd+".csv")
-            os.system("if ! grep -Fxq 'snr,if,specnum,mjds,ibox,idm,dm,ibeam,cl,cntc,cntb,trigger' "+outroot+output_mjd+".csv; then sed -i '1s/^/snr\,if\,specnum\,mjds\,ibox\,idm\,dm\,ibeam\,cl\,cntc\,cntb\,trigger\\n/' "+outroot+output_mjd+".csv; fi")
+            old_mjd = str(int(a) - 1)
 
-            os.system("echo 'snr,if,specnum,mjds,ibox,idm,dm,ibeam,cl,cntc,cntb,trigger' > "+outroot+"cluster_output.csv")
-            os.system("test -f "+outroot+old_mjd+".csv && tail -n +2 "+outroot+old_mjd+".csv | tr ' ' ',' >> "+outroot+"cluster_output.csv")
-            os.system("tail -n +2 "+outroot+output_mjd+".csv | tr ' ' ',' >> "+outroot+"cluster_output.csv")
+            os.system("cat " + output_file + " >> " + outroot + output_mjd + ".csv")
+            os.system(
+                "if ! grep -Fxq 'snr,if,specnum,mjds,ibox,idm,dm,ibeam,cl,cntc,cntb,trigger' "
+                + outroot
+                + output_mjd
+                + ".csv; then sed -i '1s/^/snr,if,specnum,mjds,ibox,idm,dm,ibeam,cl,cntc,cntb,trigger\\n/' "
+                + outroot
+                + output_mjd
+                + ".csv; fi"
+            )
+
+            os.system(
+                "echo 'snr,if,specnum,mjds,ibox,idm,dm,ibeam,cl,cntc,cntb,trigger' > "
+                + outroot
+                + "cluster_output.csv"
+            )
+            os.system(
+                "test -f "
+                + outroot
+                + old_mjd
+                + ".csv && tail -n +2 "
+                + outroot
+                + old_mjd
+                + ".csv | tr ' ' ',' >> "
+                + outroot
+                + "cluster_output.csv"
+            )
+            os.system(
+                "tail -n +2 "
+                + outroot
+                + output_mjd
+                + ".csv | tr ' ' ',' >> "
+                + outroot
+                + "cluster_output.csv"
+            )
+
 
 def cluster_and_plot(
     tab,
@@ -157,13 +177,9 @@ def cluster_and_plot(
     min_dm = t2_cnf["min_dm"]  # smallest dm in filtering
     max_ibox = t2_cnf["max_ibox"]  # largest ibox in filtering
     min_snr = t2_cnf["min_snr"]  # smallest snr in filtering
-    min_snr_t2out = t2_cnf[
-        "min_snr_t2out"
-    ]  # smallest snr to write T2 output cand file
+    min_snr_t2out = t2_cnf["min_snr_t2out"]  # smallest snr to write T2 output cand file
     if max_ncl is None:
-        max_ncl = t2_cnf[
-            "max_ncl"
-        ]  # largest number of clusters allowed in triggering
+        max_ncl = t2_cnf["max_ncl"]  # largest number of clusters allowed in triggering
     max_cntb0 = t2_cnf["max_ctb0"]
     max_cntb = t2_cnf["max_ctb"]
     target_params = (50.0, 100.0, 20.0)  # Galactic bursts

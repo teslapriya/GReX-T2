@@ -1,46 +1,20 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-# dsahead python 3.7
 import json
 import os.path
-
-# from sklearn import cluster  # for dbscan
 import socket
 import hdbscan
 import numpy as np
 from astropy import time
 from astropy.io import ascii
 from astropy.io.ascii.core import InconsistentTableError
-
-try:
-    from T2 import triggering
-except ModuleNotFoundError:
-    print("not importing triggering")
-
-from T2 import names 
-
+from numpy.lib.recfunctions import structured_to_unstructured
+from grex_t2 import triggering, names
 import logging as logger
-logger.basicConfig(filename='logs/output.log', 
-                    encoding='utf-8', 
-                    level=logger.DEBUG)
+
+logger.basicConfig(filename="logs/output.log", encoding="utf-8", level=logger.DEBUG)
 
 # half second at heimdall time resolution (after march 18)
-offset = 1907
-downsample = 4
-
-#from dsautils import coordinates, dsa_store
-#from event import names
-
-#ds = dsa_store.DsaStore()
-#import dsautils.dsa_syslog as dsl
-
-# logger = dsl.DsaSyslogger()
-# logger.subsystem("software")
-# logger.app("T2")
-
-# half second at heimdall time resolution (after march 18)
-offset = 1907
-downsample = 4
+OFFSET = 1907
+DOWNSAMPLE = 4
 
 
 def parse_candsfile(candsfile):
@@ -54,8 +28,6 @@ def parse_candsfile(candsfile):
     else:
         ncands = len(candsfile.split("\n")) - 1
         logger.debug(f"Received {ncands} candidates")
-    #    candsfile = '\n'.join([line for line in candsfile.split('\n') if line.count(' ') == 7])
-    #    print(f'Received {ncands0} candidates, removed {ncands0-ncands} lines.')
     col_heimdall = ["snr", "if", "itime", "mjds", "ibox", "idm", "dm", "ibeam"]
     col_T2old = [
         "snr",
@@ -126,16 +98,7 @@ def parse_candsfile(candsfile):
 
     tab["ibeam"] = tab["ibeam"].astype(int)
     if hdfile is True:
-        try:
-            ret_time = (
-                ds.get_dict("/mon/snap/1/armed_mjd")["armed_mjd"]
-                + float(ds.get_dict("/mon/snap/1/utc_start")["utc_start"])
-                * 4.0
-                * 8.192e-6
-                / 86400.0
-            )
-        except:
-            ret_time = 55000.0
+        ret_time = 55000.0
         tab["mjds"] = tab["mjds"] / 86400.0 + ret_time
 
     #
@@ -145,70 +108,72 @@ def parse_candsfile(candsfile):
     #    return tab, data, snrs
     return tab
 
-def dm_range(dm_max, dm_min=5., frac=0.2):
-    """ Generate list of DM-windows in which 
-    to search for single pulse groups. 
+
+def dm_range(dm_max, dm_min=5.0, frac=0.2):
+    """Generate list of DM-windows in which
+    to search for single pulse groups.
 
     Parameters
     ----------
-    dm_max : float 
-        max DM 
-    dm_min : float  
-        min DM 
-    frac : float 
-        fractional size of each window 
+    dm_max : float
+        max DM
+    dm_min : float
+        min DM
+    frac : float
+        fractional size of each window
 
     Returns
     -------
-    dm_list : list 
-        list of tuples containing (min, max) of each 
+    dm_list : list
+        list of tuples containing (min, max) of each
         DM window
     """
 
-    dm_list =[]
-    prefac = (1-frac)/(1+frac)
+    dm_list = []
+    prefac = (1 - frac) / (1 + frac)
 
-    while dm_max>dm_min:
-        if dm_max < 100.:
-            prefac = (1-2*frac)/(1+2*frac)
-        if dm_max < 50.:
-            prefac = 0.0 
+    while dm_max > dm_min:
+        if dm_max < 100.0:
+            prefac = (1 - 2 * frac) / (1 + 2 * frac)
+        if dm_max < 50.0:
+            prefac = 0.0
 
-        dm_list.append((int(prefac*dm_max), int(dm_max)))
-        dm_max = int(prefac*dm_max)
+        dm_list.append((int(prefac * dm_max), int(dm_max)))
+        dm_max = int(prefac * dm_max)
 
     return dm_list
 
+
 def cluster_dumb(tab, t_window=0.5):
     """
-    Cluster MBHeimdall candidates by finding the 
-    highest SNR event in a given DM/time box. 
+    Cluster MBHeimdall candidates by finding the
+    highest SNR event in a given DM/time box.
     """
-    dm = tab['dm'] 
-    mjd = tab['mjds']
-    snr = tab['snr']
+    dm = tab["dm"]
+    mjd = tab["mjds"]
+    snr = tab["snr"]
     tt = 86400 * (mjd - mjd.min())
 
-    tt_start = tt.min() - .5*t_window
+    tt_start = tt.min() - 0.5 * t_window
 
     ind_full = []
-    ntrig_clust_arr = [] 
+    ntrig_clust_arr = []
     snr_cut, dm_cut, tt_cut, ds_cut = [], [], [], []
 
-    dm_list = dm_range(1.1*dm.max(), dm_min=0.9*dm.min())
+    dm_list = dm_range(1.1 * dm.max(), dm_min=0.9 * dm.min())
     tduration = tt.max() - tt.min()
     ntime = int(tduration / t_window)
 
     for dms in dm_list:
         for ii in range(ntime + 2):
-            try:    
+            try:
                 # step through windows of t_window seconds, starting from tt.min()
                 # and find max S/N trigger in each DM/time box
-                t0, tm = t_window*ii + tt_start, t_window*(ii+1) + tt_start
-                ind = np.where((dm<dms[1]) & (dm>dms[0]) & (tt<tm) & (tt>t0))[0] 
+                t0, tm = t_window * ii + tt_start, t_window * (ii + 1) + tt_start
+                ind = np.where((dm < dms[1]) & (dm > dms[0]) & (tt < tm) & (tt > t0))[0]
                 ntrig_clust = len(ind)
 
-                if ntrig_clust==0:
+                if ntrig_clust == 0:
                     continue
                 else:
                     ntrig_clust_arr.append(ntrig_clust)
@@ -217,6 +182,7 @@ def cluster_dumb(tab, t_window=0.5):
             except:
                 continue
     return tab[ind_full]
+
 
 def cluster_data(
     tab,
@@ -231,9 +197,10 @@ def cluster_data(
     selectcols will take a subset of the standard MBHeimdall output
     """
 
-    data = np.lib.recfunctions.structured_to_unstructured(
+    data = structured_to_unstructured(
         tab[selectcols].as_array()
     )  # ok for single dtype (int)
+    clusterer = None
     try:
         clusterer = hdbscan.HDBSCAN(
             metric=metric,
@@ -242,22 +209,14 @@ def cluster_data(
             cluster_selection_method="eom",
             allow_single_cluster=allow_single_cluster,
         ).fit(data)
-        #        clusterer = cluster.DBSCAN(metric='chebyshev', min_samples=min_samples,
-        #                                   eps=14, algorithm='auto', leaf_size=23).fit(data)
 
         nclustered = np.max(clusterer.labels_ + 1)
         nunclustered = len(np.where(clusterer.labels_ == -1)[0])
         cl = clusterer.labels_
     except ValueError:
         print("Clustering did not run. Each point assigned to unique cluster.")
-        logger.info(
-            "Clustering did not run. Each point assigned to unique cluster."
-        )
+        logger.info("Clustering did not run. Each point assigned to unique cluster.")
         cl = np.arange(len(data))
-        nclustered = 0
-        nunclustered = len(cl)
-
-    #    logger.info(f'Found {nclustered} clustered and {nunclustered} unclustered rows')
 
     # hack assumes fixed columns
     bl = data[:, 3]
@@ -272,20 +231,13 @@ def cluster_data(
         ubl = np.unique(bl[ww])
         cntb[ww] = len(ubl)
 
-    # append useful metastats to original data
-    #    data_labeled = np.hstack((data, cl[:,None], cntb, cntc))
     # modifies tab in place
     tab["cl"] = cl.tolist()
     tab["cntc"] = cntc.flatten().tolist()
     tab["cntb"] = cntb.flatten().tolist()
 
     if return_clusterer:
-        #        return clusterer, data_labeled
         return clusterer
-
-
-#    else:
-#        return data_labeled
 
 
 def get_peak(tab):
@@ -294,13 +246,7 @@ def get_peak(tab):
     Puts unclustered candidates in as individual events.
     """
 
-    #    clsnr = []
-    #    cl = datal[:, 4].astype(int)   # hack. should really use table.
-    #    cnt_beam = datal[:, 5].astype(int)
-    #    cnt_cl = datal[:, 6].astype(int)
     cl = tab["cl"].astype(int)
-    #    cnt_beam = tab['cntb'].astype(int)
-    #    cnt_cl = tab['cntc'].astype(int)
     snrs = tab["snr"]
     ipeak = []
     for i in np.unique(cl):
@@ -310,7 +256,6 @@ def get_peak(tab):
         maxsnr = snrs[clusterinds].max()
         imaxsnr = np.where(snrs == maxsnr)[0][0]
         ipeak.append(imaxsnr)
-    #        clsnr.append((imaxsnr, maxsnr, cnt_beam[imaxsnr], cnt_cl[imaxsnr]))
     ipeak += [i for i in range(len(tab)) if cl[i] == -1]  # append unclustered
     logger.info(f"Found {len(ipeak)} cluster peaks")
     print(f"Found {len(ipeak)} cluster peaks")
@@ -325,12 +270,10 @@ def filter_clustered(
     max_ibox=None,
     min_cntb=None,
     max_cntb=None,
-    max_cntb0=None,
     min_cntc=None,
     max_cntc=None,
     max_ncl=None,
     target_params=None,
-    frac_wide=0.0,
 ):
     """Function to select a subset of clustered output.
     Can set minimum SNR, min/max number of beams in cluster, min/max total count in cluster.
@@ -353,9 +296,7 @@ def filter_clustered(
             good0 = (tab["snr"] > min_snr) * (tab["dm"] > max_dmt)
             good1 = (tab["snr"] > min_snr) * (tab["dm"] < min_dmt)
             good2 = (
-                (tab["snr"] > min_snrt)
-                * (tab["dm"] > min_dmt)
-                * (tab["dm"] < max_dmt)
+                (tab["snr"] > min_snrt) * (tab["dm"] > min_dmt) * (tab["dm"] < max_dmt)
             )
             good *= good0 + good1 + good2
 
@@ -379,13 +320,9 @@ def filter_clustered(
             min_snr_cl = sorted(tab_out["snr"])[-max_ncl]
             good = tab_out["snr"] >= min_snr_cl
             tab_out = tab_out[good]
-            print(
-                f"Limiting output to {max_ncl} clusters with snr>{min_snr_cl}."
-            )
+            print(f"Limiting output to {max_ncl} clusters with snr>{min_snr_cl}.")
 
-    logger.info(
-        f"Filtering clusters from {len(tab)} to {len(tab_out)} candidates."
-    )
+    logger.info(f"Filtering clusters from {len(tab)} to {len(tab_out)} candidates.")
     print(f"Filtering clusters from {len(tab)} to {len(tab_out)} candidates.")
 
     return tab_out
@@ -401,7 +338,6 @@ def dump_cluster_results_json(
     coords=None,
     snrs=None,
     outroot="./",
-    frac_wide=0.0,
     injectionfile=None,
 ):
     """
@@ -423,39 +359,42 @@ def dump_cluster_results_json(
     maxsnr = tab["snr"].max()
     imaxsnr = np.where(tab["snr"] == maxsnr)[0][0]
     itime = str(itimes[imaxsnr])
-    specnum = (int(itimes[imaxsnr]) - offset) * downsample
+    specnum = (int(itimes[imaxsnr]) - OFFSET) * DOWNSAMPLE
     mjd = tab["mjds"][imaxsnr]
-    snr = tab["snr"][imaxsnr]
+    _snr = tab["snr"][imaxsnr]
     dm = tab["dm"][imaxsnr]
     ibeam = tab["ibeam"][imaxsnr]
-    
+
+    # if no injection file or no coincident injection
+    candname = names.increment_name(mjd, lastname=lastname)
+
     isinjection = False
     if injectionfile is not None:
         # check candidate against injectionfile
         tab_inj = ascii.read(injectionfile)
-        assert all([col in tab_inj.columns for col in ["MJD", "Beam", "DM", "SNR", "FRBno"]])
+        assert all(
+            [col in tab_inj.columns for col in ["MJD", "Beam", "DM", "SNR", "FRBno"]]
+        )
 
         # is candidate proximal to any in tab_inj?
         t_close = 15  # seconds  TODO: why not 1 sec?
-        dm_close = 10 # pc/cm3
-        beam_close = 2 # number
-        sel_t = np.abs(tab_inj["MJD"] - mjd) < t_close/(3600*24)
+        dm_close = 10  # pc/cm3
+        beam_close = 2  # number
+        sel_t = np.abs(tab_inj["MJD"] - mjd) < t_close / (3600 * 24)
         sel_dm = np.abs(tab_inj["DM"] - dm) < dm_close
         sel_beam = np.abs(tab_inj["Beam"] - ibeam) < beam_close
-        sel = sel_t*sel_dm*sel_beam
+        sel = sel_t * sel_dm * sel_beam
         if len(np.where(sel)[0]):
             isinjection = True
 
-    if isinjection:
-        basename = names.increment_name(mjd, lastname=lastname)
-        candname = f"{basename}_inj{tab_inj[sel]['FRBno'][0]}"
-        print(f"Candidate identified as injection. Naming it {candname}")
-        if len(sel) > 1:
-            print(f"Found {len(sel)} injections coincident with this event. Using first.")
-        # if injection is found, skip the voltage trigger via etcd
-    else:
-        # if no injection file or no coincident injection
-        candname = names.increment_name(mjd, lastname=lastname)
+        if isinjection:
+            basename = names.increment_name(mjd, lastname=lastname)
+            candname = f"{basename}_inj{tab_inj[sel]['FRBno'][0]}"
+            print(f"Candidate identified as injection. Naming it {candname}")
+            if len(sel) > 1:
+                print(
+                    f"Found {len(sel)} injections coincident with this event. Using first."
+                )
 
     output_dict = {candname: {}}
     if outputfile is None:
@@ -470,23 +409,16 @@ def dump_cluster_results_json(
             output_dict[candname][col] = row[col]
 
     output_dict[candname]["specnum"] = specnum
-    # (
-    #     output_dict[candname]["ra"],
-    #     output_dict[candname]["dec"],
-    # ) = get_radec()  # quick and dirty
 
-    if len(tab):
-        print('\n',red_tab,'\n')
+    if len(tab) > 0:
+        print("\n", red_tab, "\n")
         if cat is not None and red_tab is not None:
-            # beam_model = triggering.read_beam_model(beam_model)
             tab_checked = triggering.check_clustered_sources(
-                red_tab, coords, snrs, beam_model=beam_model, do_check=False
+                red_tab, coords, snrs, do_check=False
             )
             if len(tab_checked):
                 with open(outputfile, "w") as f:  # encoding='utf-8'
-                    print(
-                        f"Writing trigger file for index {imaxsnr} with SNR={maxsnr}"
-                    )
+                    print(f"Writing trigger file for index {imaxsnr} with SNR={maxsnr}")
                     logger.info(
                         f"Writing trigger file for index {imaxsnr} with SNR={maxsnr}"
                     )
@@ -505,9 +437,7 @@ def dump_cluster_results_json(
 
         else:
             with open(outputfile, "w") as f:  # encoding='utf-8'
-                print(
-                    f"Writing trigger file for index {imaxsnr} with SNR={maxsnr}"
-                )
+                print(f"Writing trigger file for index {imaxsnr} with SNR={maxsnr}")
                 logger.info(
                     f"Writing trigger file for index {imaxsnr} with SNR={maxsnr}"
                 )
@@ -520,69 +450,36 @@ def dump_cluster_results_json(
             return row, candname
 
     else:
-        print(
-            f"Not triggering on block with {len(tab)} candidates"
-        )
-        logger.info(
-            f"Not triggering on block with {len(tab)} candidates"
-        )
+        print(f"Not triggering on block with {len(tab)} candidates")
+        logger.info(f"Not triggering on block with {len(tab)} candidates")
         return None, lastname
-
-    return None, lastname
-
-
-def get_radec(mjd=None, beamnum=None):
-    """Use time, beam number, and and antenna elevation to get RA, Dec of beam."""
-
-    if mjd is not None:
-        print("Using time to get ra,dec")
-        tt = time.Time(mjd, format="mjd")
-    else:
-        tt = None
-
-    ra, dec = coordinates.get_pointing(ibeam=beamnum, obstime=tt)    
-    
-    return ra.value, dec.value
 
 
 def send_trigger(output_dict=None, outputfile=None):
-    """Use either json file or dict to send trigger for voltage dumps via etcd."""
+    """Use either json file or dict to send trigger for voltage dumps via udp."""
 
     if outputfile is not None:
         print("Overloading output_dict trigger info with that from outputfile")
-        logger.info(
-            "Overloading output_dict trigger info with that from outputfile"
-        )
+        logger.info("Overloading output_dict trigger info with that from outputfile")
         with open(outputfile, "w") as f:
             output_dict = json.load(f)
 
-    candname = list(output_dict)[0]
-    val = output_dict.get(candname)
+    if output_dict is not None:
+        candname = list(output_dict)[0]
+        val = output_dict.get(candname)
 
-    print(
-        f"Sending trigger for candidate {candname} with specnum {val['specnum']}"
-    )
-    logger.info(
-        f"Sending trigger for candidate {candname} with specnum {val['specnum']}"
-    )
-    UDP_PORT=65432
-    UDP_IP='127.0.0.1'
-    MESSAGE = b"Sending Trigger!"
-    sock = socket.socket(socket.AF_INET, # Internet
-                         socket.SOCK_DGRAM) # UDP
-    sock.sendto(MESSAGE, (UDP_IP, UDP_PORT))
-    # ds.put_dict(
-    #     "/cmd/corr/0",
-    #     {"cmd": "trigger", "val": f'{val["specnum"]}-{candname}-'},
-    # )  # triggers voltage dump in corr.py
-    # ds.put_dict(
-    #     "/mon/corr/1/trigger", output_dict
-    # )  # tells look_after_dumps.py to manage data
+        print(f"Sending trigger for candidate {candname} with specnum {val['specnum']}")
+        logger.info(
+            f"Sending trigger for candidate {candname} with specnum {val['specnum']}"
+        )
+        UDP_PORT = 65432
+        UDP_IP = "127.0.0.1"
+        MESSAGE = b"Sending Trigger!"
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # Internet  # UDP
+        sock.sendto(MESSAGE, (UDP_IP, UDP_PORT))
 
 
-def dump_cluster_results_heimdall(
-    tab, outputfile, min_snr_t2out=None, max_ncl=None
-):
+def dump_cluster_results_heimdall(tab, outputfile, min_snr_t2out=None, max_ncl=None):
     """
     Takes tab from parse_candsfile and clsnr from get_peak,
     output T2-clustered results with the same columns as heimdall.cand into a file outputfile.
@@ -591,16 +488,14 @@ def dump_cluster_results_heimdall(
     max_ncl is number of rows to write.
     """
 
-    tab["itime"] = (tab["itime"] - offset) * downsample  # transform to specnum
+    tab["itime"] = (tab["itime"] - OFFSET) * DOWNSAMPLE  # transform to specnum
 
     if min_snr_t2out is not None:
         good = [True] * len(tab)
         good *= tab["snr"] > min_snr_t2out
         tab = tab[good]
         if not all(good) and len(tab):
-            print(
-                f"Limiting output to SNR>{min_snr_t2out} with {len(tab)} clusters."
-            )
+            print(f"Limiting output to SNR>{min_snr_t2out} with {len(tab)} clusters.")
 
     if max_ncl is not None:
         if len(tab) > max_ncl:
@@ -609,14 +504,12 @@ def dump_cluster_results_heimdall(
                 str(tt) != "0" for tt in tab["trigger"]
             ]  # keep trigger
             tab = tab[good]
-            print(
-                f"Limiting output to {max_ncl} clusters with snr>{min_snr_cl}."
-            )
+            print(f"Limiting output to {max_ncl} clusters with snr>{min_snr_cl}.")
     else:
         print("max_ncl not set. Not filtering heimdall output file.")
 
     if len(tab) > 0:
         tab.write(outputfile, format="ascii.no_header", overwrite=True)
-        return True 
+        return True
 
-    return False 
+    return False
