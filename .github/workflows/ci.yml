@@ -41,7 +41,7 @@ jobs:
         run: poetry run black . --check
 
       - name: Linting
-        run: poetry run flake8 .
+        run: poetry run flake8 grex_t2 tests scripts
 
       - name: Tests
         run: poetry run pytest --cov . -n 2
