@@ -332,7 +332,7 @@ def dump_cluster_results_json(
     itime = str(itimes[imaxsnr])
     specnum = (int(itimes[imaxsnr]) - OFFSET) * DOWNSAMPLE
     mjd = tab["mjds"][imaxsnr]
-    _snr = tab["snr"][imaxsnr]
+    #_snr = tab["snr"][imaxsnr]
     dm = tab["dm"][imaxsnr]
     ibeam = tab["ibeam"][imaxsnr]
 
