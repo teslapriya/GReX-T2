@@ -85,7 +85,6 @@ def filter_candidates(candsfile, output=True):
         coords=coords,
         snrs=snrs,
         outroot=outroot,
-        frac_wide=0.0,
     )
 
     if tab4 is not None and trigger:
