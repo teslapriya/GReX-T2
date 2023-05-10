@@ -64,18 +64,18 @@ def filter_candidates(candsfile, output=True):
     if not len(tab3):
         return
 
-    #itimes = tab3["itime"]
-    #maxsnr = tab3["snr"].max()
-    #imaxsnr = np.where(tab3["snr"] == maxsnr)[0][0]
-    #itime_imax = str(itimes[imaxsnr])
-    #mjd = tab3["mjds"][imaxsnr]
+    # itimes = tab3["itime"]
+    # maxsnr = tab3["snr"].max()
+    # imaxsnr = np.where(tab3["snr"] == maxsnr)[0][0]
+    # itime_imax = str(itimes[imaxsnr])
+    # mjd = tab3["mjds"][imaxsnr]
     trigger = False
     lastname = names.get_lastname_grex(outroot)
     cat = None
     coords = None
     snrs = None
-    #prev_trig_time = None
-    #min_timedelt = 60.0
+    # prev_trig_time = None
+    # min_timedelt = 60.0
     tab3["mjds"] = 59000.00
 
     tab4, lastname = cluster_heimdall.dump_cluster_results_json(

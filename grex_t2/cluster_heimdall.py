@@ -329,10 +329,10 @@ def dump_cluster_results_json(
     itimes = tab["itime"]
     maxsnr = tab["snr"].max()
     imaxsnr = np.where(tab["snr"] == maxsnr)[0][0]
-    #itime = str(itimes[imaxsnr])
+    # itime = str(itimes[imaxsnr])
     specnum = (int(itimes[imaxsnr]) - OFFSET) * DOWNSAMPLE
     mjd = tab["mjds"][imaxsnr]
-    #_snr = tab["snr"][imaxsnr]
+    # _snr = tab["snr"][imaxsnr]
     dm = tab["dm"][imaxsnr]
     ibeam = tab["ibeam"][imaxsnr]
 
@@ -395,15 +395,15 @@ def dump_cluster_results_json(
                     )
                     json.dump(output_dict, f, ensure_ascii=False, indent=4)
 
-                if trigger:  #  and not isinjection ?
+                if trigger:
                     print(output_dict)
                     send_trigger(output_dict=output_dict)
 
                 return row, candname
 
             else:
-                print(f"Not triggering on source in beam")
-                logger.info(f"Not triggering on source in beam")
+                print("Not triggering on source in beam")
+                logger.info("Not triggering on source in beam")
                 return None, lastname
 
         else:
