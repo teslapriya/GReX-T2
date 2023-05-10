@@ -106,7 +106,7 @@ def plot_dm_hist(tab, nbins=30, plot_dir="./", multibeam=False, data_name=None):
         logbins = np.logspace(np.log10(dm_min), np.log10(tab["dm"].max()), nbins + 1)
         ax.hist(tab["dm"], bins=logbins, histtype="step", label=data_name)
 
-    ### Set global plot window parameters
+    # Set global plot window parameters
     ax.set_xlim(dm_min, tab["dm"].max())
     ax.set_xscale("log")
     ax.set_yscale("log")

@@ -329,7 +329,7 @@ def dump_cluster_results_json(
     itimes = tab["itime"]
     maxsnr = tab["snr"].max()
     imaxsnr = np.where(tab["snr"] == maxsnr)[0][0]
-    itime = str(itimes[imaxsnr])
+    #itime = str(itimes[imaxsnr])
     specnum = (int(itimes[imaxsnr]) - OFFSET) * DOWNSAMPLE
     mjd = tab["mjds"][imaxsnr]
     #_snr = tab["snr"][imaxsnr]

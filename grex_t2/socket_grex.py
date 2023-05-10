@@ -64,20 +64,18 @@ def filter_candidates(candsfile, output=True):
     if not len(tab3):
         return
 
-    itimes = tab3["itime"]
-    maxsnr = tab3["snr"].max()
-    imaxsnr = np.where(tab3["snr"] == maxsnr)[0][0]
-    itime_imax = str(itimes[imaxsnr])
-    mjd = tab3["mjds"][imaxsnr]
+    #itimes = tab3["itime"]
+    #maxsnr = tab3["snr"].max()
+    #imaxsnr = np.where(tab3["snr"] == maxsnr)[0][0]
+    #itime_imax = str(itimes[imaxsnr])
+    #mjd = tab3["mjds"][imaxsnr]
     trigger = False
     lastname = names.get_lastname_grex(outroot)
     cat = None
-    beam_model = None
     coords = None
     snrs = None
-    nbeams_queue = 0
-    prev_trig_time = None
-    min_timedelt = 60.0
+    #prev_trig_time = None
+    #min_timedelt = 60.0
     tab3["mjds"] = 59000.00
 
     tab4, lastname = cluster_heimdall.dump_cluster_results_json(
@@ -160,7 +158,6 @@ def cluster_and_plot(
     lastname=None,
     max_ncl=None,
     cat=None,
-    beam_model=None,
     coords=None,
     snrs=None,
 ):
@@ -235,7 +232,6 @@ def cluster_and_plot(
             trigger=trigger,
             lastname=lastname,
             cat=cat,
-            beam_model=beam_model,
             coords=coords,
             snrs=snrs,
             outroot=outroot,
@@ -275,24 +271,3 @@ def recvall(sock, n):
         data.extend(packet)
 
     return data
-
-
-def gulp_status(status):
-    """Set etcd key to track gulp status.
-    0 means good, non-zero means some kind of failure for a gulp.
-    1 means not all clients are gulping
-    2 means different gulps received, so restarting clients
-    3 means overflow error during parsing of table.
-    t2_num is the process number running T2. Only one for now.
-    """
-
-    t2_num = 1
-
-    # ds.put_dict(
-    #     f"/mon/T2/{t2_num}",
-    #     {
-    #         "gulp_status": int(status),
-    #         "t2_num": t2_num,
-    #         "time": Time(datetime.datetime.utcnow()).mjd,
-    #     },
-    # )
