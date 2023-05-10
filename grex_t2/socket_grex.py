@@ -68,7 +68,7 @@ def filter_candidates(candsfile, output=True):
     # maxsnr = tab3["snr"].max()
     # imaxsnr = np.where(tab3["snr"] == maxsnr)[0][0]
     # itime_imax = str(itimes[imaxsnr])
-#   mjd = tab3["mjds"][imaxsnr]
+    #   mjd = tab3["mjds"][imaxsnr]
     trigger = False
     lastname = names.get_lastname_grex(outroot)
     cat = None
