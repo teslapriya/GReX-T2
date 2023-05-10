@@ -7,7 +7,7 @@ from grex_t2 import cluster_heimdall, names
 from collections import deque
 import logging as logger
 
-logger.basicConfig(filename="logs/output.log", encoding="utf-8", level=logger.DEBUG)
+logger.basicConfig(filename="output.log", encoding="utf-8", level=logger.DEBUG)
 
 nbeams_queue = deque(maxlen=10)
 

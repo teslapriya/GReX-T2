@@ -4,7 +4,7 @@ from astropy import units as u
 from astropy.coordinates import SkyCoord
 import logging as logger
 
-logger.basicConfig(filename="logs/output.log", encoding="utf-8", level=logger.DEBUG)
+logger.basicConfig(filename="output.log", encoding="utf-8", level=logger.DEBUG)
 
 # TODO should move to calib constants
 Ddish = 4.5
