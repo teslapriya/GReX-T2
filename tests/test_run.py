@@ -25,7 +25,7 @@ def test_T2():
     tab = cluster_heimdall.parse_candsfile(candsfile)
 
     # T2 cluster
-    clusterer = cluster_heimdall.cluster_data(
+    cluster_heimdall.cluster_data(
         tab,
         min_cluster_size=10,
         min_samples=10,
@@ -34,7 +34,7 @@ def test_T2():
         allow_single_cluster=True,
         return_clusterer=True,
     )
-    tab2 = cluster_heimdall.get_peak(tab)
+    cluster_heimdall.get_peak(tab)
 
     # send T2 cluster results to outputfile
     row, candname = cluster_heimdall.dump_cluster_results_json(
