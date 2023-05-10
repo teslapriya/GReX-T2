@@ -1,9 +1,11 @@
 import socket
 from grex_t2 import socket_grex
+import logging as logger
+
+logger.basicConfig(filename="output.log", encoding="utf-8", level=logger.DEBUG)
 
 HOST = "127.0.0.1"
 PORT = 12345
-
 
 def main():
     # Use roughly 8 seconds as a gulp size
@@ -19,6 +21,7 @@ def main():
     s.bind(server_address)
 
     print("Connected to socket %s:%d" % (HOST, PORT))
+    logger.info("Connected to socket %s:%d" % (HOST, PORT))
 
     candsfile = ["", "", "", "", ""]
 
@@ -29,20 +32,23 @@ def main():
         # Read time sample to keep track of gulp number
         itime = int(candstr.split("\t")[2])
         gulp_ii = itime // gulpsize
-        # print(gulp_ii)
 
         if candsfile == ["", "", "", "", ""]:
             gulp = gulp_ii
             print("Starting gulp is %d" % gulp)
+            logger.info("Starting gulp is %d" % gulp)
         if gulp_ii - gulp < 0:
             print("Receiving candidates gulps from before current gulp")
+            logger.info("Receiving candidates gulps from before current gulp")            
             print(gulp_ii, gulp)
             continue
         if gulp_ii - gulp >= len(candsfile):
             print("Receiving candidates too far ahead of current gulp")
+            logger.info("Receiving candidates too far ahead of current gulp")
             print(gulp_ii, gulp)
             continue
         candsfile[gulp_ii - gulp] += candstr
+
         # If cand is received with gulp 2 or more than
         # current gulp, process current gulp
         if gulp_ii >= gulp + 3:
@@ -50,7 +56,6 @@ def main():
                 candsfile.pop(0)
                 candsfile.append("")
                 continue
-            print("Clustering gulp", gulp)
             gulp += 1
             socket_grex.filter_candidates(candsfile[0])
             candsfile.pop(0)
