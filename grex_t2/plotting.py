@@ -216,7 +216,7 @@ def plot_time_dm(
     max_point_size = mps  # diameter in points
 
     if axrange:
-        if duration != None:
+        if duration is not None:
             ax.set_xlim(0.0, duration)  # duration in seconds
         else:
             ax.set_xlim(0.0, tab["mjds"].max() * 1.05)
@@ -224,7 +224,7 @@ def plot_time_dm(
         ax.set_ylim(1.0, tab["dm"].max() * 1.05)
         ax.set_yscale("log")
 
-    if axlabel == True:
+    if axlabel is True:
         ax.set_xlabel("$\\rm Time; (sec)$", size=12)
         ax.set_ylabel("$\\rm DM;(pc;cm^{-3})$", size=12)
     else:
