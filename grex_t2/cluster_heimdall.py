@@ -450,7 +450,9 @@ def send_trigger(output_dict=None, outputfile=None):
         sock.sendto(MESSAGE, (UDP_IP, UDP_PORT))
 
 
-def dump_cluster_results_heimdall(tab, outputfile, min_snr_t2out=None, max_ncl=None):
+def dump_cluster_results_heimdall(tab, outputfile, 
+                                  min_snr_t2out=None, 
+                                  max_ncl=None):
     """
     Takes tab from parse_candsfile and clsnr from get_peak,
     output T2-clustered results with the same columns as

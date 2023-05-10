@@ -18,7 +18,7 @@ def filter_candidates(candsfile, output=True):
     produce highest S/N candidate and save
     to a json file
     """
-    outroot = "/home/liam/data/grex/candidates/T2/"
+    outroot = "/hdd/data/candidates/T2/"
 
     col_heimdall = ["snr", "if", "itime", "mjds", "ibox", "idm", "dm", "ibeam"]
     min_dm = 50
