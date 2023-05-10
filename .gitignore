@@ -11,3 +11,4 @@ RELEASE-VERSION
 *.*~
 *.egg-info
 *.pyc
+*.pdf
