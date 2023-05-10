@@ -55,7 +55,6 @@ def filter_candidates(candsfile, output=True):
         min_dm=min_dm,
         max_ibox=max_ibox,
         max_cntb=max_cntb,
-        max_cntb0=max_cntb0,
         max_ncl=max_ncl,
         target_params=target_params,
     )
