@@ -28,7 +28,12 @@ def main():
     while True:
         data, address = s.recvfrom(4096)
         candstr = data.decode("utf-8")
-
+        
+        try:
+            itime = int(candstr.split("\t")[2])
+        except IndexError:
+            continue
+            
         # Read time sample to keep track of gulp number
         itime = int(candstr.split("\t")[2])
         gulp_ii = itime // gulpsize
