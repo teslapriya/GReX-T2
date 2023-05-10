@@ -3,7 +3,6 @@ import os.path
 import socket
 import hdbscan
 import numpy as np
-from astropy import time
 from astropy.io import ascii
 from astropy.io.ascii.core import InconsistentTableError
 from numpy.lib.recfunctions import structured_to_unstructured
@@ -18,7 +17,7 @@ DOWNSAMPLE = 4
 
 
 def parse_candsfile(candsfile):
-    """Takes standard MBHeimdall giants output and returns full table, 
+    """Takes standard MBHeimdall giants output and returns full table,
     classifier inputs and snr tables.
     (Can add cleaning here, eventually)
     """
@@ -29,8 +28,7 @@ def parse_candsfile(candsfile):
     else:
         ncands = len(candsfile.split("\n")) - 1
         logger.debug(f"Received {ncands} candidates")
-    col_heimdall = ["snr", "if", "itime", "mjds", 
-                    "ibox", "idm", "dm", "ibeam"]
+    col_heimdall = ["snr", "if", "itime", "mjds", "ibox", "idm", "dm", "ibeam"]
     col_T2old = [
         "snr",
         "if",
@@ -146,7 +144,6 @@ def dm_range(dm_max, dm_min=5.0, frac=0.2):
     return dm_list
 
 
-
 def cluster_data(
     tab,
     selectcols=["itime", "idm", "ibox", "ibeam"],
@@ -156,7 +153,7 @@ def cluster_data(
     return_clusterer=False,
     allow_single_cluster=True,
 ):
-    """Take data from parse_candsfile and identify clusters 
+    """Take data from parse_candsfile and identify clusters
     via hamming metric.
     selectcols will take a subset of the standard MBHeimdall output
     """
@@ -176,10 +173,14 @@ def cluster_data(
 
         cl = clusterer.labels_
     except ValueError:
-        print("Clustering did not run. Each point \
-               assigned to unique cluster.")
-        logger.info("Clustering did not run. Each point \
-               assigned to unique cluster.")
+        print(
+            "Clustering did not run. Each point \
+               assigned to unique cluster."
+        )
+        logger.info(
+            "Clustering did not run. Each point \
+               assigned to unique cluster."
+        )
         cl = np.arange(len(data))
 
     # hack assumes fixed columns
@@ -220,8 +221,8 @@ def get_peak(tab):
         maxsnr = snrs[clusterinds].max()
         imaxsnr = np.where(snrs == maxsnr)[0][0]
         ipeak.append(imaxsnr)
-    # Append unclustered        
-    ipeak += [i for i in range(len(tab)) if cl[i] == -1]  
+    # Append unclustered
+    ipeak += [i for i in range(len(tab)) if cl[i] == -1]
     logger.info(f"Found {len(ipeak)} cluster peaks")
     print(f"Found {len(ipeak)} cluster peaks")
 
@@ -241,9 +242,9 @@ def filter_clustered(
     target_params=None,
 ):
     """Function to select a subset of clustered output.
-    Can set minimum SNR, min/max number of beams in cluster, 
+    Can set minimum SNR, min/max number of beams in cluster,
     min/max total count in cluster.
-    target_params is a tuple (min_dmt, max_dmt, min_snrt) 
+    target_params is a tuple (min_dmt, max_dmt, min_snrt)
     for custom snr threshold for target.
     max_ncl is maximum number of clusters returned (sorted by SNR).
     """
@@ -263,8 +264,7 @@ def filter_clustered(
             good0 = (tab["snr"] > min_snr) * (tab["dm"] > max_dmt)
             good1 = (tab["snr"] > min_snr) * (tab["dm"] < min_dmt)
             good2 = (
-                (tab["snr"] > min_snrt) * (tab["dm"] > min_dmt)\
-                 * (tab["dm"] < max_dmt)
+                (tab["snr"] > min_snrt) * (tab["dm"] > min_dmt) * (tab["dm"] < max_dmt)
             )
             good *= good0 + good1 + good2
 
@@ -288,8 +288,10 @@ def filter_clustered(
             min_snr_cl = sorted(tab_out["snr"])[-max_ncl]
             good = tab_out["snr"] >= min_snr_cl
             tab_out = tab_out[good]
-            print(f"Limiting output to {max_ncl} \
-                    clusters with snr>{min_snr_cl}.")
+            print(
+                f"Limiting output to {max_ncl} \
+                    clusters with snr>{min_snr_cl}."
+            )
 
     logger.info(f"Filtering clusters from {len(tab)} to {len(tab_out)} candidates.")
     print(f"Filtering clusters from {len(tab)} to {len(tab_out)} candidates.")
@@ -448,21 +450,19 @@ def send_trigger(output_dict=None, outputfile=None):
         sock.sendto(MESSAGE, (UDP_IP, UDP_PORT))
 
 
-def dump_cluster_results_heimdall(tab, outputfile, 
-                                  min_snr_t2out=None, 
-                                  max_ncl=None):
+def dump_cluster_results_heimdall(tab, outputfile, min_snr_t2out=None, max_ncl=None):
     """
     Takes tab from parse_candsfile and clsnr from get_peak,
-    output T2-clustered results with the same columns as 
+    output T2-clustered results with the same columns as
     heimdall.cand into a file outputfile.
-    The output is in pandas format with column names 
+    The output is in pandas format with column names
     in the 1st row.
     min_snr_t2out is a min snr on candidates to write.
     max_ncl is number of rows to write.
     """
 
     # transform to specnum
-    tab["itime"] = (tab["itime"] - OFFSET) * DOWNSAMPLE  
+    tab["itime"] = (tab["itime"] - OFFSET) * DOWNSAMPLE
 
     if min_snr_t2out is not None:
         good = [True] * len(tab)
