@@ -7,7 +7,7 @@ logger.basicConfig(filename="output.log", encoding="utf-8", level=logger.DEBUG)
 HOST = "127.0.0.1"
 PORT = 12345
 
-def main():
+def main(trigger=False):
     # Use roughly 8 seconds as a gulp size
     gulpsize = 16384 * 8
 
@@ -62,7 +62,7 @@ def main():
                 candsfile.append("")
                 continue
             gulp += 1
-            socket_grex.filter_candidates(candsfile[0])
+            socket_grex.filter_candidates(candsfile[0], trigger=trigger)
             candsfile.pop(0)
             candsfile.append("")
             continue
