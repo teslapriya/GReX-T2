@@ -101,11 +101,6 @@ def parse_candsfile(candsfile):
         ret_time = 55000.0
         tab["mjds"] = tab["mjds"] / 86400.0 + ret_time
 
-    #
-    #    snrs = tab['snr']
-    # how to use ibeam?
-
-    #    return tab, data, snrs
     return tab
 
 

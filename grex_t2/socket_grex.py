@@ -11,7 +11,6 @@ logger.basicConfig(filename="output.log", encoding="utf-8", level=logger.DEBUG)
 
 nbeams_queue = deque(maxlen=10)
 
-
 def filter_candidates(candsfile, output=True, trigger=True):
     """Take a single gulp of candidates,
     parse, cluster, and then filter to
