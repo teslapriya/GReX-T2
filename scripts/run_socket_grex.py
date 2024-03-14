@@ -20,8 +20,8 @@ def main(trigger=False):
     server_address = (HOST, PORT)
     s.bind(server_address)
 
-    print("Connected to socket %s:%d" % (HOST, PORT))
-    logger.info("Connected to socket %s:%d" % (HOST, PORT))
+    print("Connected to socket %s:%d. Triggering set to %s" % (HOST, PORT, trigger))
+    logger.info("Connected to socket %s:%d. Triggering set to %s" % (HOST, PORT, trigger))
 
     candsfile = ["", "", "", "", ""]
 
