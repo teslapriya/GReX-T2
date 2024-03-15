@@ -8,8 +8,8 @@ Module for parsing Heimdall output and clustering candidates to trigger voltage 
 
 or within poetry,
 
-poetry install 
-poetry shell
+`poetry install`
+`poetry shell`
 
 ## Dependencies
 - python 3.6+
