@@ -23,8 +23,8 @@ def filter_candidates(candsfile, output=True, trigger=True):
     col_heimdall = ["snr", "if", "itime", "mjds", "ibox", "idm", "dm", "ibeam"]
     min_dm = 50
     max_ibox = 64
-    min_snr = 8.0
-    min_snr_t2out = 10.0
+    min_snr = 10.0
+    min_snr_t2out = 15.0
     max_ncl = np.inf
     max_cntb = np.inf
     max_cntb0 = np.inf
@@ -74,8 +74,11 @@ def filter_candidates(candsfile, output=True, trigger=True):
     snrs = None
     # prev_trig_time = None
     # min_timedelt = 60.0
+
+    # Query for the start-time in MJD
     start_time = requests.get("http://localhost:8083/start_time").json()
     tab3["mjds"] = tab3["mjds"] / 86400. + start_time
+    tab2["mjds"] = tab2["mjds"] / 86400. + start_time    
 
     tab4, lastname = cluster_heimdall.dump_cluster_results_json(
         tab3,
