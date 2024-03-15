@@ -6,6 +6,11 @@ Module for parsing Heimdall output and clustering candidates to trigger voltage 
 
 `python setup.py install`
 
+or within poetry,
+
+poetry install 
+poetry shell
+
 ## Dependencies
 - python 3.6+
 - astropy
