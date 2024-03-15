@@ -6,6 +6,7 @@ from astropy.io import ascii
 from grex_t2 import cluster_heimdall, names
 from collections import deque
 import logging as logger
+import requests
 
 logger.basicConfig(filename="output.log", encoding="utf-8", level=logger.DEBUG)
 
@@ -73,7 +74,8 @@ def filter_candidates(candsfile, output=True, trigger=True):
     snrs = None
     # prev_trig_time = None
     # min_timedelt = 60.0
-    tab3["mjds"] = 59000.00
+    start_time = requests.get("http://localhost:8083/start_time").json()
+    tab3["mjds"] = tab3["mjds"] / 86400. + start_time
 
     tab4, lastname = cluster_heimdall.dump_cluster_results_json(
         tab3,
