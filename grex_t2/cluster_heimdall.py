@@ -97,9 +97,9 @@ def parse_candsfile(candsfile):
                 return ([], [], [])
 
     tab["ibeam"] = tab["ibeam"].astype(int)
-    if hdfile is True:
-        ret_time = 55000.0
-        tab["mjds"] = tab["mjds"] / 86400.0 + ret_time
+
+    start_time_mjd = requests.get("http://localhost:8083/start_time").json()
+    tab["mjds"] = tab["mjds"] / 86400.0 + start_time_mjd
 
     return tab
 
@@ -390,6 +390,7 @@ def dump_cluster_results_json(
                     )
                     json.dump(output_dict, f, ensure_ascii=False, indent=4)
 
+                trigger = True
                 if trigger:
                     print(output_dict)
                     send_trigger(output_dict=output_dict)

@@ -7,7 +7,7 @@ logger.basicConfig(filename="output.log", encoding="utf-8", level=logger.DEBUG)
 HOST = "127.0.0.1"
 PORT = 12345
 
-def main(trigger=False):
+def main(trigger=True):
     # Use roughly 8 seconds as a gulp size
     gulpsize = 16384 * 8
 
