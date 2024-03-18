@@ -441,7 +441,8 @@ def send_trigger(output_dict=None, outputfile=None):
         )
         UDP_PORT = 65432
         UDP_IP = "127.0.0.1"
-        MESSAGE = b"Sending Trigger!"
+#        MESSAGE = b"{candname_str}"
+        MESSAGE = bytes(candname, 'utf8')
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # Internet  # UDP
         sock.sendto(MESSAGE, (UDP_IP, UDP_PORT))
 
