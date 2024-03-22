@@ -30,9 +30,11 @@ def filter_candidates(candsfile, output=True, trigger=True):
     max_cntb0 = np.inf
     target_params = (50.0, 100.0, 20.0)  # Galactic bursts
 
+    print("Trying to parse")
     tab = ascii.read(
         candsfile, names=col_heimdall, guess=True, fast_reader=False, format="no_header"
     )
+    print("Finished parsing")
 
     # Ensure that the candidate table is not empty
     if not len(tab):

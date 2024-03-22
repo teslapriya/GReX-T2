@@ -25,9 +25,33 @@ def main(trigger=True):
 
     candsfile = ["", "", "", "", ""]
 
+    # Outer loop that runs as long as T2 is running
     while True:
-        data, address = s.recvfrom(4096)
-        candstr = data.decode("utf-8")
+        candstr_list = ''
+        cand_count = 0
+        # Inner loop for chunks of Heimdall output data
+        while True:
+            # Recieve 512 bytes
+            data, address = s.recvfrom(512)
+
+            # Waiting for end of text. When chunk is done, break inner loop
+            if len(data)==1 and data==b'\x03':
+                break
+            
+            candstr = data.decode("utf-8")
+            
+            # Removing the \n from the end of line
+            candstr_list += candstr
+            cand_count += 1
+
+        print("Number of candidates %d" % cand_count)
+        print(candstr_list)
+        if cand_count > 0:
+            print("Filtering")
+            socket_grex.filter_candidates(candstr_list, trigger=trigger)
+            print("Finished filtering")
+            
+        continue
         
         try:
             itime = int(candstr.split("\t")[2])
