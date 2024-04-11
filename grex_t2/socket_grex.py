@@ -23,18 +23,16 @@ def filter_candidates(candsfile, output=True, trigger=True):
     col_heimdall = ["snr", "if", "itime", "mjds", "ibox", "idm", "dm", "ibeam"]
     min_dm = 50
     max_ibox = 64
-    min_snr = 10.0
+    min_snr = 12.5
     min_snr_t2out = 15.0
     max_ncl = np.inf
     max_cntb = np.inf
     max_cntb0 = np.inf
     target_params = (50.0, 100.0, 20.0)  # Galactic bursts
 
-    print("Trying to parse")
     tab = ascii.read(
         candsfile, names=col_heimdall, guess=True, fast_reader=False, format="no_header"
     )
-    print("Finished parsing")
 
     # Ensure that the candidate table is not empty
     if not len(tab):

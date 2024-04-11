@@ -5,6 +5,7 @@ import hdbscan
 import numpy as np
 from astropy.io import ascii
 from astropy.io.ascii.core import InconsistentTableError
+from astropy.time import Time
 from numpy.lib.recfunctions import structured_to_unstructured
 from grex_t2 import triggering, names
 import logging as logger
@@ -255,7 +256,6 @@ def filter_clustered(
         if min_snrt is None:
             good *= tab["snr"] > min_snr
         else:
-            # print(f'min_snr={min_snr}, min_snrt={min_snrt}, min_dmt={min_dmt}, max_dmt={max_dmt}, tab={tab[["snr", "dm"]]}')
             good0 = (tab["snr"] > min_snr) * (tab["dm"] > max_dmt)
             good1 = (tab["snr"] > min_snr) * (tab["dm"] < min_dmt)
             good2 = (
@@ -434,8 +434,8 @@ def send_trigger(output_dict=None, outputfile=None):
     if output_dict is not None:
         candname = list(output_dict)[0]
         val = output_dict.get(candname)
-
-        print(f"Sending trigger for candidate {candname} with specnum {val['specnum']}")
+        nowmjd = Time.now().mjd
+        print(f"Sending trigger for candidate {candname} with specnum {val['specnum']} at Time", nowmjd)
         logger.info(
             f"Sending trigger for candidate {candname} with specnum {val['specnum']}"
         )

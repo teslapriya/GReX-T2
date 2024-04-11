@@ -1,3 +1,5 @@
+import sys
+
 import socket
 from grex_t2 import socket_grex
 import logging as logger
@@ -52,6 +54,4 @@ def main(trigger=True):
             print("Finished filtering")
             
         continue
-        
 
-    exit()
