@@ -45,7 +45,7 @@ def main(trigger=True):
             cand_count += 1
 
         print("Number of candidates %d" % cand_count)
-        print(candstr_list)
+
         if cand_count > 0:
             print("Filtering")
             socket_grex.filter_candidates(candstr_list, trigger=trigger)
@@ -53,42 +53,5 @@ def main(trigger=True):
             
         continue
         
-        try:
-            itime = int(candstr.split("\t")[2])
-        except IndexError:
-            continue
-            
-        # Read time sample to keep track of gulp number
-        itime = int(candstr.split("\t")[2])
-        gulp_ii = itime // gulpsize
-
-        if candsfile == ["", "", "", "", ""]:
-            gulp = gulp_ii
-            print("Starting gulp is %d" % gulp)
-            logger.info("Starting gulp is %d" % gulp)
-        if gulp_ii - gulp < 0:
-            print("Receiving candidates gulps from before current gulp")
-            logger.info("Receiving candidates gulps from before current gulp")            
-            print(gulp_ii, gulp)
-            continue
-        if gulp_ii - gulp >= len(candsfile):
-            print("Receiving candidates too far ahead of current gulp")
-            logger.info("Receiving candidates too far ahead of current gulp")
-            print(gulp_ii, gulp)
-            continue
-        candsfile[gulp_ii - gulp] += candstr
-
-        # If cand is received with gulp 2 or more than
-        # current gulp, process current gulp
-        if gulp_ii >= gulp + 3:
-            if candsfile[0] == "":
-                candsfile.pop(0)
-                candsfile.append("")
-                continue
-            gulp += 1
-            socket_grex.filter_candidates(candsfile[0], trigger=trigger)
-            candsfile.pop(0)
-            candsfile.append("")
-            continue
 
     exit()
