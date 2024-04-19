@@ -27,6 +27,7 @@ def main(trigger=True):
 
     candsfile = ["", "", "", "", ""]
 
+    last_trigger_time = 0.0
     # Outer loop that runs as long as T2 is running
     while True:
         candstr_list = ''
@@ -50,7 +51,8 @@ def main(trigger=True):
 
         if cand_count > 0:
             print("Filtering")
-            socket_grex.filter_candidates(candstr_list, trigger=trigger)
+            last_trigger_time = socket_grex.filter_candidates(candstr_list, trigger=trigger, 
+                                          last_trigger_time=last_trigger_time)
             print("Finished filtering")
             
         continue
