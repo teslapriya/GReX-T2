@@ -88,8 +88,7 @@ def filter_candidates(candsfile, output=True, trigger=True):
         coords=coords,
         snrs=snrs,
         outroot=outroot,
-        last_trigger_time,
-    )
+        last_trigger_time=last_trigger_time)
 
     if tab4 is not None and trigger:
         col_trigger = np.where(tab4 == tab2, lastname, 0)  # if trigger, then overload
