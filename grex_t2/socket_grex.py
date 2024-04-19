@@ -80,7 +80,7 @@ def filter_candidates(candsfile, output=True, trigger=True):
     tab3["mjds"] = tab3["mjds"] / 86400. + start_time
     tab2["mjds"] = tab2["mjds"] / 86400. + start_time    
 
-    tab4, lastname = cluster_heimdall.dump_cluster_results_json(
+    tab4, lastname, last_trigger_time = cluster_heimdall.dump_cluster_results_json(
         tab3,
         trigger=trigger,
         lastname=lastname,
@@ -88,6 +88,7 @@ def filter_candidates(candsfile, output=True, trigger=True):
         coords=coords,
         snrs=snrs,
         outroot=outroot,
+        last_trigger_time,
     )
 
     if tab4 is not None and trigger:

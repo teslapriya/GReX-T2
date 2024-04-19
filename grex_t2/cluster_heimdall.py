@@ -305,6 +305,7 @@ def dump_cluster_results_json(
     snrs=None,
     outroot="./",
     injectionfile=None,
+    last_trigger_time=0.0,
 ):
     """
     Takes tab from parse_candsfile and clsnr from get_peak,
@@ -391,16 +392,27 @@ def dump_cluster_results_json(
                     json.dump(output_dict, f, ensure_ascii=False, indent=4)
 
                 trigger = True
+
                 if trigger:
+                    if (Time.now().mjd - last_trigger_time) < 90.0/86400.:
+                        print(
+                            "Not triggering on source in beam as last trigger was < 90s ago"
+                        )
+                        logger.info(
+                            "Not triggering on source in beam as last trigger was < 90s ago"
+                        )
+                        return None, lastname, last_trigger_time
+                    
                     print(output_dict)
                     send_trigger(output_dict=output_dict)
+                    last_trigger_time = Time.now().mjd
 
-                return row, candname
+                return row, candname, last_trigger_time
 
             else:
                 print("Not triggering on source in beam")
                 logger.info("Not triggering on source in beam")
-                return None, lastname
+                return None, lastname, last_trigger_time
 
         else:
             with open(outputfile, "w") as f:  # encoding='utf-8'
@@ -411,10 +423,19 @@ def dump_cluster_results_json(
                 json.dump(output_dict, f, ensure_ascii=False, indent=4)
 
             if trigger:  # and not isinjection ?
+                if (Time.now().mjd - last_trigger_time) < 90.0/86400.:
+                    print(
+                        "Not triggering on source in beam as last trigger was < 90s ago"
+                    )
+                    logger.info(
+                        "Not triggering on source in beam as last trigger was < 90s ago"
+                    )
+                    return None, lastname, last_trigger_time
                 print(output_dict)
                 send_trigger(output_dict=output_dict)
+                last_trigger_time = Time.now().mjd
 
-            return row, candname
+            return row, candname, last_trigger_time
 
     else:
         print(f"Not triggering on block with {len(tab)} candidates")
