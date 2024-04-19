@@ -440,7 +440,7 @@ def dump_cluster_results_json(
     else:
         print(f"Not triggering on block with {len(tab)} candidates")
         logger.info(f"Not triggering on block with {len(tab)} candidates")
-        return None, lastname
+        return None, lastname, last_trigger_time
 
 
 def send_trigger(output_dict=None, outputfile=None):

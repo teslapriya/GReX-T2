@@ -50,7 +50,7 @@ def main(trigger=True):
         print("Number of candidates %d" % cand_count)
 
         if cand_count > 0:
-            print("Filtering")
+            print("Filtering", "last trig was ", last_trigger_time
             last_trigger_time = socket_grex.filter_candidates(candstr_list, trigger=trigger, 
                                           last_trigger_time=last_trigger_time)
             print("Finished filtering")
