@@ -28,7 +28,6 @@ def filter_candidates(candsfile, output=True, trigger=True, last_trigger_time=0.
     min_snr_t2out = 15.0
     max_ncl = np.inf
     max_cntb = np.inf
-    max_cntb0 = np.inf
     target_params = (50.0, 100.0, 20.0)  # Galactic bursts
 
     tab = ascii.read(

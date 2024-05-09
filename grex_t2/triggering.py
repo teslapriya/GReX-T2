@@ -46,7 +46,7 @@ def parse_catalog(catalog):
                 c = SkyCoord(ra=ra, dec=dec, unit=(u.hourangle, u.deg), frame="icrs")
                 coords.append(c)
                 snrs.append(float(minsnr))
-            except:
+            except:  # noqa: E722
                 print("")
     else:
         logger.warning("No catalog found. Will not filter output based on a catalog.")

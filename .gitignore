@@ -12,3 +12,6 @@ RELEASE-VERSION
 *.egg-info
 *.pyc
 *.pdf
+.coverage
+.venv
+.ruff_cache
