@@ -12,6 +12,7 @@ logger.basicConfig(filename="output.log", encoding="utf-8", level=logger.DEBUG)
 
 nbeams_queue = deque(maxlen=10)
 
+
 def filter_candidates(candsfile, output=True, trigger=True, last_trigger_time=0.0):
     """Take a single gulp of candidates,
     parse, cluster, and then filter to
@@ -27,7 +28,6 @@ def filter_candidates(candsfile, output=True, trigger=True, last_trigger_time=0.
     min_snr_t2out = 15.0
     max_ncl = np.inf
     max_cntb = np.inf
-    max_cntb0 = np.inf
     target_params = (50.0, 100.0, 20.0)  # Galactic bursts
 
     tab = ascii.read(
@@ -77,8 +77,8 @@ def filter_candidates(candsfile, output=True, trigger=True, last_trigger_time=0.
 
     # Query for the start-time in MJD
     start_time = requests.get("http://localhost:8083/start_time").json()
-    tab3["mjds"] = tab3["mjds"] / 86400. + start_time
-    tab2["mjds"] = tab2["mjds"] / 86400. + start_time    
+    tab3["mjds"] = tab3["mjds"] / 86400.0 + start_time
+    tab2["mjds"] = tab2["mjds"] / 86400.0 + start_time
 
     tab4, lastname, last_trigger_time = cluster_heimdall.dump_cluster_results_json(
         tab3,
@@ -88,7 +88,8 @@ def filter_candidates(candsfile, output=True, trigger=True, last_trigger_time=0.
         coords=coords,
         snrs=snrs,
         outroot=outroot,
-        last_trigger_time=last_trigger_time)
+        last_trigger_time=last_trigger_time,
+    )
 
     if tab4 is not None and trigger:
         col_trigger = np.where(tab4 == tab2, lastname, 0)  # if trigger, then overload

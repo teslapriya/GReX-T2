@@ -1,5 +1,3 @@
-import sys
-
 import socket
 from grex_t2 import socket_grex
 import logging as logger
@@ -9,10 +7,8 @@ logger.basicConfig(filename="output.log", encoding="utf-8", level=logger.DEBUG)
 HOST = "127.0.0.1"
 PORT = 12345
 
-def main(trigger=True):
-    # Use roughly 8 seconds as a gulp size
-    gulpsize = 16384 * 8
 
+def main(trigger=True):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     # Create a UDP socket
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -23,14 +19,14 @@ def main(trigger=True):
     s.bind(server_address)
 
     print("Connected to socket %s:%d. Triggering set to %s" % (HOST, PORT, trigger))
-    logger.info("Connected to socket %s:%d. Triggering set to %s" % (HOST, PORT, trigger))
-
-    candsfile = ["", "", "", "", ""]
+    logger.info(
+        "Connected to socket %s:%d. Triggering set to %s" % (HOST, PORT, trigger)
+    )
 
     last_trigger_time = 0.0
     # Outer loop that runs as long as T2 is running
     while True:
-        candstr_list = ''
+        candstr_list = ""
         cand_count = 0
         # Inner loop for chunks of Heimdall output data
         while True:
@@ -38,11 +34,11 @@ def main(trigger=True):
             data, address = s.recvfrom(512)
 
             # Waiting for end of text. When chunk is done, break inner loop
-            if len(data)==1 and data==b'\x03':
+            if len(data) == 1 and data == b"\x03":
                 break
-            
+
             candstr = data.decode("utf-8")
-            
+
             # Removing the \n from the end of line
             candstr_list += candstr
             cand_count += 1
@@ -50,10 +46,10 @@ def main(trigger=True):
         print("Number of candidates %d" % cand_count)
 
         if cand_count > 0:
-            print("Filtering", "last trig was ", last_trigger_time
-            last_trigger_time = socket_grex.filter_candidates(candstr_list, trigger=trigger, 
-                                          last_trigger_time=last_trigger_time)
+            print("Filtering", "last trig was ", last_trigger_time)
+            last_trigger_time = socket_grex.filter_candidates(
+                candstr_list, trigger=trigger, last_trigger_time=last_trigger_time
+            )
             print("Finished filtering")
-            
-        continue
 
+        continue

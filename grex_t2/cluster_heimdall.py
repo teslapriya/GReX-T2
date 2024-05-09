@@ -3,6 +3,7 @@ import os.path
 import socket
 import hdbscan
 import numpy as np
+import requests
 from astropy.io import ascii
 from astropy.io.ascii.core import InconsistentTableError
 from astropy.time import Time
@@ -59,7 +60,7 @@ def parse_candsfile(candsfile):
     ]
 
     # flag for heimdall file
-    hdfile = False
+    _hdfile = False
 
     try:
         tab = ascii.read(
@@ -69,7 +70,7 @@ def parse_candsfile(candsfile):
             fast_reader=False,
             format="no_header",
         )
-        hdfile = True
+        _hdfile = True
         logger.debug("Read with heimdall columns")
     except InconsistentTableError:
         try:
@@ -80,7 +81,7 @@ def parse_candsfile(candsfile):
                 fast_reader=False,
                 format="no_header",
             )
-            hdfile = False
+            _hdfile = False
             logger.debug("Read with T2 columns")
         except InconsistentTableError:
             try:
@@ -91,7 +92,7 @@ def parse_candsfile(candsfile):
                     fast_reader=False,
                     format="no_header",
                 )
-                hdfile = False
+                _hdfile = False
                 logger.debug("Read with old style T2 columns")
             except InconsistentTableError:
                 logger.warning("Inconsistent table. Skipping...")
@@ -181,8 +182,9 @@ def cluster_data(
 
     # hack assumes fixed columns
     bl = data[:, 3]
-    cntb, cntc = np.zeros((len(data), 1), dtype=int), np.zeros(
-        (len(data), 1), dtype=int
+    cntb, cntc = (
+        np.zeros((len(data), 1), dtype=int),
+        np.zeros((len(data), 1), dtype=int),
     )
     ucl = np.unique(cl)
 
@@ -377,6 +379,9 @@ def dump_cluster_results_json(
 
     output_dict[candname]["specnum"] = specnum
 
+    # json.dumps doesn't know how to serialize numpy integers for some insane reason
+    trigger_payload = {"candname": candname, "itime": int(itimes[imaxsnr])}
+
     if len(tab) > 0:
         print("\n", red_tab, "\n")
         if cat is not None and red_tab is not None:
@@ -394,7 +399,7 @@ def dump_cluster_results_json(
                 trigger = True
 
                 if trigger:
-                    if (Time.now().mjd - last_trigger_time) < 90.0/86400.:
+                    if (Time.now().mjd - last_trigger_time) < 90.0 / 86400.0:
                         print(
                             "Not triggering on source in beam as last trigger was < 90s ago"
                         )
@@ -402,9 +407,9 @@ def dump_cluster_results_json(
                             "Not triggering on source in beam as last trigger was < 90s ago"
                         )
                         return None, lastname, last_trigger_time
-                    
+
                     print(output_dict)
-                    send_trigger(output_dict=output_dict)
+                    send_trigger(trigger_payload)
                     last_trigger_time = Time.now().mjd
 
                 return row, candname, last_trigger_time
@@ -423,7 +428,7 @@ def dump_cluster_results_json(
                 json.dump(output_dict, f, ensure_ascii=False, indent=4)
 
             if trigger:  # and not isinjection ?
-                if (Time.now().mjd - last_trigger_time) < 90.0/86400.:
+                if (Time.now().mjd - last_trigger_time) < 90.0 / 86400.0:
                     print(
                         "Not triggering on source in beam as last trigger was < 90s ago"
                     )
@@ -432,7 +437,7 @@ def dump_cluster_results_json(
                     )
                     return None, lastname, last_trigger_time
                 print(output_dict)
-                send_trigger(output_dict=output_dict)
+                send_trigger(trigger_payload)
                 last_trigger_time = Time.now().mjd
 
             return row, candname, last_trigger_time
@@ -443,34 +448,20 @@ def dump_cluster_results_json(
         return None, lastname, last_trigger_time
 
 
-def send_trigger(output_dict=None, outputfile=None):
-    """Use either json file or dict to send trigger for voltage dumps via udp."""
-
-    if outputfile is not None:
-        print("Overloading output_dict trigger info with that from outputfile")
-        logger.info("Overloading output_dict trigger info with that from outputfile")
-        with open(outputfile, "w") as f:
-            output_dict = json.load(f)
-
-    if output_dict is not None:
-        candname = list(output_dict)[0]
-        val = output_dict.get(candname)
-        nowmjd = Time.now().mjd
-        print(f"Sending trigger for candidate {candname} with specnum {val['specnum']} at Time", nowmjd)
-        logger.info(
-            f"Sending trigger for candidate {candname} with specnum {val['specnum']}"
-        )
-        UDP_PORT = 65432
-        UDP_IP = "127.0.0.1"
-#        MESSAGE = b"{candname_str}"
-        MESSAGE = bytes(candname, 'utf8')
-        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # Internet  # UDP
-        sock.sendto(MESSAGE, (UDP_IP, UDP_PORT))
+def send_trigger(trigger_payload):
+    nowmjd = Time.now().mjd
+    trigger_message = json.dumps(trigger_payload).encode("utf-8")
+    print(
+        f"Sending trigger for candidate {trigger_payload['candname']} at time index {trigger_payload['itime']} at Time",
+        nowmjd,
+    )
+    UDP_PORT = 65432
+    UDP_IP = "127.0.0.1"
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # Internet  # UDP
+    sock.sendto(trigger_message, (UDP_IP, UDP_PORT))
 
 
-def dump_cluster_results_heimdall(tab, outputfile, 
-                                  min_snr_t2out=None, 
-                                  max_ncl=None):
+def dump_cluster_results_heimdall(tab, outputfile, min_snr_t2out=None, max_ncl=None):
     """
     Takes tab from parse_candsfile and clsnr from get_peak,
     output T2-clustered results with the same columns as
