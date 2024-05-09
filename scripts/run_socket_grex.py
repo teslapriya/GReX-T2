@@ -1,5 +1,3 @@
-import sys
-
 import socket
 from grex_t2 import socket_grex
 import logging as logger
@@ -11,9 +9,6 @@ PORT = 12345
 
 
 def main(trigger=True):
-    # Use roughly 8 seconds as a gulp size
-    gulpsize = 16384 * 8
-
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     # Create a UDP socket
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -27,8 +22,6 @@ def main(trigger=True):
     logger.info(
         "Connected to socket %s:%d. Triggering set to %s" % (HOST, PORT, trigger)
     )
-
-    candsfile = ["", "", "", "", ""]
 
     last_trigger_time = 0.0
     # Outer loop that runs as long as T2 is running
