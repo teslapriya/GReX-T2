@@ -182,8 +182,9 @@ def cluster_data(
 
     # hack assumes fixed columns
     bl = data[:, 3]
-    cntb, cntc = np.zeros((len(data), 1), dtype=int), np.zeros(
-        (len(data), 1), dtype=int
+    cntb, cntc = (
+        np.zeros((len(data), 1), dtype=int),
+        np.zeros((len(data), 1), dtype=int),
     )
     ucl = np.unique(cl)
 

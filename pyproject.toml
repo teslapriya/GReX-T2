@@ -18,9 +18,8 @@ pytest-xdist = "^3.2.1"
 requests = "^2.31.0"
 
 [tool.poetry.group.dev.dependencies]
-black = "*"
 pytest = "*"
-flake8 = "^6.0.0"
+ruff = "*"
 
 [build-system]
 requires = ["poetry-core"]
