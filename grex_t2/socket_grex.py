@@ -23,8 +23,8 @@ def filter_candidates(candsfile, output=True, trigger=True):
     col_heimdall = ["snr", "if", "itime", "mjds", "ibox", "idm", "dm", "ibeam"]
     min_dm = 50
     max_ibox = 64
-    min_snr = 12.5
-    min_snr_t2out = 15.0
+    min_snr = 10.0
+    min_snr_t2out = 10.0
     max_ncl = np.inf
     max_cntb = np.inf
     max_cntb0 = np.inf
