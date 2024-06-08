@@ -24,8 +24,8 @@ def filter_candidates(candsfile, output=True, trigger=True, last_trigger_time=0.
     col_heimdall = ["snr", "if", "itime", "mjds", "ibox", "idm", "dm", "ibeam"]
     min_dm = 50
     max_ibox = 64
-    min_snr = 12.5
-    min_snr_t2out = 15.0
+    min_snr = 10.0
+    min_snr_t2out = 10.0
     max_ncl = np.inf
     max_cntb = np.inf
     target_params = (50.0, 100.0, 20.0)  # Galactic bursts
@@ -149,113 +149,6 @@ def filter_candidates(candsfile, output=True, trigger=True, last_trigger_time=0.
                 + "cluster_output.csv"
             )
 
-
-# def cluster_and_plot(
-#     tab,
-#     globct,
-#     selectcols=["itime", "idm", "ibox", "ibeam"],
-#     outroot=None,
-#     plot_dir=None,
-#     trigger=False,
-#     lastname=None,
-#     max_ncl=None,
-#     cat=None,
-#     coords=None,
-#     snrs=None,
-# ):
-#     """
-#     Run clustering and plotting on read data.
-#     Can optionally save clusters as heimdall candidate table before filtering and json version of buffer trigger.
-#     lastname is name of previously triggered/named candidate.
-#     cat: path to source catalog (default None)
-#     beam_model: pre-calculated beam model (default None)
-#     coords and snrs: from source catalog (default None)
-#     """
-
-#     # TODO: put these in json config file
-#     min_dm = t2_cnf["min_dm"]  # smallest dm in filtering
-#     max_ibox = t2_cnf["max_ibox"]  # largest ibox in filtering
-#     min_snr = t2_cnf["min_snr"]  # smallest snr in filtering
-#     min_snr_t2out = t2_cnf["min_snr_t2out"]  # smallest snr to write T2 output cand file
-#     if max_ncl is None:
-#         max_ncl = t2_cnf["max_ncl"]  # largest number of clusters allowed in triggering
-#     max_cntb0 = t2_cnf["max_ctb0"]
-#     max_cntb = t2_cnf["max_ctb"]
-#     target_params = (50.0, 100.0, 20.0)  # Galactic bursts
-
-#     # cluster
-#     cluster_heimdall.cluster_data(
-#         tab,
-#         metric="euclidean",
-#         allow_single_cluster=True,
-#         return_clusterer=False,
-#     )
-#     tab2 = cluster_heimdall.get_peak(tab)
-#     nbeams_gulp = cluster_heimdall.get_nbeams(tab2)
-#     nbeams_queue.append(nbeams_gulp)
-
-#     # Liam edit to preserve real FRBs during RFI storm:
-#     # if nbeam > 100 and frac_wide < 0.8: do not discard
-#     maxsnr = tab["snr"].max()
-#     imaxsnr = np.where(tab["snr"] == maxsnr)[0][0]
-#     cl_max = tab["cl"][imaxsnr]
-#     frac_wide = np.sum(tab["ibox"][tab["cl"] == cl_max] >= 32) / float(
-#         len(tab["ibox"][tab["cl"] == cl_max])
-#     )
-
-#     if len(tab["ibox"][tab["cl"] == cl_max]) == 1:
-#         frac_wide = 0.0
-
-#     # Width filter for false positives
-#     ibox64_filter = False
-#     if len(tab2):
-#         ibox64_cnt = np.sum(tab2["ibox"] == 64) / float(len(tab2["ibox"]))
-#         if ibox64_cnt > 0.85 and len(tab2["ibox"]) > 15:
-#             ibox64_filter = True
-#             print("ibox64 filter")
-
-#     # Done
-
-#     tab3 = cluster_heimdall.filter_clustered(
-#         tab2,
-#         min_snr=min_snr,
-#         min_dm=min_dm,
-#         max_ibox=max_ibox,
-#         max_cntb=max_cntb,
-#         max_cntb0=max_cntb0,
-#         max_ncl=max_ncl,
-#         target_params=target_params,
-#     )  # max_ncl rows returned
-
-#     col_trigger = np.zeros(len(tab2), dtype=int)
-#     if outroot is not None and len(tab3) and not ibox64_filter:
-#         tab4, lastname = cluster_heimdall.dump_cluster_results_json(
-#             tab3,
-#             trigger=trigger,
-#             lastname=lastname,
-#             cat=cat,
-#             coords=coords,
-#             snrs=snrs,
-#             outroot=outroot,
-#             nbeams=sum(nbeams_queue),
-#             frac_wide=frac_wide,
-#         )
-#         if tab4 is not None and trigger:
-#             col_trigger = np.where(
-#                 tab4 == tab2, lastname, 0
-#             )  # if trigger, then overload
-
-#     # write T2 clustered/filtered results
-#     if outroot is not None and len(tab2):
-#         tab2["trigger"] = col_trigger
-#         cluster_heimdall.dump_cluster_results_heimdall(
-#             tab2,
-#             outroot + str(np.floor(time.time()).astype("int")) + ".cand",
-#             min_snr_t2out=min_snr_t2out,
-#             max_ncl=max_ncl,
-#         )
-
-#     return lastname
 
 
 def recvall(sock, n):
