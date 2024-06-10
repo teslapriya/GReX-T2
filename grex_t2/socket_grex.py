@@ -5,10 +5,7 @@ from astropy.time import Time
 from astropy.io import ascii
 from grex_t2 import cluster_heimdall, names
 from collections import deque
-import logging as logger
 import requests
-
-logger.basicConfig(filename="output.log", encoding="utf-8", level=logger.DEBUG)
 
 nbeams_queue = deque(maxlen=10)
 

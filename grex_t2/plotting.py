@@ -2,12 +2,11 @@ import matplotlib
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-import logging as logger
+import logging
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from matplotlib.ticker import FormatStrFormatter, NullLocator
 
 matplotlib.use("Agg")
-logger.basicConfig(filename="logs/output.log", encoding="utf-8", level=logger.DEBUG)
 
 
 def plot_clustered(clusterer, clsnr, snrs, data, tab, cols, plot_dir="./"):
@@ -169,7 +168,7 @@ def plot_dm_snr(ax, ax_cbar, tab, tsamp=1048e-6):
     ax.xaxis.set_minor_locator(NullLocator())
 
     if tab["snr"].max() > max_snr:
-        logger.warning(
+        logging.warning(
             "The SNR of a candidate is higher than the maximum SNRs plotted!"
         )
 

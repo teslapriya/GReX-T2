@@ -9,9 +9,7 @@ from astropy.io.ascii.core import InconsistentTableError
 from astropy.time import Time
 from numpy.lib.recfunctions import structured_to_unstructured
 from grex_t2 import triggering, names
-import logging as logger
-
-logger.basicConfig(filename="logs/output.log", encoding="utf-8", level=logger.DEBUG)
+import logging
 
 # half second at heimdall time resolution (after march 18)
 OFFSET = 1907
@@ -25,11 +23,11 @@ def parse_candsfile(candsfile):
     """
 
     if os.path.exists(candsfile):
-        logger.debug(f"Candsfile {candsfile} is path, so opening it")
+        logging.debug(f"Candsfile {candsfile} is path, so opening it")
         candsfile = open(candsfile, "r").read()
     else:
         ncands = len(candsfile.split("\n")) - 1
-        logger.debug(f"Received {ncands} candidates")
+        logging.debug(f"Received {ncands} candidates")
     col_heimdall = ["snr", "if", "itime", "mjds", "ibox", "idm", "dm", "ibeam"]
     col_T2old = [
         "snr",
@@ -71,7 +69,7 @@ def parse_candsfile(candsfile):
             format="no_header",
         )
         _hdfile = True
-        logger.debug("Read with heimdall columns")
+        logging.debug("Read with heimdall columns")
     except InconsistentTableError:
         try:
             tab = ascii.read(
@@ -82,7 +80,7 @@ def parse_candsfile(candsfile):
                 format="no_header",
             )
             _hdfile = False
-            logger.debug("Read with T2 columns")
+            logging.debug("Read with T2 columns")
         except InconsistentTableError:
             try:
                 tab = ascii.read(
@@ -93,9 +91,9 @@ def parse_candsfile(candsfile):
                     format="no_header",
                 )
                 _hdfile = False
-                logger.debug("Read with old style T2 columns")
+                logging.debug("Read with old style T2 columns")
             except InconsistentTableError:
-                logger.warning("Inconsistent table. Skipping...")
+                logging.warning("Inconsistent table. Skipping...")
                 return ([], [], [])
 
     tab["ibeam"] = tab["ibeam"].astype(int)
@@ -172,11 +170,7 @@ def cluster_data(
 
         cl = clusterer.labels_
     except ValueError:
-        print(
-            "Clustering did not run. Each point \
-               assigned to unique cluster."
-        )
-        logger.info(
+        logging.info(
             "Clustering did not run. Each point \
                assigned to unique cluster."
         )
@@ -223,8 +217,7 @@ def get_peak(tab):
         ipeak.append(imaxsnr)
     # Append unclustered
     ipeak += [i for i in range(len(tab)) if cl[i] == -1]
-    logger.info(f"Found {len(ipeak)} cluster peaks")
-    print(f"Found {len(ipeak)} cluster peaks")
+    logging.info(f"Found {len(ipeak)} cluster peaks")
 
     return tab[ipeak]
 
@@ -287,13 +280,12 @@ def filter_clustered(
             min_snr_cl = sorted(tab_out["snr"])[-max_ncl]
             good = tab_out["snr"] >= 50  # min_snr_cl
             tab_out = tab_out[good]
-            print(
+            logging.info(
                 f"Limiting output to {max_ncl} \
                     clusters with snr>{min_snr_cl}."
             )
 
-    logger.info(f"Filtering clusters from {len(tab)} to {len(tab_out)} candidates.")
-    print(f"Filtering clusters from {len(tab)} to {len(tab_out)} candidates.")
+    logging.info(f"Filtering clusters from {len(tab)} to {len(tab_out)} candidates.")
 
     return tab_out
 
@@ -361,9 +353,9 @@ def dump_cluster_results_json(
         if isinjection:
             basename = names.increment_name(mjd, lastname=lastname)
             candname = f"{basename}_inj{tab_inj[sel]['FRBno'][0]}"
-            print(f"Candidate identified as injection. Naming it {candname}")
+            logging.info(f"Candidate identified as injection. Naming it {candname}")
             if len(sel) > 1:
-                print(
+                logging.info(
                     f"Found {len(sel)} injections coincident with this event. Using first."
                 )
 
@@ -385,15 +377,14 @@ def dump_cluster_results_json(
     trigger_payload = {"candname": candname, "itime": int(itimes[imaxsnr])}
 
     if len(tab) > 0:
-        print("\n", red_tab, "\n")
+        # print("\n", red_tab, "\n")
         if cat is not None and red_tab is not None:
             tab_checked = triggering.check_clustered_sources(
                 red_tab, coords, snrs, do_check=False
             )
             if len(tab_checked):
                 with open(outputfile, "w") as f:  # encoding='utf-8'
-                    print(f"Writing trigger file for index {imaxsnr} with SNR={maxsnr}")
-                    logger.info(
+                    logging.info(
                         f"Writing trigger file for index {imaxsnr} with SNR={maxsnr}"
                     )
                     json.dump(output_dict, f, ensure_ascii=False, indent=4)
@@ -401,46 +392,43 @@ def dump_cluster_results_json(
                 trigger = True
 
                 if trigger:
-                    print(output_dict)
+                    # print(output_dict)
                     send_trigger(trigger_payload)
 
                 if trigger:
-                    print(output_dict)
+                    # print(output_dict)
                     send_trigger(trigger_payload)
                     last_trigger_time = Time.now().mjd
 
                 return row, candname, last_trigger_time
 
             else:
-                print("Not triggering on source in beam")
-                logger.info("Not triggering on source in beam")
+                logging.info("Not triggering on source in beam")
                 return None, lastname, last_trigger_time
 
         else:
             with open(outputfile, "w") as f:  # encoding='utf-8'
-                print(f"Writing trigger file for index {imaxsnr} with SNR={maxsnr}")
-                logger.info(
+                logging.info(
                     f"Writing trigger file for index {imaxsnr} with SNR={maxsnr}"
                 )
                 json.dump(output_dict, f, ensure_ascii=False, indent=4)
 
             if trigger:  # and not isinjection ?
-                print(output_dict)
-                print(trigger_payload)
+                # print(output_dict)
+                # print(trigger_payload)
                 send_trigger(trigger_payload)
 
             return row, candname, last_trigger_time
 
     else:
-        print(f"Not triggering on block with {len(tab)} candidates")
-        logger.info(f"Not triggering on block with {len(tab)} candidates")
+        logging.info(f"Not triggering on block with {len(tab)} candidates")
         return None, lastname, last_trigger_time
 
 
 def send_trigger(trigger_payload):
     nowmjd = Time.now().mjd
     trigger_message = json.dumps(trigger_payload).encode("utf-8")
-    print(
+    logging.info(
         f"Sending trigger for candidate {trigger_payload['candname']} at time index {trigger_payload['itime']} at Time",
         nowmjd,
     )
@@ -469,7 +457,9 @@ def dump_cluster_results_heimdall(tab, outputfile, min_snr_t2out=None, max_ncl=N
         good *= tab["snr"] > min_snr_t2out
         tab = tab[good]
         if not all(good) and len(tab):
-            print(f"Limiting output to SNR>{min_snr_t2out} with {len(tab)} clusters.")
+            logging.info(
+                f"Limiting output to SNR>{min_snr_t2out} with {len(tab)} clusters."
+            )
 
     if max_ncl is not None:
         if len(tab) > max_ncl:
@@ -478,9 +468,11 @@ def dump_cluster_results_heimdall(tab, outputfile, min_snr_t2out=None, max_ncl=N
                 str(tt) != "0" for tt in tab["trigger"]
             ]  # keep trigger
             tab = tab[good]
-            print(f"Limiting output to {max_ncl} clusters with snr>{min_snr_cl}.")
+            logging.info(
+                f"Limiting output to {max_ncl} clusters with snr>{min_snr_cl}."
+            )
     else:
-        print("max_ncl not set. Not filtering heimdall output file.")
+        logging.info("max_ncl not set. Not filtering heimdall output file.")
 
     if len(tab) > 0:
         tab.write(outputfile, format="ascii.no_header", overwrite=True)

@@ -1,11 +1,18 @@
 import socket
 from grex_t2 import socket_grex
-import logging as logger
-
-logger.basicConfig(filename="output.log", encoding="utf-8", level=logger.DEBUG)
+import logging
 
 HOST = "127.0.0.1"
 PORT = 12345
+
+# Setup logging to write to a file and stdout, with formatting
+# TODO Write to OpenTelemetry as well to collect logs for grafana
+
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[logging.FileHandler("output.log"), logging.StreamHandler()],
+)
 
 
 def main(trigger=True):
@@ -18,8 +25,7 @@ def main(trigger=True):
     server_address = (HOST, PORT)
     s.bind(server_address)
 
-    print("Connected to socket %s:%d. Triggering set to %s" % (HOST, PORT, trigger))
-    logger.info(
+    logging.info(
         "Connected to socket %s:%d. Triggering set to %s" % (HOST, PORT, trigger)
     )
 
@@ -43,13 +49,12 @@ def main(trigger=True):
             candstr_list += candstr
             cand_count += 1
 
-        print("Number of candidates %d" % cand_count)
+        logging.info(f"Number of candidates {cand_count}")
 
         if cand_count > 0:
-            print("Filtering", "last trig was ", last_trigger_time)
+            logging.info(f"Filtering, last trig was {last_trigger_time}")
             last_trigger_time = socket_grex.filter_candidates(
                 candstr_list, trigger=trigger, last_trigger_time=last_trigger_time
             )
-            print("Finished filtering")
 
         continue
