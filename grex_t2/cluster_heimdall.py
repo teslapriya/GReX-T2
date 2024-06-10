@@ -404,15 +404,6 @@ def dump_cluster_results_json(
                     send_trigger(trigger_payload)
 
                 if trigger:
-                    if (Time.now().mjd - last_trigger_time) < 90.0 / 86400.0:
-                        print(
-                            "Not triggering on source in beam as last trigger was < 90s ago"
-                        )
-                        logger.info(
-                            "Not triggering on source in beam as last trigger was < 90s ago"
-                        )
-                        return None, lastname, last_trigger_time
-
                     print(output_dict)
                     send_trigger(trigger_payload)
                     last_trigger_time = Time.now().mjd
@@ -433,14 +424,6 @@ def dump_cluster_results_json(
                 json.dump(output_dict, f, ensure_ascii=False, indent=4)
 
             if trigger:  # and not isinjection ?
-                if (Time.now().mjd - last_trigger_time) < 90.0 / 86400.0:
-                    print(
-                        "Not triggering on source in beam as last trigger was < 90s ago"
-                    )
-                    logger.info(
-                        "Not triggering on source in beam as last trigger was < 90s ago"
-                    )
-                    return None, lastname, last_trigger_time
                 print(output_dict)
                 print(trigger_payload)
                 send_trigger(trigger_payload)
