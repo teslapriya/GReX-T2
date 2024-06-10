@@ -150,7 +150,6 @@ def filter_candidates(candsfile, output=True, trigger=True, last_trigger_time=0.
             )
 
 
-
 def recvall(sock, n):
     """
     helper function to receive all bytes from a socket

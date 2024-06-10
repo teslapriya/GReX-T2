@@ -183,17 +183,18 @@ def cluster_data(
         cl = np.arange(len(data))
 
     # hack assumes fixed columns
-#    bl = data[:, 3]
-    cntb, cntc = np.zeros((len(data), 1), dtype=int), np.zeros(
-        (len(data), 1), dtype=int
+    #    bl = data[:, 3]
+    cntb, cntc = (
+        np.zeros((len(data), 1), dtype=int),
+        np.zeros((len(data), 1), dtype=int),
     )
     ucl = np.unique(cl)
 
     for i in ucl:
         ww = np.where(i == cl)
         cntc[ww] = len(ww[0])
-#        ubl = np.unique(bl[ww])
-#        cntb[ww] = len(ubl)
+    #        ubl = np.unique(bl[ww])
+    #        cntb[ww] = len(ubl)
 
     # modifies tab in place
     tab["cl"] = cl.tolist()
@@ -284,7 +285,7 @@ def filter_clustered(
     if max_ncl is not None:
         if len(tab_out) > max_ncl:
             min_snr_cl = sorted(tab_out["snr"])[-max_ncl]
-            good = tab_out["snr"] >= 50#min_snr_cl
+            good = tab_out["snr"] >= 50  # min_snr_cl
             tab_out = tab_out[good]
             print(
                 f"Limiting output to {max_ncl} \
@@ -438,8 +439,11 @@ def dump_cluster_results_json(
 
 def send_trigger(trigger_payload):
     nowmjd = Time.now().mjd
-    trigger_message = json.dumps(trigger_payload).encode('utf-8')
-    print(f"Sending trigger for candidate {trigger_payload['candname']} at time index {trigger_payload['itime']} at Time", nowmjd)
+    trigger_message = json.dumps(trigger_payload).encode("utf-8")
+    print(
+        f"Sending trigger for candidate {trigger_payload['candname']} at time index {trigger_payload['itime']} at Time",
+        nowmjd,
+    )
     UDP_PORT = 65432
     UDP_IP = "127.0.0.1"
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # Internet  # UDP
