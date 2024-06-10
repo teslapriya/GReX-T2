@@ -429,8 +429,7 @@ def send_trigger(trigger_payload):
     nowmjd = Time.now().mjd
     trigger_message = json.dumps(trigger_payload).encode("utf-8")
     logging.info(
-        f"Sending trigger for candidate {trigger_payload['candname']} at time index {trigger_payload['itime']} at Time",
-        nowmjd,
+        f"Sending trigger for candidate {trigger_payload['candname']} at time index {trigger_payload['itime']} at Time {nowmjd}",
     )
     UDP_PORT = 65432
     UDP_IP = "127.0.0.1"
