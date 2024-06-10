@@ -1,4 +1,5 @@
 import sqlite3
+import logging
 
 
 def create_tables(con: sqlite3.Connection):
@@ -50,4 +51,5 @@ def connect_and_create(path: str) -> sqlite3.Connection:
     """Connect to a SQLite database and create our tables if they don't exist"""
     con = sqlite3.connect(path)
     create_tables(con)
+    logging.info("Successfully setup and connected to SQLite database")
     return con

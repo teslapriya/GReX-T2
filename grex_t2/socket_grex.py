@@ -10,13 +10,14 @@ import requests
 nbeams_queue = deque(maxlen=10)
 
 
-def filter_candidates(candsfile, output=True, trigger=True, last_trigger_time=0.0):
+def filter_candidates(
+    candsfile, outroot, output=True, trigger=True, last_trigger_time=0.0
+):
     """Take a single gulp of candidates,
     parse, cluster, and then filter to
     produce highest S/N candidate and save
     to a json file
     """
-    outroot = "/hdd/data/candidates/T2/"
 
     col_heimdall = ["snr", "if", "itime", "mjds", "ibox", "idm", "dm", "ibeam"]
     min_dm = 50
