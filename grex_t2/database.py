@@ -57,8 +57,9 @@ def connect_and_create(path: str) -> sqlite3.Connection:
 
 def is_injection(mjd: float, con: sqlite3.Connection) -> bool:
     """Run a SQL query to see if T0 performed an injection near candidate time"""
-    OFFSET = 5.78704e-5  # 5 Seconds in days
+    OFFSET = 1 / 86400  # 1s in days
     cur = con.cursor()
+    logging.debug("Testing if candidate at {mjd} corresponds to an injection")
     cur.execute(
         "SELECT COUNT(*) FROM injection WHERE mjd BETWEEN ? AND ?",
         (
@@ -66,4 +67,6 @@ def is_injection(mjd: float, con: sqlite3.Connection) -> bool:
             mjd + OFFSET / 2,
         ),
     )
-    return cur.fetchone()[0] == 1
+    res = cur.fetchone()
+    logging.debug("SQL Query Result: {res}")
+    return res[0] == 1
