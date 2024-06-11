@@ -61,7 +61,9 @@ def is_injection(mjd: float, con: sqlite3.Connection) -> bool:
     cur = con.cursor()
     cur.execute(
         "SELECT COUNT(*) FROM injection WHERE mjd BETWEEN ? AND ?",
-        mjd - OFFSET / 2,
-        mjd + OFFSET / 2,
+        (
+            mjd - OFFSET / 2,
+            mjd + OFFSET / 2,
+        ),
     ).fetchall()
     return cur.fetchone()[0] == 1
