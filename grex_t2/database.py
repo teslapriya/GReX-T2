@@ -65,5 +65,5 @@ def is_injection(mjd: float, con: sqlite3.Connection) -> bool:
             mjd - OFFSET / 2,
             mjd + OFFSET / 2,
         ),
-    ).fetchall()
+    )
     return cur.fetchone()[0] == 1
