@@ -56,7 +56,7 @@ def main():
     s.bind(server_address)
 
     # Connect to SQLite
-    db_con = database.connect_and_create(args.db_path)
+    db_con = database.connect(args.db_path)
 
     logging.info(
         "Connected to socket %s:%d. Triggering set to %s" % (HOST, PORT, args.trigger)
