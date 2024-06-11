@@ -1,6 +1,7 @@
 import json
 import os.path
 import socket
+import sqlite3
 import hdbscan
 import numpy as np
 import requests
@@ -8,7 +9,7 @@ from astropy.io import ascii
 from astropy.io.ascii.core import InconsistentTableError
 from astropy.time import Time
 from numpy.lib.recfunctions import structured_to_unstructured
-from grex_t2 import triggering, names
+from grex_t2 import triggering, names, database
 import logging
 
 # half second at heimdall time resolution (after march 18)
@@ -292,6 +293,7 @@ def filter_clustered(
 
 def dump_cluster_results_json(
     tab,
+    db_con: sqlite3.Connection,
     outputfile=None,
     output_cols=["mjds", "snr", "ibox", "dm", "ibeam", "cntb", "cntc"],
     trigger=False,
@@ -300,7 +302,6 @@ def dump_cluster_results_json(
     coords=None,
     snrs=None,
     outroot="./",
-    injectionfile=None,
     last_trigger_time=0.0,
 ):
     """
@@ -311,7 +312,6 @@ def dump_cluster_results_json(
     cat is path to source catalog (default None)
     beam_model is pre-calculated beam model (default None)
     coords and snrs are parsed source file input
-    injectionfile is path to info on injects and controls whether trigger is compared to that
     returns row of table that triggered, along with name generated for candidate.
     """
 
@@ -321,50 +321,22 @@ def dump_cluster_results_json(
     itimes = tab["itime"]
     maxsnr = tab["snr"].max()
     imaxsnr = np.where(tab["snr"] == maxsnr)[0][0]
-    # itime = str(itimes[imaxsnr])
     specnum = (int(itimes[imaxsnr]) - OFFSET) * DOWNSAMPLE
     mjd = tab["mjds"][imaxsnr]
-    # _snr = tab["snr"][imaxsnr]
-    dm = tab["dm"][imaxsnr]
-    ibeam = tab["ibeam"][imaxsnr]
 
     # if no injection file or no coincident injection
     candname = names.increment_name(mjd, lastname=lastname)
 
-    isinjection = False
-    if injectionfile is not None:
-        # check candidate against injectionfile
-        tab_inj = ascii.read(injectionfile)
-        assert all(
-            [col in tab_inj.columns for col in ["MJD", "Beam", "DM", "SNR", "FRBno"]]
-        )
-
-        # is candidate proximal to any in tab_inj?
-        t_close = 15  # seconds  TODO: why not 1 sec?
-        dm_close = 10  # pc/cm3
-        beam_close = 2  # number
-        sel_t = np.abs(tab_inj["MJD"] - mjd) < t_close / (3600 * 24)
-        sel_dm = np.abs(tab_inj["DM"] - dm) < dm_close
-        sel_beam = np.abs(tab_inj["Beam"] - ibeam) < beam_close
-        sel = sel_t * sel_dm * sel_beam
-        if len(np.where(sel)[0]):
-            isinjection = True
-
-        if isinjection:
-            basename = names.increment_name(mjd, lastname=lastname)
-            candname = f"{basename}_inj{tab_inj[sel]['FRBno'][0]}"
-            logging.info(f"Candidate identified as injection. Naming it {candname}")
-            if len(sel) > 1:
-                logging.info(
-                    f"Found {len(sel)} injections coincident with this event. Using first."
-                )
+    # Check to see if the max SNR candidate corresponds with an injection
+    isinjection = database.is_injection(mjd, db_con)
+    if isinjection:
+        logging.info("Candidate corresponds with injection, skipping trigger")
 
     output_dict = {candname: {}}
     if outputfile is None:
         outputfile = f"{outroot}{candname}.json"
 
     row = tab[imaxsnr]
-    red_tab = tab[imaxsnr : imaxsnr + 1]
     for col in output_cols:
         if type(row[col]) == np.int64:
             output_dict[candname][col] = int(row[col])
@@ -377,48 +349,14 @@ def dump_cluster_results_json(
     trigger_payload = {"candname": candname, "itime": int(itimes[imaxsnr])}
 
     if len(tab) > 0:
-        # print("\n", red_tab, "\n")
-        if cat is not None and red_tab is not None:
-            tab_checked = triggering.check_clustered_sources(
-                red_tab, coords, snrs, do_check=False
-            )
-            if len(tab_checked):
-                with open(outputfile, "w") as f:  # encoding='utf-8'
-                    logging.info(
-                        f"Writing trigger file for index {imaxsnr} with SNR={maxsnr}"
-                    )
-                    json.dump(output_dict, f, ensure_ascii=False, indent=4)
+        with open(outputfile, "w") as f:  # encoding='utf-8'
+            logging.info(f"Writing trigger file for index {imaxsnr} with SNR={maxsnr}")
+            json.dump(output_dict, f, ensure_ascii=False, indent=4)
 
-                trigger = True
+        if trigger and not isinjection:
+            send_trigger(trigger_payload)
 
-                if trigger:
-                    # print(output_dict)
-                    send_trigger(trigger_payload)
-
-                if trigger:
-                    # print(output_dict)
-                    send_trigger(trigger_payload)
-                    last_trigger_time = Time.now().mjd
-
-                return row, candname, last_trigger_time
-
-            else:
-                logging.info("Not triggering on source in beam")
-                return None, lastname, last_trigger_time
-
-        else:
-            with open(outputfile, "w") as f:  # encoding='utf-8'
-                logging.info(
-                    f"Writing trigger file for index {imaxsnr} with SNR={maxsnr}"
-                )
-                json.dump(output_dict, f, ensure_ascii=False, indent=4)
-
-            if trigger:  # and not isinjection ?
-                # print(output_dict)
-                # print(trigger_payload)
-                send_trigger(trigger_payload)
-
-            return row, candname, last_trigger_time
+        return row, candname, last_trigger_time
 
     else:
         logging.info(f"Not triggering on block with {len(tab)} candidates")

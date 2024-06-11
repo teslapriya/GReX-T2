@@ -1,4 +1,5 @@
 import os
+import sqlite3
 import numpy as np
 import time
 from astropy.time import Time
@@ -11,7 +12,12 @@ nbeams_queue = deque(maxlen=10)
 
 
 def filter_candidates(
-    candsfile, outroot, output=True, trigger=True, last_trigger_time=0.0
+    candsfile,
+    outroot,
+    db_con: sqlite3.Connection,
+    output=True,
+    trigger=True,
+    last_trigger_time=0.0,
 ):
     """Take a single gulp of candidates,
     parse, cluster, and then filter to
@@ -80,6 +86,7 @@ def filter_candidates(
 
     tab4, lastname, last_trigger_time = cluster_heimdall.dump_cluster_results_json(
         tab3,
+        db_con,
         trigger=trigger,
         lastname=lastname,
         cat=cat,

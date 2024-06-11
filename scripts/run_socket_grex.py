@@ -56,7 +56,7 @@ def main():
     s.bind(server_address)
 
     # Connect to SQLite
-    database.connect_and_create(args.db_path)
+    db_con = database.connect_and_create(args.db_path)
 
     logging.info(
         "Connected to socket %s:%d. Triggering set to %s" % (HOST, PORT, args.trigger)
@@ -89,6 +89,7 @@ def main():
             last_trigger_time = socket_grex.filter_candidates(
                 candstr_list,
                 outroot=args.outroot,
+                db_con=db_con,
                 trigger=args.trigger,
                 last_trigger_time=last_trigger_time,
             )
