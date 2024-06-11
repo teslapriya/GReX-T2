@@ -13,7 +13,7 @@ def is_injection(mjd: float, con: sqlite3.Connection) -> bool:
     """Run a SQL query to see if T0 performed an injection near candidate time"""
 
     # Not sure why the offset from T0 is this much
-    OFFSET = 10 / 86400  # Seconds to days
+    OFFSET = 15 / 86400  # Seconds to days
     cur = con.cursor()
     logging.debug(f"Testing if candidate at {mjd} corresponds to an injection")
     cur.execute(

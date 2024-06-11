@@ -327,11 +327,6 @@ def dump_cluster_results_json(
     # if no injection file or no coincident injection
     candname = names.increment_name(mjd, lastname=lastname)
 
-    # Check to see if the max SNR candidate corresponds with an injection
-    isinjection = database.is_injection(mjd, db_con)
-    if isinjection:
-        logging.info("Candidate corresponds with injection, skipping trigger")
-
     output_dict = {candname: {}}
     if outputfile is None:
         outputfile = f"{outroot}{candname}.json"
@@ -347,6 +342,11 @@ def dump_cluster_results_json(
 
     # json.dumps doesn't know how to serialize numpy integers for some insane reason
     trigger_payload = {"candname": candname, "itime": int(itimes[imaxsnr])}
+
+    # Check to see if the max SNR candidate corresponds with an injection
+    isinjection = database.is_injection(mjd, db_con)
+    if isinjection:
+        logging.info("Candidate corresponds with injection, skipping trigger")
 
     if len(tab) > 0:
         with open(outputfile, "w") as f:  # encoding='utf-8'
@@ -364,10 +364,9 @@ def dump_cluster_results_json(
 
 
 def send_trigger(trigger_payload):
-    nowmjd = Time.now().mjd
     trigger_message = json.dumps(trigger_payload).encode("utf-8")
     logging.info(
-        f"Sending trigger for candidate {trigger_payload['candname']} at time index {trigger_payload['itime']} at Time {nowmjd}",
+        f"Sending trigger for candidate {trigger_payload['candname']} at time index {trigger_payload['itime']} at Time {Time.now().mjd}",
     )
     UDP_PORT = 65432
     UDP_IP = "127.0.0.1"
