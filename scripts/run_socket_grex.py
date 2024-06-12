@@ -1,14 +1,51 @@
+import argparse
 import socket
-from grex_t2 import socket_grex
-import logging as logger
-
-logger.basicConfig(filename="output.log", encoding="utf-8", level=logger.DEBUG)
+from grex_t2 import socket_grex, database
+import logging
 
 HOST = "127.0.0.1"
 PORT = 12345
 
+# Setup logging to write to a file and stdout, with formatting
+# TODO Write to OpenTelemetry as well to collect logs for grafana
 
-def main(trigger=True):
+logging.basicConfig(
+    level=logging.INFO,
+    format="[%(asctime)s] [%(levelname)s] %(message)s",
+    handlers=[logging.FileHandler("output.log"), logging.StreamHandler()],
+)
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description="Run T2 clustering and triggering on heimdall output"
+    )
+    parser.add_argument(
+        "--trigger",
+        type=bool,
+        default=True,
+        help="Enable triggers to dump the voltage buffer",
+        required=False,
+    )
+    parser.add_argument(
+        "--outroot",
+        type=str,
+        default="/hdd/data/candidates/T2/",
+        help="Directory to store intermediate candidate files",
+        required=False,
+    )
+    parser.add_argument(
+        "--db-path",
+        type=str,
+        default="/hdd/data/candidates.db",
+        help="Path to SQLite database",
+        required=False,
+    )
+    return parser.parse_args()
+
+
+def main():
+    args = parse_args()
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     # Create a UDP socket
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -18,9 +55,11 @@ def main(trigger=True):
     server_address = (HOST, PORT)
     s.bind(server_address)
 
-    print("Connected to socket %s:%d. Triggering set to %s" % (HOST, PORT, trigger))
-    logger.info(
-        "Connected to socket %s:%d. Triggering set to %s" % (HOST, PORT, trigger)
+    # Connect to SQLite
+    db_con = database.connect(args.db_path)
+
+    logging.info(
+        "Connected to socket %s:%d. Triggering set to %s" % (HOST, PORT, args.trigger)
     )
 
     last_trigger_time = 0.0
@@ -43,13 +82,20 @@ def main(trigger=True):
             candstr_list += candstr
             cand_count += 1
 
-        print("Number of candidates %d" % cand_count)
+        logging.info(f"Number of candidates {cand_count}")
 
         if cand_count > 0:
-            print("Filtering", "last trig was ", last_trigger_time)
+            logging.info(f"Filtering, last trig was {last_trigger_time}")
             last_trigger_time = socket_grex.filter_candidates(
-                candstr_list, trigger=trigger, last_trigger_time=last_trigger_time
+                candstr_list,
+                outroot=args.outroot,
+                db_con=db_con,
+                trigger=args.trigger,
+                last_trigger_time=last_trigger_time,
             )
-            print("Finished filtering")
 
         continue
+
+
+if __name__ == "__main__":
+    main()

@@ -2,9 +2,7 @@ import os.path
 import numpy as np
 from astropy import units as u
 from astropy.coordinates import SkyCoord
-import logging as logger
-
-logger.basicConfig(filename="output.log", encoding="utf-8", level=logger.DEBUG)
+import logging
 
 # TODO should move to calib constants
 Ddish = 4.5
@@ -49,7 +47,6 @@ def parse_catalog(catalog):
             except:  # noqa: E722
                 print("")
     else:
-        logger.warning("No catalog found. Will not filter output based on a catalog.")
-        print("No catalog found. Will not filter output based on a catalog.")
+        logging.warning("No catalog found. Will not filter output based on a catalog.")
 
     return coords, snrs

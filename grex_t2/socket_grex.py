@@ -1,25 +1,29 @@
 import os
+import sqlite3
 import numpy as np
 import time
 from astropy.time import Time
 from astropy.io import ascii
 from grex_t2 import cluster_heimdall, names
 from collections import deque
-import logging as logger
 import requests
-
-logger.basicConfig(filename="output.log", encoding="utf-8", level=logger.DEBUG)
 
 nbeams_queue = deque(maxlen=10)
 
 
-def filter_candidates(candsfile, output=True, trigger=True, last_trigger_time=0.0):
+def filter_candidates(
+    candsfile,
+    outroot,
+    db_con: sqlite3.Connection,
+    output=True,
+    trigger=True,
+    last_trigger_time=0.0,
+):
     """Take a single gulp of candidates,
     parse, cluster, and then filter to
     produce highest S/N candidate and save
     to a json file
     """
-    outroot = "/hdd/data/candidates/T2/"
 
     col_heimdall = ["snr", "if", "itime", "mjds", "ibox", "idm", "dm", "ibeam"]
     min_dm = 50
@@ -82,6 +86,7 @@ def filter_candidates(candsfile, output=True, trigger=True, last_trigger_time=0.
 
     tab4, lastname, last_trigger_time = cluster_heimdall.dump_cluster_results_json(
         tab3,
+        db_con,
         trigger=trigger,
         lastname=lastname,
         cat=cat,
@@ -148,7 +153,6 @@ def filter_candidates(candsfile, output=True, trigger=True, last_trigger_time=0.
                 + outroot
                 + "cluster_output.csv"
             )
-
 
 
 def recvall(sock, n):

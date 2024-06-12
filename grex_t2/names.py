@@ -1,3 +1,4 @@
+import logging
 import os
 import string
 import datetime
@@ -37,7 +38,7 @@ def increment_name(mjd, lastname=None, suffixlength=4):
             suffix = f"{numbertosuffix(lastnumber+1):a>4}"  # increment name
 
     newname = f"{str(dt.year)[2:]}{dt.month:02d}{dt.day:02d}{suffix}"  # type: ignore
-    print(f'Incrementing name from "{lastname}" to "{newname}".')
+    logging.debug(f'Incrementing name from "{lastname}" to "{newname}".')
 
     return newname
 
