@@ -289,8 +289,7 @@ def filter_clustered(
     logging.info(f"Filtering clusters from {len(tab)} to {len(tab_out)} candidates.")
 
     return tab_out
-
-
+    
 def dump_cluster_results_json(
     tab,
     db_con: sqlite3.Connection,
@@ -344,7 +343,10 @@ def dump_cluster_results_json(
     trigger_payload = {"candname": candname, "itime": int(itimes[imaxsnr])}
 
     # Check to see if the max SNR candidate corresponds with an injection
+
     isinjection = database.is_injection(mjd, db_con)
+    output_dict[candname]["isinjection"] = isinjection #Added_Priya
+    
     if isinjection:
         logging.info("Candidate corresponds with injection, skipping trigger")
 
@@ -353,7 +355,7 @@ def dump_cluster_results_json(
             logging.info(f"Writing trigger file for index {imaxsnr} with SNR={maxsnr}")
             json.dump(output_dict, f, ensure_ascii=False, indent=4)
 
-        if trigger and not isinjection:
+        if trigger: #and not isinjection: 
             send_trigger(trigger_payload)
 
         return row, candname, last_trigger_time
@@ -361,7 +363,7 @@ def dump_cluster_results_json(
     else:
         logging.info(f"Not triggering on block with {len(tab)} candidates")
         return None, lastname, last_trigger_time
-
+        
 
 def send_trigger(trigger_payload):
     trigger_message = json.dumps(trigger_payload).encode("utf-8")
